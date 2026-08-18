@@ -1,0 +1,203 @@
+:root {
+    --bg-dark: #0a0b10;
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --neon-green: #2ecc71;
+    --neon-yellow: #f1c40f;
+    --neon-orange: #e67e22;
+    --neon-cyan: #00ffff;
+    --text-main: #ecf0f1;
+    --text-muted: #7f8c8d;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 25vw 1fr;
+    grid-template-rows: 8vh 1fr;
+    overflow: hidden;
+}
+
+/* Top HUD */
+header {
+    grid-column: 1 / -1;
+    background: var(--glass-bg);
+    border-bottom: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3vw;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 2.2vh;
+    backdrop-filter: blur(10px);
+}
+
+.hud-item span { color: var(--neon-cyan); font-weight: bold; }
+
+/* Sidebar Controls */
+aside {
+    background: var(--glass-bg);
+    border-right: 1px solid var(--glass-border);
+    padding: 2vh 1.5vw;
+    display: flex;
+    flex-direction: column;
+    gap: 2vh;
+    overflow-y: auto;
+    backdrop-filter: blur(10px);
+}
+
+.control-group { margin-bottom: 1vh; }
+.control-group h3 {
+    font-size: 2.2vh;
+    color: var(--neon-yellow);
+    margin-bottom: 1.5vh;
+    cursor: pointer;
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: 1vh;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.accordion-content {
+    display: none;
+    flex-direction: column;
+}
+.accordion-content.active {
+    display: flex;
+}
+
+.slider-container { margin-bottom: 2vh; position: relative; }
+.slider-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.8vh;
+    margin-bottom: 1vh;
+}
+
+/* Custom Slider Styling */
+input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    background: transparent;
+    cursor: pointer;
+}
+
+input[type=range]:focus {
+    outline: none;
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 0.8vh;
+    cursor: pointer;
+    background: linear-gradient(to right, var(--track-color, var(--neon-cyan)) var(--val, 0%), #333 var(--val, 0%));
+    border-radius: 0.4vh;
+}
+
+input[type=range]::-webkit-slider-thumb {
+    height: 1.6vh;
+    width: 1.6vh;
+    border-radius: 50%;
+    background: #fff;
+    cursor: pointer;
+    -webkit-appearance: none;
+    margin-top: -0.4vh;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+
+.slider-actions {
+    display: flex;
+    gap: 0.5vw;
+    margin-top: 0.5vh;
+    justify-content: flex-end;
+}
+
+.icon-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1.8vh;
+    transition: color 0.2s;
+}
+
+.icon-btn:hover {
+    color: var(--neon-yellow);
+}
+
+.help-text {
+    font-size: 1.8vh;
+    line-height: 1.4;
+    color: var(--text-muted);
+    background: rgba(0, 0, 0, 0.5);
+    padding: 1.5vh;
+    border-radius: 0.4vh;
+    margin-top: 1vh;
+    display: none;
+    border-left: 2px solid var(--neon-yellow);
+}
+.help-text.show {
+    display: block;
+}
+
+select {
+    font-size: 1.8vh;
+}
+
+/* Main Display */
+main {
+    display: grid;
+    grid-template-rows: 1fr 1fr 1fr 1fr;
+    padding: 2vh;
+    gap: 2vh;
+    height: 100%;
+    min-height: 0;
+}
+
+.canvas-wrapper {
+    position: relative;
+    background: #000;
+    border: 1px solid var(--glass-border);
+    border-radius: 0.8vh;
+    overflow: hidden;
+    min-height: 0;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.canvas-label {
+    position: absolute;
+    top: 1vh;
+    left: 1vw;
+    font-size: 1.5vh;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1vw;
+    display: flex;
+    align-items: center;
+    gap: 1vw;
+    z-index: 10;
+}
+
+.canvas-label select {
+    background: #111;
+    color: var(--neon-cyan);
+    border: 1px solid var(--glass-border);
+    font-size: 1.5vh;
+    padding: 0.2vh 0.5vw;
+}
+

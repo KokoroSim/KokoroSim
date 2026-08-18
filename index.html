@@ -4,126 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Eletrofisiologia - Cockpit</title>
-    <style>
-        :root {
-            --bg-dark: #0a0b10;
-            --glass-bg: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --neon-green: #2ecc71;
-            --neon-yellow: #f1c40f;
-            --neon-orange: #e67e22;
-            --neon-cyan: #00ffff;
-            --text-main: #ecf0f1;
-            --text-muted: #7f8c8d;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            height: 100vh;
-            display: grid;
-            grid-template-columns: 25vw 1fr;
-            grid-template-rows: 8vh 1fr;
-            overflow: hidden;
-        }
-
-        /* Top HUD */
-        header {
-            grid-column: 1 / -1;
-            background: var(--glass-bg);
-            border-bottom: 1px solid var(--glass-border);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 3vw;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 2.2vh;
-            backdrop-filter: blur(10px);
-        }
-
-        .hud-item span { color: var(--neon-cyan); font-weight: bold; }
-
-        /* Sidebar Controls */
-        aside {
-            background: var(--glass-bg);
-            border-right: 1px solid var(--glass-border);
-            padding: 2vh 1.5vw;
-            display: flex;
-            flex-direction: column;
-            gap: 2vh;
-            overflow-y: auto;
-            backdrop-filter: blur(10px);
-        }
-
-        .control-group { margin-bottom: 1vh; }
-        .control-group h3 {
-            font-size: 1.8vh;
-            color: var(--neon-yellow);
-            margin-bottom: 1.5vh;
-            cursor: pointer;
-            border-bottom: 1px solid var(--glass-border);
-            padding-bottom: 1vh;
-        }
-
-        .slider-container { margin-bottom: 2vh; }
-        .slider-header {
-            display: flex;
-            justify-content: space-between;
-            font-size: 1.5vh;
-            margin-bottom: 1vh;
-        }
-        
-        input[type=range] {
-            width: 100%;
-            cursor: pointer;
-        }
-        
-        select {
-            font-size: 1.5vh;
-        }
-
-        /* Main Display */
-        main {
-            display: grid;
-            grid-template-rows: 1fr 1fr;
-            padding: 2vh;
-            gap: 2vh;
-            height: 100%;
-            min-height: 0;
-        }
-
-        .canvas-wrapper {
-            position: relative;
-            background: #000;
-            border: 1px solid var(--glass-border);
-            border-radius: 0.8vh;
-            overflow: hidden;
-            min-height: 0;
-        }
-
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
-
-        .canvas-label {
-            position: absolute;
-            top: 1.5vh;
-            left: 1vw;
-            font-size: 1.5vh;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.1vw;
-        }
-    </style>
 </head>
 <body>
 
@@ -135,132 +15,41 @@
         <div class="hud-item">V_rest: <span id="hud-vrest">-85mV</span></div>
     </header>
 
-    <aside>
-        <div class="control-group">
-            <h3>Visualização</h3>
-            <div class="slider-container">
-                <label style="font-size: 0.85rem; display: flex; gap: 10px;">
-                    <input type="checkbox" id="ghost-toggle" checked> Onda Fantasma
-                </label>
-            </div>
-            <div class="slider-container">
-                <select id="view-mode" style="width: 100%; background: #000; color: #fff; padding: 5px; border: 1px solid var(--glass-border);">
-                    <option value="continuous">Varredura Contínua</option>
-                    <option value="single">Gatilho Único</option>
-                    <option value="paged">Paginação Longa</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="control-group">
-            <h3>Eletrolitos</h3>
-            <div class="slider-container">
-                <div class="slider-header">
-                    <span>Potássio [K+]_o</span>
-                    <span id="val-k">4.0 mEq/L</span>
-                </div>
-                <input type="range" id="sl-k" min="2.0" max="8.0" step="0.1" value="4.0">
-            </div>
-            <div class="slider-container">
-                <div class="slider-header">
-                    <span>Cálcio [Ca2+]_o</span>
-                    <span id="val-ca">2.0 mmol/L</span>
-                </div>
-                <input type="range" id="sl-ca" min="1.0" max="3.0" step="0.1" value="2.0">
-            </div>
-        </div>
-
-        <div class="control-group">
-            <h3>Fármacos</h3>
-            <div class="slider-container">
-                <div class="slider-header">
-                    <span>Bloqueio Na+ (Lidocaína)</span>
-                    <span id="val-lido">0%</span>
-                </div>
-                <input type="range" id="sl-lido" min="0" max="100" value="0">
-            </div>
-        </div>
+    <aside id="controls-sidebar">
+        <!-- Generado via JS (src/ui/sidebar.ts) -->
     </aside>
 
     <main>
         <div class="canvas-wrapper">
-            <div class="canvas-label">Potencial de Ação Celular (SA + AV + Vent)</div>
+            <div class="canvas-label">Potencial de Ação Celular</div>
             <canvas id="canvas-pa"></canvas>
         </div>
         <div class="canvas-wrapper">
-            <div class="canvas-label">Eletrocardiograma (ECG)</div>
+            <div class="canvas-label">DII (ECG)</div>
             <canvas id="canvas-ecg"></canvas>
+        </div>
+        <div class="canvas-wrapper">
+            <div class="canvas-label">
+                <select id="sel-ch3">
+                    <option value="corrente_na">Corrente I_Na</option>
+                    <option value="corrente_ca">Corrente I_CaL</option>
+                    <option value="corrente_k">Corrente I_K</option>
+                </select>
+            </div>
+            <canvas id="canvas-ch3"></canvas>
+        </div>
+        <div class="canvas-wrapper">
+            <div class="canvas-label">
+                <select id="sel-ch4">
+                    <option value="ca_int">Cálcio Intracelular [Ca2+]i</option>
+                    <option value="na_int">Sódio Intracelular [Na+]i</option>
+                    <option value="corrente_f">Corrente I_f (Funny)</option>
+                </select>
+            </div>
+            <canvas id="canvas-ch4"></canvas>
         </div>
     </main>
 
-    <script>
-        // Sincronização dos Sliders da Interface
-        const bindSlider = (id, valId, suffix) => {
-            const slider = document.getElementById(id);
-            const val = document.getElementById(valId);
-            slider.addEventListener('input', (e) => {
-                val.textContent = `${e.target.value}${suffix}`;
-            });
-            // Duplo clique para resetar (mecânica sugerida)
-            slider.addEventListener('dblclick', (e) => {
-                slider.value = slider.defaultValue;
-                val.textContent = `${slider.value}${suffix}`;
-            });
-        };
-
-        bindSlider('sl-k', 'val-k', ' mEq/L');
-        bindSlider('sl-ca', 'val-ca', ' mmol/L');
-        bindSlider('sl-lido', 'val-lido', '%');
-
-        // Configuração do Canvas Mockup
-        const canvasPA = document.getElementById('canvas-pa');
-        const ctxPA = canvasPA.getContext('2d');
-        const canvasECG = document.getElementById('canvas-ecg');
-        const ctxECG = canvasECG.getContext('2d');
-
-        // Ajuste para alta resolução
-        const resizeCanvas = (canvas) => {
-            const parent = canvas.parentElement;
-            canvas.width = parent.clientWidth * 2; // Para retinas
-            canvas.height = parent.clientHeight * 2;
-        };
-
-        window.addEventListener('resize', () => {
-            resizeCanvas(canvasPA);
-            resizeCanvas(canvasECG);
-        });
-
-        // Loop de simulação visual (apenas estética para teste de conceito)
-        let x = 0;
-        const speed = 4;
-        
-        function drawMockup() {
-            if(canvasPA.width === 0) {
-                resizeCanvas(canvasPA);
-                resizeCanvas(canvasECG);
-            }
-
-            // Barra de apagamento (Varredura Contínua)
-            ctxPA.fillStyle = '#000';
-            ctxPA.fillRect(x, 0, speed * 5, canvasPA.height);
-            ctxECG.fillStyle = '#000';
-            ctxECG.fillRect(x, 0, speed * 5, canvasECG.height);
-
-            // Simulação de linha reta do miócito (Apenas visual, sem matemática)
-            ctxPA.fillStyle = '#2ecc71';
-            ctxPA.fillRect(x, canvasPA.height - 50, speed, 2);
-
-            ctxECG.fillStyle = '#00ffff';
-            ctxECG.fillRect(x, canvasECG.height / 2, speed, 2);
-
-            x += speed;
-            if(x > canvasPA.width) x = 0;
-
-            requestAnimationFrame(drawMockup);
-        }
-
-        drawMockup();
-    </script>
+    <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
-
