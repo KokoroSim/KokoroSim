@@ -17,45 +17,31 @@ export function initCanvas() {
     window.addEventListener('resize', resizeCanvases);
 
     let x = 0;
-    let t = 0;
     const speedX = 2; // Slower so wave is shorter visually
     const speedT = 4;
     const beatPeriod = 300; // Shorter beat period so more waves fit
     let lastBeatCount = 0;
+
+    let dataBuffer: any[] = [];
     
-    function getSignal(time: number) {
-        const localT = time % beatPeriod;
-        
-        // Mock SA
-        let sa = -60 + (localT / beatPeriod) * 20; // phase 4
-        if (localT > 250) sa = 10 - ((localT - 250) / 50) * 70; // phase 3
-        else if (localT > 230) sa = -40 + ((localT - 230) / 20) * 50; // phase 0
-        
-        // Mock AV (delayed)
-        let av = -60;
-        const avT = (localT + 20) % beatPeriod; // 20 units behind
-        if (avT > 250) av = 10 - ((avT - 250) / 50) * 70;
-        else if (avT > 240) av = -60 + ((avT - 240) / 10) * 70;
-
-        // Mock Vent (delayed more)
-        let vent = -80;
-        const ventT = (localT + 60) % beatPeriod; // 60 units behind SA
-        if (ventT > 250) vent = -80;
-        else if (ventT > 180) vent = 0 - ((ventT - 180) / 70) * 80;
-        else if (ventT > 50) vent = 20 - ((ventT - 50) / 130) * 20;
-        else if (ventT > 40) vent = -80 + ((ventT - 40) / 10) * 100;
-
-        // Mock ECG
-        let ecg = 0;
-        if (localT > 220 && localT < 240) ecg = Math.sin((localT - 220)/20 * Math.PI) * 10; // P
-        else if (ventT > 40 && ventT < 50) ecg = Math.sin((ventT - 40)/10 * Math.PI) * 40; // R
-        else if (ventT > 160 && ventT < 200) ecg = Math.sin((ventT - 160)/40 * Math.PI) * 15; // T
-
-        return { sa, av, vent, ecg };
-    }
+    // Injetado pelo main.ts
+    (window as any).pushData = function(batch: any[]) {
+        dataBuffer.push(...batch);
+    };
     
     function drawMockup() {
         if (canvases[0].width === 0) resizeCanvases();
+
+        // Só desenha se houver dados do Worker no buffer
+        if (dataBuffer.length < speedX) {
+            requestAnimationFrame(drawMockup);
+            return;
+        }
+
+        // Puxa os próximos "speedX" pontos do buffer
+        const sig = dataBuffer[speedX - 1]; // pega o último do lote
+        const t = sig.t;
+        dataBuffer.splice(0, speedX); // remove do buffer
 
         const viewMode = (document.getElementById('view-mode') as HTMLSelectElement)?.value || 'continuous';
         const currentBeatCount = Math.floor(t / beatPeriod);
@@ -88,8 +74,6 @@ export function initCanvas() {
         }
 
         if (x < canvases[0].width) {
-            const sig = getSignal(t);
-            
             // Checkboxes
             const showSA = (document.getElementById('show-sa') as HTMLInputElement)?.checked;
             const showAV = (document.getElementById('show-av') as HTMLInputElement)?.checked;
@@ -126,10 +110,15 @@ export function initCanvas() {
         }
 
         if (x >= canvases[0].width && viewMode !== 'single') x = 0;
-        t += speedT;
 
         requestAnimationFrame(drawMockup);
     }
 
     drawMockup();
+}
+
+export function pushData(batch: any[]) {
+    if ((window as any).pushData) {
+        (window as any).pushData(batch);
+    }
 }

@@ -58,13 +58,46 @@ function startEngine() {
             // Para não enviar todos os 320 passos (muita memória/CPU no PostMessage),
             // fazemos um "downsampling" salvando os dados a cada 1ms (a cada 20 passos).
             if (i % 20 === 0) {
+                const beatPeriod = 300;
+                const localT = time % beatPeriod;
+                const kFactor = (params['sl-k'] || 5.4) / 5.4;
+                
+                // SA Mock com influência do K+
+                let sa = -60 + (localT / beatPeriod) * 20; 
+                if (localT > 250) sa = 10 - ((localT - 250) / 50) * 70;
+                else if (localT > 230) sa = -40 + ((localT - 230) / 20) * 50;
+                sa *= kFactor;
+
+                // AV Mock
+                let av = -60;
+                const avT = (localT + 20) % beatPeriod;
+                if (avT > 250) av = 10 - ((avT - 250) / 50) * 70;
+                else if (avT > 240) av = -60 + ((avT - 240) / 10) * 70;
+
+                // Vent Mock (Potássio alto sobe o potencial de repouso)
+                let vent = -80 * (1 / kFactor);
+                const ventT = (localT + 60) % beatPeriod;
+                if (ventT > 250) vent = -80 * (1 / kFactor);
+                else if (ventT > 180) vent = 0 - ((ventT - 180) / 70) * 80;
+                else if (ventT > 50) vent = 20 - ((ventT - 50) / 130) * 20;
+                else if (ventT > 40) vent = (-80 * (1 / kFactor)) + ((ventT - 40) / 10) * 100;
+
+                // ECG Mock (Potássio alto = Onda T apiculada, Potássio baixo = Onda T achatada/invertida)
+                let ecg = 0;
+                if (localT > 220 && localT < 240) ecg = Math.sin((localT - 220)/20 * Math.PI) * 10;
+                else if (ventT > 40 && ventT < 50) ecg = Math.sin((ventT - 40)/10 * Math.PI) * 40;
+                else if (ventT > 160 && ventT < 200) {
+                    const tWaveBase = Math.sin((ventT - 160)/40 * Math.PI) * 15;
+                    // kFactor > 1: T wave apiculada. kFactor < 1: achatada
+                    ecg = tWaveBase * (kFactor * kFactor);
+                }
+
                 batchData.push({
                     t: time,
-                    // Mock dependente do K_o (só pra provar comunicação)
-                    sa: -60 + Math.sin(time * 0.01) * (params['sl-k'] || 5.4) * 2, 
-                    av: -60,
-                    vent: -80,
-                    ecg: 0 
+                    sa, 
+                    av,
+                    vent,
+                    ecg 
                 });
             }
 

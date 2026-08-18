@@ -97,6 +97,14 @@ function bindControls() {
                 const max = item.max || 100;
                 const defaultVal = Number(item.value) || 0;
                 
+                // Envia para o Worker inicialmente
+                if ((window as any).worker) {
+                    (window as any).worker.postMessage({
+                        type: 'UPDATE_PARAMS',
+                        payload: { [item.id]: defaultVal }
+                    });
+                }
+
                 // Initialize color
                 updateSliderColor(slider, min, max, defaultVal);
 
@@ -104,6 +112,13 @@ function bindControls() {
                     const target = e.target as HTMLInputElement;
                     if(val) val.textContent = `${target.value}${item.unit}`;
                     updateSliderColor(target, min, max, defaultVal);
+                    
+                    if ((window as any).worker) {
+                        (window as any).worker.postMessage({
+                            type: 'UPDATE_PARAMS',
+                            payload: { [item.id]: parseFloat(target.value) }
+                        });
+                    }
                 });
 
                 // Reset button
@@ -113,6 +128,13 @@ function bindControls() {
                         slider.value = String(item.value);
                         if(val) val.textContent = `${item.value}${item.unit}`;
                         updateSliderColor(slider, min, max, defaultVal);
+                        
+                        if ((window as any).worker) {
+                            (window as any).worker.postMessage({
+                                type: 'UPDATE_PARAMS',
+                                payload: { [item.id]: defaultVal }
+                            });
+                        }
                     });
                 }
 
