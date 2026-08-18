@@ -1,5 +1,6 @@
 // Configuração do Integrador
-const DT = 0.05; // ms (passo de tempo para o Método de Euler)
+// Configuração do Integrador
+const DT = 0.01; // ms (passo de tempo menor para manter a estabilidade de Euler)
 let time = 0; // ms (tempo total de simulação)
 
 // Estado do Motor
@@ -8,6 +9,18 @@ let intervalId: number | null = null;
 
 // Parâmetros Basais e Farmacológicos (recebidos da interface)
 let params: Record<string, any> = {};
+
+import { initConsts, computeRates, computeVariables } from './severi';
+
+const CONSTANTS = new Float64Array(104);
+const RATES = new Float64Array(33);
+const STATES = new Float64Array(33);
+const ALGEBRAIC = new Float64Array(90);
+
+initConsts(CONSTANTS, RATES, STATES);
+
+// Variáveis de Estado - Fase 3 (Modelo Diferencial)
+// (v_sa e w_sa removidos, usando STATES array)
 
 // Escuta mensagens vindas do Main Thread (Interface)
 self.onmessage = (e: MessageEvent) => {
@@ -40,33 +53,43 @@ function startEngine() {
     intervalId = setInterval(() => {
         if (!isRunning) return;
 
-        // Vamos calcular 16ms de simulação por quadro.
-        // 16ms / 0.05ms = 320 passos de Euler.
-        const stepsPerFrame = 320; 
+        // 16ms / 0.01ms = 1600 passos de Euler para altíssima estabilidade numérica.
+        const stepsPerFrame = 1600; 
         const batchData = [];
 
         for (let i = 0; i < stepsPerFrame; i++) {
             
             // -------------------------------------------------------------
-            // AQUI ENTRARÃO AS EQUAÇÕES DIFERENCIAIS DOS 3 TECIDOS (Fase 3)
-            // V(t + dt) = V(t) + dV/dt * dt
+            // INTEGRAÇÃO NUMÉRICA (Fase 3) - Ocorre a cada micro-passo DT
             // -------------------------------------------------------------
             
-            // Por enquanto, criamos um MOCK matemático dependente dos 'params' 
-            // apenas para validar o tráfego do Web Worker para o Canvas.
+            // Atualizar Constantes do Usuário
+            if (params['sl-k'] !== undefined) CONSTANTS[16] = params['sl-k']; // Ko
+            if (params['sl-symp'] !== undefined) CONSTANTS[12] = params['sl-symp'] / 100; // Iso_1_uM
+            if (params['sl-parasymp'] !== undefined) CONSTANTS[11] = params['sl-parasymp'] / 100; // ACh
+
+            // Tempo em segundos para o modelo
+            const timeSec = time / 1000.0;
+            const dtSec = DT / 1000.0;
+
+            // Calcular Derivadas (Severi 2012)
+            computeRates(timeSec, CONSTANTS, RATES, STATES, ALGEBRAIC);
             
-            // Para não enviar todos os 320 passos (muita memória/CPU no PostMessage),
-            // fazemos um "downsampling" salvando os dados a cada 1ms (a cada 20 passos).
-            if (i % 20 === 0) {
+            // Aplicar passo de integração Euler para todas as 33 variáveis de estado
+            for (let j = 0; j < 33; j++) {
+                STATES[j] += RATES[j] * dtSec;
+            }
+
+            // O Potencial de Ação é o STATES[0] (V_ode)
+            const v_sa = STATES[0];
+
+            // "Downsampling": salvamos os dados a cada 1ms (100 passos) para UI
+            if (i % 100 === 0) {
                 const beatPeriod = 300;
                 const localT = time % beatPeriod;
-                const kFactor = (params['sl-k'] || 5.4) / 5.4;
-                
-                // SA Mock com influência do K+
-                let sa = -60 + (localT / beatPeriod) * 20; 
-                if (localT > 250) sa = 10 - ((localT - 250) / 50) * 70;
-                else if (localT > 230) sa = -40 + ((localT - 230) / 20) * 50;
-                sa *= kFactor;
+
+                // Variáveis para plotagem
+                let sa = v_sa;
 
                 // AV Mock
                 let av = -60;
@@ -75,6 +98,7 @@ function startEngine() {
                 else if (avT > 240) av = -60 + ((avT - 240) / 10) * 70;
 
                 // Vent Mock (Potássio alto sobe o potencial de repouso)
+                const kFactor = (params['sl-k'] || 5.4) / 5.4;
                 let vent = -80 * (1 / kFactor);
                 const ventT = (localT + 60) % beatPeriod;
                 if (ventT > 250) vent = -80 * (1 / kFactor);

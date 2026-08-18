@@ -20,6 +20,7 @@ export function initCanvas() {
     const speedX = 2; // Slower so wave is shorter visually
     const beatPeriod = 300; // Shorter beat period so more waves fit
     let lastBeatCount = 0;
+    let lastYs: Record<string, number> = {};
 
     let dataBuffer: any[] = [];
     
@@ -37,10 +38,10 @@ export function initCanvas() {
             return;
         }
 
-        // Puxa os próximos "speedX" pontos do buffer
-        const sig = dataBuffer[speedX - 1]; // pega o último do lote
+        // Puxa o ponto mais recente do buffer para garantir sincronia em TEMPO REAL
+        const sig = dataBuffer[dataBuffer.length - 1]; 
         const t = sig.t;
-        dataBuffer.splice(0, speedX); // remove do buffer
+        dataBuffer.length = 0; // Esvazia o buffer consumindo todos os pacotes pendentes
 
         const viewMode = (document.getElementById('view-mode') as HTMLSelectElement)?.value || 'continuous';
         const currentBeatCount = Math.floor(t / beatPeriod);
@@ -79,31 +80,59 @@ export function initCanvas() {
             const showVent = (document.getElementById('show-vent') as HTMLInputElement)?.checked;
             const ghost = (document.getElementById('ghost-toggle') as HTMLInputElement)?.checked;
 
-            const drawPoint = (ctx: CanvasRenderingContext2D, yVal: number, color: string) => {
+            const drawPoint = (ctx: CanvasRenderingContext2D, yVal: number, color: string, id: string) => {
                 const y = ctx.canvas.height - ((yVal + 100) / 150) * ctx.canvas.height;
-                ctx.fillStyle = color;
-                ctx.fillRect(x, y, speedX, 2);
+
+                if (x === 0) lastYs[id] = y;
+                const lastY = lastYs[id] !== undefined ? lastYs[id] : y;
+                
+                ctx.beginPath();
+                ctx.moveTo(x - speedX, lastY);
+                ctx.lineTo(x, y);
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 1.5; // Espessura ideal para monitor médico
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.stroke();
+
                 if (ghost) {
-                    ctx.fillStyle = `rgba(${color === '#e74c3c' ? '231,76,60' : color === '#f1c40f' ? '241,196,15' : '46,204,113'}, 0.2)`;
-                    ctx.fillRect(x - speedX * 20, y, speedX, 2);
+                    ctx.beginPath();
+                    ctx.moveTo(x - speedX * 20 - speedX, lastY);
+                    ctx.lineTo(x - speedX * 20, y);
+                    ctx.strokeStyle = `rgba(${color === '#e74c3c' ? '231,76,60' : color === '#f1c40f' ? '241,196,15' : '46,204,113'}, 0.2)`;
+                    ctx.lineWidth = 1.5;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    ctx.stroke();
                 }
+                lastYs[id] = y;
             };
 
             // Linha 1: PA (Sobrepostos)
-            if (showSA) drawPoint(contexts[0]!, sig.sa, '#e74c3c'); // Red
-            if (showAV) drawPoint(contexts[0]!, sig.av, '#f1c40f'); // Yellow
-            if (showVent) drawPoint(contexts[0]!, sig.vent, '#2ecc71'); // Green
+            if (showSA) drawPoint(contexts[0]!, sig.sa, '#e74c3c', 'sa'); // Red
+            if (showAV) drawPoint(contexts[0]!, sig.av, '#f1c40f', 'av'); // Yellow
+            if (showVent) drawPoint(contexts[0]!, sig.vent, '#2ecc71', 'vent'); // Green
 
             // Linha 2: ECG
             const ecgY = (canvases[1].height / 2) - sig.ecg;
-            contexts[1]!.fillStyle = '#00ffff';
-            contexts[1]!.fillRect(x, ecgY, speedX, 2);
+            if (x === 0) lastYs['ecg'] = ecgY;
+            const lastEcgY = lastYs['ecg'] !== undefined ? lastYs['ecg'] : ecgY;
+            
+            contexts[1]!.beginPath();
+            contexts[1]!.moveTo(x - speedX, lastEcgY);
+            contexts[1]!.lineTo(x, ecgY);
+            contexts[1]!.strokeStyle = '#00ffff';
+            contexts[1]!.lineWidth = 1.5;
+            contexts[1]!.lineCap = 'round';
+            contexts[1]!.lineJoin = 'round';
+            contexts[1]!.stroke();
+            lastYs['ecg'] = ecgY;
 
             // Linha 3 & 4 (Mock lines with arbitrary signals from vent phase)
             const sig3 = Math.sin(t * 0.05) * 20;
             const sig4 = Math.cos(t * 0.02) * 10;
-            drawPoint(contexts[2]!, sig3, '#9b59b6'); // Purple
-            drawPoint(contexts[3]!, sig4, '#e67e22'); // Orange
+            drawPoint(contexts[2]!, sig3, '#9b59b6', 'ch3'); // Purple
+            drawPoint(contexts[3]!, sig4, '#e67e22', 'ch4'); // Orange
 
             x += speedX;
         }
