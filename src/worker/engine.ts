@@ -10,14 +10,17 @@ let intervalId: number | null = null;
 // Parâmetros Basais e Farmacológicos (recebidos da interface)
 let params: Record<string, any> = {};
 
-import { initConsts, computeRates, computeVariables } from './severi';
+import { initConsts as initSeveri, computeRates as ratesSeveri, computeVariables as varsSeveri } from './severi';
+import { initConsts as initInada, computeRates as ratesInada, computeVariables as varsInada } from './inada';
+import { initConsts as initTussher, computeRates as ratesTussher, computeVariables as varsTussher } from './tentussher';
 
-const CONSTANTS = new Float64Array(104);
-const RATES = new Float64Array(33);
-const STATES = new Float64Array(33);
-const ALGEBRAIC = new Float64Array(90);
+const C_SEV = new Float64Array(104), R_SEV = new Float64Array(33), S_SEV = new Float64Array(33), A_SEV = new Float64Array(90);
+const C_INA = new Float64Array(58), R_INA = new Float64Array(29), S_INA = new Float64Array(29), A_INA = new Float64Array(81);
+const C_TUS = new Float64Array(46), R_TUS = new Float64Array(17), S_TUS = new Float64Array(17), A_TUS = new Float64Array(69);
 
-initConsts(CONSTANTS, RATES, STATES);
+initSeveri(C_SEV, R_SEV, S_SEV);
+initInada(C_INA, R_INA, S_INA);
+initTussher(C_TUS, R_TUS, S_TUS);
 
 // Variáveis de Estado - Fase 3 (Modelo Diferencial)
 // (v_sa e w_sa removidos, usando STATES array)
@@ -64,57 +67,48 @@ function startEngine() {
             // -------------------------------------------------------------
             
             // Atualizar Constantes do Usuário
-            if (params['sl-k'] !== undefined) CONSTANTS[16] = params['sl-k']; // Ko
-            if (params['sl-symp'] !== undefined) CONSTANTS[12] = params['sl-symp'] / 100; // Iso_1_uM
-            if (params['sl-parasymp'] !== undefined) CONSTANTS[11] = params['sl-parasymp'] / 100; // ACh
+            if (params['sl-k'] !== undefined) C_SEV[16] = params['sl-k']; // Ko
+            if (params['sl-symp'] !== undefined) C_SEV[12] = params['sl-symp'] / 100; // Iso_1_uM
+            if (params['sl-parasymp'] !== undefined) C_SEV[11] = params['sl-parasymp'] / 100; // ACh
 
-            // Tempo em segundos para o modelo
+            // Tempo em segundos para Severi e Inada
             const timeSec = time / 1000.0;
             const dtSec = DT / 1000.0;
 
-            // Calcular Derivadas (Severi 2012)
-            computeRates(timeSec, CONSTANTS, RATES, STATES, ALGEBRAIC);
-            
-            // Aplicar passo de integração Euler para todas as 33 variáveis de estado
-            for (let j = 0; j < 33; j++) {
-                STATES[j] += RATES[j] * dtSec;
+            // 1. Integrar Nó Sinoatrial (Severi 2012 - coelho)
+            ratesSeveri(timeSec, C_SEV, R_SEV, S_SEV, A_SEV);
+            for (let j = 0; j < 33; j++) S_SEV[j] += R_SEV[j] * dtSec;
+
+            // 2. Integrar Nó Atrioventricular (Inada - coelho)
+            ratesInada(timeSec, C_INA, R_INA, S_INA, A_INA);
+            for (let j = 0; j < 29; j++) S_INA[j] += R_INA[j] * dtSec;
+
+            // 3. Integrar Ventrículo (Ten Tusscher 2004 - humano) usa Milissegundos
+            // Sub-cycling de 10x (dt=0.001ms) para evitar explosão (NaN) no canal rápido de Na+
+            const subSteps = 10;
+            const subDT = DT / subSteps;
+            for (let k = 0; k < subSteps; k++) {
+                const subTime = time + k * subDT;
+                ratesTussher(subTime, C_TUS, R_TUS, S_TUS, A_TUS);
+                for (let j = 0; j < 17; j++) S_TUS[j] += R_TUS[j] * subDT;
             }
 
-            // O Potencial de Ação é o STATES[0] (V_ode)
-            const v_sa = STATES[0];
+            const v_sa = S_SEV[0];
+            const v_av = S_INA[0];
+            const v_vent = S_TUS[0];
 
             // "Downsampling": salvamos os dados a cada 1ms (100 passos) para UI
             if (i % 100 === 0) {
-                const beatPeriod = 300;
-                const localT = time % beatPeriod;
-
-                // Variáveis para plotagem
-                let sa = v_sa;
-
-                // AV Mock
-                let av = -60;
-                const avT = (localT + 20) % beatPeriod;
-                if (avT > 250) av = 10 - ((avT - 250) / 50) * 70;
-                else if (avT > 240) av = -60 + ((avT - 240) / 10) * 70;
-
-                // Vent Mock (Potássio alto sobe o potencial de repouso)
                 const kFactor = (params['sl-k'] || 5.4) / 5.4;
-                let vent = -80 * (1 / kFactor);
-                const ventT = (localT + 60) % beatPeriod;
-                if (ventT > 250) vent = -80 * (1 / kFactor);
-                else if (ventT > 180) vent = 0 - ((ventT - 180) / 70) * 80;
-                else if (ventT > 50) vent = 20 - ((ventT - 50) / 130) * 20;
-                else if (ventT > 40) vent = (-80 * (1 / kFactor)) + ((ventT - 40) / 10) * 100;
 
-                // ECG Mock (Potássio alto = Onda T apiculada, Potássio baixo = Onda T achatada/invertida)
+                let sa = v_sa;
+                let av = v_av;
+                let vent = v_vent;
+
+                // ECG Mock temporário baseado na repolarização (a ser aprimorado)
                 let ecg = 0;
-                if (localT > 220 && localT < 240) ecg = Math.sin((localT - 220)/20 * Math.PI) * 10;
-                else if (ventT > 40 && ventT < 50) ecg = Math.sin((ventT - 40)/10 * Math.PI) * 40;
-                else if (ventT > 160 && ventT < 200) {
-                    const tWaveBase = Math.sin((ventT - 160)/40 * Math.PI) * 15;
-                    // kFactor > 1: T wave apiculada. kFactor < 1: achatada
-                    ecg = tWaveBase * (kFactor * kFactor);
-                }
+                if (vent > 0) ecg = 10;
+                else if (vent > -60 && vent < 0) ecg = 20 * (kFactor * kFactor);
 
                 batchData.push({
                     t: time,
