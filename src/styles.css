@@ -1,0 +1,90 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 20px;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: radial-gradient(circle at 10% 20%, #0f172a 0%, #1e1b4b 90%);
+  color: #e2e8f0;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Base do Glassmorphism */
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  border-radius: 16px;
+}
+
+#overlay {
+  position: absolute;
+  padding: 40px;
+  text-align: center;
+  z-index: 100;
+}
+
+.btn-glass {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+.btn-glass:hover { background: rgba(16, 185, 129, 0.4); }
+
+#app {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  max-width: 1200px;
+}
+
+.panel { padding: 20px; }
+.controls { flex: 1; min-width: 280px; }
+.displays { flex: 3; display: flex; flex-direction: column; gap: 20px; }
+
+.control-group {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+label { font-size: 14px; font-weight: 500; color: #cbd5e1; }
+span { float: right; color: #34d399; }
+
+input[type=range] { width: 100%; cursor: pointer; }
+
+select {
+  width: 100%;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  outline: none;
+}
+
+/* OBRIGATÓRIO: Fundo opaco para opções de dropdown, 
+senão o texto fica invisível por causa do glassmorphism no Select */
+select option {
+  background-color: #0f172a; 
+  color: #e2e8f0;
+}
+
+canvas {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+h3, h4 { margin-top: 0; color: #f8fafc; }

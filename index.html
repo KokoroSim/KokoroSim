@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Eletrofisiologia Cardíaca</title>
+  <link rel="stylesheet" href="/src/styles.css" />
+</head>
+<body>
+  <div id="overlay" class="glass">
+    <h2>Simulador Cardíaco</h2>
+    <p>Clique para inicializar o motor de áudio e a simulação.</p>
+    <button id="btn-start" class="btn-glass">Iniciar Simulação</button>
+  </div>
+
+  <main id="app" style="display: none;">
+    <div class="panel glass controls">
+      <h3>Parâmetros</h3>
+      
+      <div class="control-group">
+        <label>Tipo de Célula</label>
+        <select id="sel-cell">
+          <option value="ventricular">Miócito Ventricular</option>
+          <option value="nodal">Nó Sinoatrial (Marcapasso)</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>Derivação ECG</label>
+        <select id="sel-lead">
+          <option value="DII">DII (Padrão)</option>
+          <option value="V1">V1 (Precordial)</option>
+          <option value="aVR">aVR (Invertida)</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>Adrenalina (Tônus Simpático) <span id="val-adr">0.0</span></label>
+        <input type="range" id="sl-adr" min="0" max="1" step="0.05" value="0">
+      </div>
+
+      <div class="control-group">
+        <label>Calemia ([K+] externo) <span id="val-k">4.0 mEq/L</span></label>
+        <input type="range" id="sl-k" min="2.0" max="8.0" step="0.1" value="4.0">
+      </div>
+
+      <div class="control-group">
+        <label>Bloqueio Canais Ca2+ <span id="val-ca">100%</span></label>
+        <input type="range" id="sl-ca" min="0.2" max="1.0" step="0.1" value="1.0">
+      </div>
+
+      <div class="control-group" style="margin-top: 15px;">
+        <button id="btn-reset" class="btn-glass" style="width: 100%; padding: 10px; cursor: pointer;">Resetar Parâmetros</button>
+      </div>
+    </div>
+
+    <div class="panel glass displays">
+      <div class="canvas-container">
+        <h4>Potencial de Ação (mV)</h4>
+        <canvas id="cvs-ap" width="800" height="250"></canvas>
+      </div>
+      <div class="canvas-container">
+        <h4>Eletrocardiograma (ECG)</h4>
+        <canvas id="cvs-ecg" width="800" height="250"></canvas>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
