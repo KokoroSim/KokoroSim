@@ -18,7 +18,6 @@ export function initCanvas() {
 
     let x = 0;
     const speedX = 2; // Slower so wave is shorter visually
-    const speedT = 4;
     const beatPeriod = 300; // Shorter beat period so more waves fit
     let lastBeatCount = 0;
 

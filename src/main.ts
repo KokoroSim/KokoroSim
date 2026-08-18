@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     worker.postMessage({ type: 'INIT', payload: {} });
 
     // Escutar os pacotes do Integrador de Euler
-    worker.onmessage = (e) => {
+    worker.onmessage = (e: MessageEvent) => {
         if (e.data.type === 'DATA_BATCH') {
             pushData(e.data.payload);
         }

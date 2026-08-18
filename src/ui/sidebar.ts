@@ -1,4 +1,4 @@
-import { controlsData, ControlItem } from '../config/controls';
+import { controlsData } from '../config/controls';
 
 export function initSidebar() {
     const sidebar = document.getElementById('controls-sidebar');

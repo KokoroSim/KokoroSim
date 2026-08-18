@@ -1,7 +1,7 @@
 export interface ControlItem {
     type: 'slider' | 'checkbox' | 'select';
     id: string;
-    label: string;
+    label?: string;
     min?: number;
     max?: number;
     value?: number | string;
