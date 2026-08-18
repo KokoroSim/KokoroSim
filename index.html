@@ -1,71 +1,266 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Eletrofisiologia Cardíaca</title>
-  <link rel="stylesheet" href="/src/styles.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eletrofisiologia - Cockpit</title>
+    <style>
+        :root {
+            --bg-dark: #0a0b10;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --neon-green: #2ecc71;
+            --neon-yellow: #f1c40f;
+            --neon-orange: #e67e22;
+            --neon-cyan: #00ffff;
+            --text-main: #ecf0f1;
+            --text-muted: #7f8c8d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            display: grid;
+            grid-template-columns: 25vw 1fr;
+            grid-template-rows: 8vh 1fr;
+            overflow: hidden;
+        }
+
+        /* Top HUD */
+        header {
+            grid-column: 1 / -1;
+            background: var(--glass-bg);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3vw;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 2.2vh;
+            backdrop-filter: blur(10px);
+        }
+
+        .hud-item span { color: var(--neon-cyan); font-weight: bold; }
+
+        /* Sidebar Controls */
+        aside {
+            background: var(--glass-bg);
+            border-right: 1px solid var(--glass-border);
+            padding: 2vh 1.5vw;
+            display: flex;
+            flex-direction: column;
+            gap: 2vh;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-group { margin-bottom: 1vh; }
+        .control-group h3 {
+            font-size: 1.8vh;
+            color: var(--neon-yellow);
+            margin-bottom: 1.5vh;
+            cursor: pointer;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 1vh;
+        }
+
+        .slider-container { margin-bottom: 2vh; }
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.5vh;
+            margin-bottom: 1vh;
+        }
+        
+        input[type=range] {
+            width: 100%;
+            cursor: pointer;
+        }
+        
+        select {
+            font-size: 1.5vh;
+        }
+
+        /* Main Display */
+        main {
+            display: grid;
+            grid-template-rows: 1fr 1fr;
+            padding: 2vh;
+            gap: 2vh;
+            height: 100%;
+            min-height: 0;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            background: #000;
+            border: 1px solid var(--glass-border);
+            border-radius: 0.8vh;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .canvas-label {
+            position: absolute;
+            top: 1.5vh;
+            left: 1vw;
+            font-size: 1.5vh;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1vw;
+        }
+    </style>
 </head>
 <body>
-  <div id="overlay" class="glass">
-    <h2>Simulador Cardíaco</h2>
-    <p>Clique para inicializar o motor de áudio e a simulação.</p>
-    <button id="btn-start" class="btn-glass">Iniciar Simulação</button>
-  </div>
 
-  <main id="app" style="display: none;">
-    <div class="panel glass controls">
-      <h3>Parâmetros</h3>
-      
-      <div class="control-group">
-        <label>Tipo de Célula</label>
-        <select id="sel-cell">
-          <option value="ventricular">Miócito Ventricular</option>
-          <option value="nodal">Nó Sinoatrial (Marcapasso)</option>
-        </select>
-      </div>
+    <header>
+        <div class="hud-item">BPM: <span id="hud-bpm">75</span></div>
+        <div class="hud-item">PR: <span id="hud-pr">160ms</span></div>
+        <div class="hud-item">QRS: <span id="hud-qrs">90ms</span></div>
+        <div class="hud-item">QT: <span id="hud-qt">400ms</span></div>
+        <div class="hud-item">V_rest: <span id="hud-vrest">-85mV</span></div>
+    </header>
 
-      <div class="control-group">
-        <label>Derivação ECG</label>
-        <select id="sel-lead">
-          <option value="DII">DII (Padrão)</option>
-          <option value="V1">V1 (Precordial)</option>
-          <option value="aVR">aVR (Invertida)</option>
-        </select>
-      </div>
+    <aside>
+        <div class="control-group">
+            <h3>Visualização</h3>
+            <div class="slider-container">
+                <label style="font-size: 0.85rem; display: flex; gap: 10px;">
+                    <input type="checkbox" id="ghost-toggle" checked> Onda Fantasma
+                </label>
+            </div>
+            <div class="slider-container">
+                <select id="view-mode" style="width: 100%; background: #000; color: #fff; padding: 5px; border: 1px solid var(--glass-border);">
+                    <option value="continuous">Varredura Contínua</option>
+                    <option value="single">Gatilho Único</option>
+                    <option value="paged">Paginação Longa</option>
+                </select>
+            </div>
+        </div>
 
-      <div class="control-group">
-        <label>Adrenalina (Tônus Simpático) <span id="val-adr">0.0</span></label>
-        <input type="range" id="sl-adr" min="0" max="1" step="0.05" value="0">
-      </div>
+        <div class="control-group">
+            <h3>Eletrolitos</h3>
+            <div class="slider-container">
+                <div class="slider-header">
+                    <span>Potássio [K+]_o</span>
+                    <span id="val-k">4.0 mEq/L</span>
+                </div>
+                <input type="range" id="sl-k" min="2.0" max="8.0" step="0.1" value="4.0">
+            </div>
+            <div class="slider-container">
+                <div class="slider-header">
+                    <span>Cálcio [Ca2+]_o</span>
+                    <span id="val-ca">2.0 mmol/L</span>
+                </div>
+                <input type="range" id="sl-ca" min="1.0" max="3.0" step="0.1" value="2.0">
+            </div>
+        </div>
 
-      <div class="control-group">
-        <label>Calemia ([K+] externo) <span id="val-k">4.0 mEq/L</span></label>
-        <input type="range" id="sl-k" min="2.0" max="8.0" step="0.1" value="4.0">
-      </div>
+        <div class="control-group">
+            <h3>Fármacos</h3>
+            <div class="slider-container">
+                <div class="slider-header">
+                    <span>Bloqueio Na+ (Lidocaína)</span>
+                    <span id="val-lido">0%</span>
+                </div>
+                <input type="range" id="sl-lido" min="0" max="100" value="0">
+            </div>
+        </div>
+    </aside>
 
-      <div class="control-group">
-        <label>Bloqueio Canais Ca2+ <span id="val-ca">100%</span></label>
-        <input type="range" id="sl-ca" min="0.2" max="1.0" step="0.1" value="1.0">
-      </div>
+    <main>
+        <div class="canvas-wrapper">
+            <div class="canvas-label">Potencial de Ação Celular (SA + AV + Vent)</div>
+            <canvas id="canvas-pa"></canvas>
+        </div>
+        <div class="canvas-wrapper">
+            <div class="canvas-label">Eletrocardiograma (ECG)</div>
+            <canvas id="canvas-ecg"></canvas>
+        </div>
+    </main>
 
-      <div class="control-group" style="margin-top: 15px;">
-        <button id="btn-reset" class="btn-glass" style="width: 100%; padding: 10px; cursor: pointer;">Resetar Parâmetros</button>
-      </div>
-    </div>
+    <script>
+        // Sincronização dos Sliders da Interface
+        const bindSlider = (id, valId, suffix) => {
+            const slider = document.getElementById(id);
+            const val = document.getElementById(valId);
+            slider.addEventListener('input', (e) => {
+                val.textContent = `${e.target.value}${suffix}`;
+            });
+            // Duplo clique para resetar (mecânica sugerida)
+            slider.addEventListener('dblclick', (e) => {
+                slider.value = slider.defaultValue;
+                val.textContent = `${slider.value}${suffix}`;
+            });
+        };
 
-    <div class="panel glass displays">
-      <div class="canvas-container">
-        <h4>Potencial de Ação (mV)</h4>
-        <canvas id="cvs-ap" width="800" height="250"></canvas>
-      </div>
-      <div class="canvas-container">
-        <h4>Eletrocardiograma (ECG)</h4>
-        <canvas id="cvs-ecg" width="800" height="250"></canvas>
-      </div>
-    </div>
-  </main>
+        bindSlider('sl-k', 'val-k', ' mEq/L');
+        bindSlider('sl-ca', 'val-ca', ' mmol/L');
+        bindSlider('sl-lido', 'val-lido', '%');
 
-  <script type="module" src="/src/main.ts"></script>
+        // Configuração do Canvas Mockup
+        const canvasPA = document.getElementById('canvas-pa');
+        const ctxPA = canvasPA.getContext('2d');
+        const canvasECG = document.getElementById('canvas-ecg');
+        const ctxECG = canvasECG.getContext('2d');
+
+        // Ajuste para alta resolução
+        const resizeCanvas = (canvas) => {
+            const parent = canvas.parentElement;
+            canvas.width = parent.clientWidth * 2; // Para retinas
+            canvas.height = parent.clientHeight * 2;
+        };
+
+        window.addEventListener('resize', () => {
+            resizeCanvas(canvasPA);
+            resizeCanvas(canvasECG);
+        });
+
+        // Loop de simulação visual (apenas estética para teste de conceito)
+        let x = 0;
+        const speed = 4;
+        
+        function drawMockup() {
+            if(canvasPA.width === 0) {
+                resizeCanvas(canvasPA);
+                resizeCanvas(canvasECG);
+            }
+
+            // Barra de apagamento (Varredura Contínua)
+            ctxPA.fillStyle = '#000';
+            ctxPA.fillRect(x, 0, speed * 5, canvasPA.height);
+            ctxECG.fillStyle = '#000';
+            ctxECG.fillRect(x, 0, speed * 5, canvasECG.height);
+
+            // Simulação de linha reta do miócito (Apenas visual, sem matemática)
+            ctxPA.fillStyle = '#2ecc71';
+            ctxPA.fillRect(x, canvasPA.height - 50, speed, 2);
+
+            ctxECG.fillStyle = '#00ffff';
+            ctxECG.fillRect(x, canvasECG.height / 2, speed, 2);
+
+            x += speed;
+            if(x > canvasPA.width) x = 0;
+
+            requestAnimationFrame(drawMockup);
+        }
+
+        drawMockup();
+    </script>
 </body>
 </html>
+
