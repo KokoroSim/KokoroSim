@@ -90,7 +90,7 @@ export function initCanvas() {
                 ctx.moveTo(x - speedX, lastY);
                 ctx.lineTo(x, y);
                 ctx.strokeStyle = color;
-                ctx.lineWidth = 1.5; // Espessura ideal para monitor médico
+                ctx.lineWidth = 1.0;
                 ctx.lineCap = 'round';
                 ctx.lineJoin = 'round';
                 ctx.stroke();
@@ -100,7 +100,7 @@ export function initCanvas() {
                     ctx.moveTo(x - speedX * 20 - speedX, lastY);
                     ctx.lineTo(x - speedX * 20, y);
                     ctx.strokeStyle = `rgba(${color === '#e74c3c' ? '231,76,60' : color === '#f1c40f' ? '241,196,15' : '46,204,113'}, 0.2)`;
-                    ctx.lineWidth = 1.5;
+                    ctx.lineWidth = 1.0;
                     ctx.lineCap = 'round';
                     ctx.lineJoin = 'round';
                     ctx.stroke();
@@ -122,7 +122,7 @@ export function initCanvas() {
             contexts[1]!.moveTo(x - speedX, lastEcgY);
             contexts[1]!.lineTo(x, ecgY);
             contexts[1]!.strokeStyle = '#00ffff';
-            contexts[1]!.lineWidth = 1.5;
+            contexts[1]!.lineWidth = 1.0;
             contexts[1]!.lineCap = 'round';
             contexts[1]!.lineJoin = 'round';
             contexts[1]!.stroke();
