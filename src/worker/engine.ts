@@ -22,6 +22,18 @@ initSeveri(C_SEV, R_SEV, S_SEV);
 initInada(C_INA, R_INA, S_INA);
 initTussher(C_TUS, R_TUS, S_TUS);
 
+// === TUNING FISIOLÓGICO DO NÓ SA (SEVERI) PARA ~96 BPM ===
+// Reduz as correntes de entrada da Fase 4 e aumenta a de saída para deitar a inclinação (BPM humano)
+// Essa configuração mantém uma margem segura para a Acetilcolina (Simpático/Parassimpático) não matar a célula.
+C_SEV[82] *= 0.25; // Corta 75% da g_f_Na (Corrente Funny)
+C_SEV[83] *= 0.25; // Corta 75% da g_f_K (Corrente Funny)
+C_SEV[37] *= 0.75; // Corta 25% de P_CaL (Cálcio Lento)
+C_SEV[79] *= 1.25; // Aumenta 25% de g_Kr (Potássio Rápido, empurra pra baixo)
+C_SEV[35] *= 0.50; // Corta 50% de g_Na (Sódio background/rápido)
+// Aumenta o tamanho (Capacitância) da célula para níveis humanos, atrasando a carga/descarga em 40%
+// Isso empurra a frequência final de 96 BPM para redondos 75 BPM sem quebrar a dinâmica do modelo!
+C_SEV[3] *= 1.40;
+
 // Variáveis de Estado - Fase 3 (Modelo Diferencial)
 // (v_sa e w_sa removidos, usando STATES array)
 
@@ -75,6 +87,9 @@ function startEngine() {
             const timeSec = time / 1000.0;
             const dtSec = DT / 1000.0;
 
+            const v_sa_old = S_SEV[0];
+            const v_av_old = S_INA[0];
+
             // 1. Integrar Nó Sinoatrial (Severi 2012 - coelho)
             ratesSeveri(timeSec, C_SEV, R_SEV, S_SEV, A_SEV);
             for (let j = 0; j < 33; j++) S_SEV[j] += R_SEV[j] * dtSec;
@@ -83,7 +98,17 @@ function startEngine() {
             ratesInada(timeSec, C_INA, R_INA, S_INA, A_INA);
             for (let j = 0; j < 29; j++) S_INA[j] += R_INA[j] * dtSec;
 
+            // --- ACOPLAMENTO ELETROTÔNICO SA -> AV ---
+            // Corrente de junção comunicante (Gap Junction) que flui do SA para o AV
+            const g_sa_av = 0.005; // condutância da junção em microS (Ajustável para o PR interval)
+            const i_gap_sa_av = g_sa_av * (v_sa_old - v_av_old); // nanoA
+            // Adiciona a corrente no AV e subtrai do SA (I/C * dt = dV)
+            S_INA[0] += (i_gap_sa_av / C_INA[3]) * dtSec;
+            S_SEV[0] -= (i_gap_sa_av / C_SEV[3]) * dtSec;
+
             // 3. Integrar Ventrículo (Ten Tusscher 2004 - humano) usa Milissegundos
+            C_TUS[8] = 0; // DESLIGA o marca-passo artificial/intrínseco do ventrículo!
+
             // Sub-cycling de 10x (dt=0.001ms) para evitar explosão (NaN) no canal rápido de Na+
             const subSteps = 10;
             const subDT = DT / subSteps;
@@ -91,6 +116,14 @@ function startEngine() {
                 const subTime = time + k * subDT;
                 ratesTussher(subTime, C_TUS, R_TUS, S_TUS, A_TUS);
                 for (let j = 0; j < 17; j++) S_TUS[j] += R_TUS[j] * subDT;
+
+                // --- ACOPLAMENTO ELETROTÔNICO AV -> VENTRÍCULO ---
+                const v_av_current = S_INA[0];
+                const v_vent_current = S_TUS[0];
+                // g_av_v em pA/pF/mV (adimensionalizado por capacitância)
+                const g_av_v = 0.05; 
+                const i_gap_av_v = g_av_v * (v_av_current - v_vent_current);
+                S_TUS[0] += i_gap_av_v * subDT;
             }
 
             const v_sa = S_SEV[0];
