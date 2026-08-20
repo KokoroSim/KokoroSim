@@ -17,7 +17,7 @@ export function initCanvas() {
     window.addEventListener('resize', resizeCanvases);
 
     let x = 0;
-    const speedX = 4; // Faster drawing visually reduces the number of cycles on screen
+    const speedX = 1.5; // Comprime horizontalmente para caber ~3 ciclos na tela
     const beatPeriod = 300; // Shorter beat period so more waves fit
     let lastBeatCount = 0;
     let lastYs: Record<string, number> = {};

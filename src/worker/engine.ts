@@ -48,13 +48,20 @@ C_SEV[35] *= 0.50; // Corta 50% de g_Na (Sódio background/rápido)
 // Isso empurra a frequência final de 96 BPM para redondos 75 BPM sem quebrar a dinâmica do modelo!
 C_SEV[3] *= 1.40;
 
-// === TUNING FISIOLÓGICO DO NÓ AV (INADA) PARA EVITAR "ESCAPE" ===
-// O coelho tem o Nó AV disparando nativamente a mais de 130 BPM!
-// Mesmo desligando a corrente I_f, a corrente de fuga (Background) estava puxando
-// a voltagem do AV para o limiar, pois seu potencial de reversão de fábrica é -22.5mV!
-C_INA[4] = 0.0; // Desliga g_f (Corrente de Marca-passo) no AV Node
-C_INA[11] = -60.0; // Atraca a corrente de fuga em -60mV para forçar repouso plano!
-// C_INA[3] removido: escalar a capacitância alarga muito o formato do pulso (APD).
+// === TUNING FISIOLÓGICO DO NÓ AV (INADA) PARA FASE 4 LENTA ===
+// Nós reduzimos as correntes de marca-passo nativas (I_f e Fuga) a uma fração bem pequena.
+// Isso impede que o AV atinja o limiar sozinho antes de 800ms (não escapa do SA),
+// mas permite que o gráfico mostre a clássica rampa lenta ascendente da Fase 4.
+C_INA[4] *= 0.15; // Mantém apenas 15% da Corrente Funny original
+C_INA[10] *= 0.45; // Sweet-spot: 40% da Corrente de Fuga cria a rampa sem escapar
+// (C_INA[11] = -60 removido: a voltagem agora vai flutuar livre e suavemente)
+
+// === TUNING FISIOLÓGICO DO VENTRÍCULO (TEN TUSSCHER) PARA "BICO E PLATÔ" ===
+// Para exibir o clássico Spike-and-Dome (Bico e Platô), simulamos uma célula Epicárdica
+// que tem a Corrente de Potássio Transiente de Saída (I_to) muito mais forte, e 
+// aumentamos um pouco o Cálcio Lento para segurar a altura do platô.
+C_TUS[20] *= 4.0; // g_to (Potássio transiente) 4x mais forte (Gera o "Bico")
+C_TUS[18] *= 1.3; // g_CaL (Cálcio Lento) 30% mais forte (Sustenta o "Platô")
 
 // Variáveis de Estado - Fase 3 (Modelo Diferencial)
 // (v_sa e w_sa removidos, usando STATES array)
@@ -133,10 +140,6 @@ function startEngine() {
             // 2. Integrar Nó Atrioventricular (Inada - coelho)
             ratesInada(timeSec, C_INA, R_INA, S_INA, A_INA);
             for (let j = 0; j < 29; j++) S_INA[j] += R_INA[j] * dtSec;
-            
-            // PROTEÇÃO DO INTEGRATOR EULER (Voltage Clamp Diastólico)
-            // Se a voltagem cair abaixo de -65mV, o portão 'm' do sódio explode para infinito devido ao dt fixo.
-            if (S_INA[0] < -65.0) S_INA[0] = -65.0;
 
             if (stim_av > 0) {
                 // Injeta a corrente por 1ms para cruzar o limiar suavemente
