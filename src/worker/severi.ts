@@ -1,3 +1,4 @@
+// @ts-nocheck
 /*
    There are a total of 90 entries in the algebraic variable array.
    There are a total of 33 entries in each of the rate and state variable arrays.
