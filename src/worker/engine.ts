@@ -10,21 +10,13 @@ let intervalId: number | null = null;
 // Parâmetros Basais e Farmacológicos (recebidos da interface)
 let params: Record<string, any> = {};
 
-import { initConsts as initSeveri, computeRates as ratesSeveri, computeVariables as varsSeveri } from './severi';
-import { initConsts as initInada, computeRates as ratesInada, computeVariables as varsInada } from './inada';
-import { initConsts as initTussher, computeRates as ratesTussher, computeVariables as varsTussher } from './tentussher';
+import { initConsts as initSeveri, computeRates as ratesSeveri } from './severi';
+import { initConsts as initInada, computeRates as ratesInada } from './inada';
+import { initConsts as initTussher, computeRates as ratesTussher } from './tentussher';
 
 const C_SEV = new Float64Array(104), R_SEV = new Float64Array(33), S_SEV = new Float64Array(33), A_SEV = new Float64Array(90);
 const C_INA = new Float64Array(58), R_INA = new Float64Array(29), S_INA = new Float64Array(29), A_INA = new Float64Array(81);
 const C_TUS = new Float64Array(46), R_TUS = new Float64Array(17), S_TUS = new Float64Array(17), A_TUS = new Float64Array(69);
-
-// Buffers de Atraso Fisiológico (Delay Lines) para simular propagação espacial do sinal
-const delayBufferSA = new Float64Array(20000);
-delayBufferSA.fill(-60); // Repouso aproximado do SA
-let bufferIdxSA = 0;
-const delayBufferAV = new Float64Array(20000);
-delayBufferAV.fill(-60); // Repouso aproximado do AV
-let bufferIdxAV = 0;
 
 // Variáveis de controle do Sistema de Gatilhos (Pingers de Condução)
 let timerAV = -1; 
