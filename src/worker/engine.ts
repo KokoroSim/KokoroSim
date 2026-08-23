@@ -62,6 +62,13 @@ C_INA[10] *= 0.45; // Sweet-spot: 40% da Corrente de Fuga cria a rampa sem escap
 // Aqui definimos o valor oficial da célula Endocárdica:
 C_TUS[20] = 0.073; 
 
+// Salva o estado basal das constantes após o tuning para podermos aplicar 
+// modificadores farmacológicos e fisiológicos dinamicamente
+const C_SEV_BASE = new Float64Array(C_SEV);
+const C_ATR_BASE = new Float64Array(C_ATR);
+const C_INA_BASE = new Float64Array(C_INA);
+const C_TUS_BASE = new Float64Array(C_TUS);
+
 // Variáveis de Estado - Fase 3 (Modelo Diferencial)
 // (v_sa e w_sa removidos, usando STATES array)
 
@@ -100,16 +107,105 @@ function startEngine() {
         const stepsPerFrame = 1600; 
         const batchData = [];
 
+        // Extrai parâmetros do usuário 1x por frame para altíssima performance
+        const Ko = params['sl-k'] !== undefined ? params['sl-k'] : 5.4;
+        const Cao = params['sl-ca'] !== undefined ? params['sl-ca'] : 2.0;
+        const Nao = params['sl-na'] !== undefined ? params['sl-na'] : 140.0;
+        
+        const blockNa = 1.0 - ((params['sl-lido'] || 0) / 100.0);
+        const blockK = 1.0 - ((params['sl-amio'] || 0) / 100.0);
+        const blockCa = 1.0 - ((params['sl-vera'] || 0) / 100.0);
+        const blockNaK = 1.0 - ((params['sl-digo'] || 0) / 100.0);
+        
+        const symp = (params['sl-symp'] || 0) / 100.0;
+        const parasymp = (params['sl-parasymp'] || 0) / 100.0;
+        const iso = symp;
+        const ach = parasymp * 1e-3; // Max 1 uM ACh (dose-resposta fisiológica)
+
+        // 3. Sistema Nervoso Autônomo (SNA)
+        // Severi usa ACh e Iso para calcular várias constantes de gating e condutâncias.
+        // O original era binário para Iso, então interpolamos para ficar suave!
+        C_SEV[12] = iso; 
+        C_SEV[11] = ach; 
+
+        // Efeitos competitivos na constante 84
+        const effIso84 = iso * -0.25;
+        const effAch84 = ach > 0 ? (0.7 * ach) / (9e-5 + ach) : 0;
+        C_SEV[84] = effIso84 + effAch84; 
+
+        C_SEV[86] = 0.00165760 * (1.0 + 0.2 * iso);
+        C_SEV[89] = ach > 0 ? -1.0 - (9.898 * Math.pow(ach, 0.618)) / (Math.pow(ach, 0.618) + 0.00122423) : 0;
+        C_SEV[90] = iso * 7.5;
+        C_SEV[91] = 1.0 + 0.2 * iso;
+        C_SEV[93] = 1.0 + 0.23 * iso;
+        C_SEV[94] = (0.31 * ach) / (ach + 9e-5);
+        C_SEV[95] = iso * -8.0;
+        C_SEV[96] = 1.0 - 0.31 * iso;
+        C_SEV[102] = iso * -14.0;
+        C_SEV[103] = ach > 0 ? (3.59880 - 0.0256410) / (1.0 + 1.21550e-06 / Math.pow(ach, 1.69510)) + 0.0256410 : 0.0256410;
+
+        // Modificador conservador (10%) para os outros tecidos para evitar bloqueio AV por falha de I_CaL
+        const ansCaModifier = 1.0 + (symp * 0.1) - (parasymp * 0.1);
+
+        const isch = (params['sl-isch'] || 0) / 100.0;
+        const ischKo = Ko + (isch * 6.0);
+        const ischBlock = 1.0 - (isch * 0.5);
+
+        // Atualiza os potenciais de Nernst cacheados de Severi (SA) e Inada (AV)
+        // Severi tem E_K em C_SEV[87]. Inada tem E_K em C_INA[50/52] e E_Na em C_INA[51]
+        // Se isquemia ativa, usa o Ko isquêmico
+        const effectiveKo = isch > 0 ? ischKo : Ko;
+        
+        // E_K Severi = C_SEV[85] * ln(Ko / Ki) onde Ki = C_SEV[15]
+        C_SEV[87] = C_SEV_BASE[85] * Math.log(effectiveKo / C_SEV_BASE[15]);
+        
+        // E_K Inada = C_INA[48] * ln(Ko / Ki) onde Ki = C_INA[7]
+        const inadaEK = C_INA_BASE[48] * Math.log(effectiveKo / C_INA_BASE[7]);
+        C_INA[50] = inadaEK;
+        C_INA[52] = inadaEK;
+
+        // E_Na Inada = C_INA[48] * ln(Nao / Nai) onde Nai = C_INA[13]
+        C_INA[51] = C_INA_BASE[48] * Math.log(Nao / C_INA_BASE[13]);
+
         for (let i = 0; i < stepsPerFrame; i++) {
             
             // -------------------------------------------------------------
-            // INTEGRAÇÃO NUMÉRICA (Fase 3) - Ocorre a cada micro-passo DT
+            // INTEGRAÇÃO NUMÉRICA E FARMACOLOGIA - A cada micro-passo DT
             // -------------------------------------------------------------
             
-            // Atualizar Constantes do Usuário
-            if (params['sl-k'] !== undefined) C_SEV[16] = params['sl-k']; // Ko
-            if (params['sl-symp'] !== undefined) C_SEV[12] = params['sl-symp'] / 100; // Iso_1_uM
-            if (params['sl-parasymp'] !== undefined) C_SEV[11] = params['sl-parasymp'] / 100; // ACh
+            // 1. Eletrólitos
+            C_SEV[16] = Ko; C_SEV[17] = Cao; C_SEV[14] = Nao;
+            C_ATR[12] = Ko; C_ATR[24] = Cao; C_ATR[10] = Nao;
+            C_INA[8] = Ko;  C_INA[27] = Cao; C_INA[28] = Nao;
+            C_TUS[10] = Ko; C_TUS[12] = Cao; C_TUS[11] = Nao;
+
+            // 2. Fármacos Antiarrítmicos
+            C_SEV[35] = C_SEV_BASE[35] * blockNa; C_ATR[9]  = C_ATR_BASE[9] * blockNa;
+            C_INA[29] = C_INA_BASE[29] * blockNa; C_TUS[16] = C_TUS_BASE[16] * blockNa;
+
+            C_SEV[79] = C_SEV_BASE[79] * blockK; C_SEV[86] = C_SEV_BASE[86] * blockK;
+            C_ATR[15] = C_ATR_BASE[15] * blockK; C_ATR[16] = C_ATR_BASE[16] * blockK;
+            C_INA[6]  = C_INA_BASE[6] * blockK; 
+            C_TUS[14] = C_TUS_BASE[14] * blockK; C_TUS[15] = C_TUS_BASE[15] * blockK;
+
+            C_SEV[37] = C_SEV_BASE[37] * blockCa; C_ATR[17] = C_ATR_BASE[17] * blockCa;
+            C_INA[31] = C_INA_BASE[31] * blockCa; C_TUS[18] = C_TUS_BASE[18] * blockCa;
+
+            C_SEV[21] = C_SEV_BASE[21] * blockNaK; C_ATR[20] = C_ATR_BASE[20] * blockNaK;
+            C_TUS[21] = C_TUS_BASE[21] * blockNaK;
+
+            // 3. Sistema Nervoso Autônomo
+            C_SEV[12] = symp; // SA tem receptor embutido
+            C_SEV[11] = parasymp; 
+
+            C_ATR[17] *= ansCaModifier; C_INA[31] *= ansCaModifier; C_TUS[18] *= ansCaModifier;
+
+            // 4. Isquemia (Efeito drástico: Hipercalemia Local + Hipóxia)
+            if (isch > 0) {
+                C_SEV[16] = ischKo; C_ATR[12] = ischKo; C_INA[8] = ischKo; C_TUS[10] = ischKo;
+                C_SEV[35] *= ischBlock; C_ATR[9] *= ischBlock; C_INA[29] *= ischBlock; C_TUS[16] *= ischBlock;
+                C_SEV[37] *= ischBlock; C_ATR[17] *= ischBlock; C_INA[31] *= ischBlock; C_TUS[18] *= ischBlock;
+            }
 
             // Tempo em segundos para Severi e Inada
             const timeSec = time / 1000.0;
