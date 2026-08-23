@@ -54,12 +54,13 @@ C_INA[4] *= 0.15; // Mantém apenas 15% da Corrente Funny original
 C_INA[10] *= 0.45; // Sweet-spot: 40% da Corrente de Fuga cria a rampa sem escapar
 // (C_INA[11] = -60 removido: a voltagem agora vai flutuar livre e suavemente)
 
-// === TUNING FISIOLÓGICO DO VENTRÍCULO (TEN TUSSCHER) PARA "BICO E PLATÔ" ===
-// Para exibir o clássico Spike-and-Dome (Bico e Platô), simulamos uma célula Epicárdica
-// que tem a Corrente de Potássio Transiente de Saída (I_to) muito mais forte, e 
-// aumentamos um pouco o Cálcio Lento para segurar a altura do platô.
-C_TUS[20] *= 4.0; // g_to (Potássio transiente) 4x mais forte (Gera o "Bico")
-C_TUS[18] *= 1.3; // g_CaL (Cálcio Lento) 30% mais forte (Sustenta o "Platô")
+// === TUNING FISIOLÓGICO DO VENTRÍCULO (TEN TUSSCHER 2004) ===
+// O artigo original define 3 tipos de células mudando apenas 2 condutâncias:
+// - Epicárdica: g_to = 0.294
+// - M-Cell: g_to = 0.294, g_Ks = 0.098
+// - Endocárdica: g_to = 0.073
+// Aqui definimos o valor oficial da célula Endocárdica:
+C_TUS[20] = 0.073; 
 
 // Variáveis de Estado - Fase 3 (Modelo Diferencial)
 // (v_sa e w_sa removidos, usando STATES array)
