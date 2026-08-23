@@ -142,8 +142,14 @@ export function initCanvas() {
         
         drawChannel(contexts[1]!, 'ecg', '#00ffff', 'ecg', true);
         
-        drawChannel(contexts[2]!, '', '#9b59b6', 'ch3', false, true, (t) => Math.sin(t * 0.05) * 20);
-        drawChannel(contexts[3]!, '', '#e67e22', 'ch4', false, true, (t) => Math.cos(t * 0.02) * 10);
+        const selCh3 = (document.getElementById('sel-ch3') as HTMLSelectElement)?.value || 'corrente_na';
+        const selCh4 = (document.getElementById('sel-ch4') as HTMLSelectElement)?.value || 'ca_int';
+        
+        // As correntes podem ter amplitudes bizarras, então a função drawChannel pode precisar normalizar.
+        // A princípio o drawChannel atual apenas subtrai de Y, então se as amplitudes forem gigantes, podem sair da tela.
+        // Como o original mockava com sin*20, a gente pode passar um mockFn vazio e usar a string real da chave!
+        drawChannel(contexts[2]!, selCh3, '#9b59b6', selCh3, false, false);
+        drawChannel(contexts[3]!, selCh4, '#e67e22', selCh4, false, false);
 
         // Atualiza a posição X global da caneta
         for (let i = 0; i < localBuffer.length; i++) {

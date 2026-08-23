@@ -420,13 +420,33 @@ function startEngine() {
                 ecg = pWave + qrs + tWave;
                 // --------------------------------------------------------------
 
+                // Extrai as correntes e íons para os monitores inferiores e os normaliza
+                // O canvas espera valores no range de -100 a +50 para desenhar bem na tela.
+                const corrente_na = A_TUS[53] / 3.0; // I_Na chega a -300 pA/pF (reduzir)
+                const corrente_ca = A_TUS[55] * 10.0; // I_CaL chega a -8 pA/pF (aumentar)
+                const corrente_k = (A_TUS[50] + A_TUS[51] + A_TUS[52] + A_TUS[57]) * 10.0;
+                
+                // Cálcio intracelular é pequenininho (~0.0001 a 0.001 mM). Escalando por 50000 -> 5 a 50
+                const ca_int = S_TUS[3] * 50000.0;
+                
+                // Sódio intracelular é bem estável em ~10mM. Tira o offset e escala as variações.
+                const na_int = (S_TUS[2] - 10.0) * 10.0;
+                
+                const corrente_f = A_SEV[51] * 20.0; // I_f é minúsculo no Nó SA
+
                 batchData.push({
                     t: time,
                     sa, 
                     atr,
                     av,
                     vent,
-                    ecg 
+                    ecg,
+                    corrente_na,
+                    corrente_ca,
+                    corrente_k,
+                    ca_int,
+                    na_int,
+                    corrente_f
                 });
             }
 
