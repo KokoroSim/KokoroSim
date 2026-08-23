@@ -91,6 +91,9 @@ let last_ecg_vent = -85;
 let v_atr_prev = -80;
 let t_atr = 0;
 let t_t_wave = 0;
+let peak_ina = 0;
+let base_na = 11.6;
+let base_ca = 0.0002;
 // ------------------------------------
 
 // Escuta mensagens vindas do Main Thread (Interface)
@@ -314,6 +317,11 @@ function startEngine() {
                 const subTime = time + k * subDT;
                 ratesTussher(subTime, C_TUS, R_TUS, S_TUS, A_TUS);
                 
+                // Rastreamento de pico (Anti-Aliasing). 
+                // I_Na é um pulso tão rápido (< 0.5ms) que o downsampling da UI (0.5ms) frequentemente o ignora.
+                // Rastreamos o maior pico (mais negativo) e enviamos para a UI.
+                if (A_TUS[53] < peak_ina) peak_ina = A_TUS[53];
+
                 let manual_stim = 0;
                 if (timerVent > -1.0 && timerVent <= 0) {
                     manual_stim = 50; 
@@ -420,19 +428,27 @@ function startEngine() {
                 ecg = pWave + qrs + tWave;
                 // --------------------------------------------------------------
 
-                // Extrai as correntes e íons para os monitores inferiores e os normaliza
-                // O canvas espera valores no range de -100 a +50 para desenhar bem na tela.
-                const corrente_na = A_TUS[53] / 3.0; // I_Na chega a -300 pA/pF (reduzir)
-                const corrente_ca = A_TUS[55] * 10.0; // I_CaL chega a -8 pA/pF (aumentar)
+                
+                // I_Na atinge picos gigantes de -400 pA/pF (Influxo negativo).
+                // Enviamos o valor bruto se não houver pico. Se houver pico, usamos ele.
+                const corrente_na = (peak_ina < -5.0) ? (peak_ina / 8.0) : (A_TUS[53] / 8.0); 
+                peak_ina = 0; // Reseta o rastreador de pico para o próximo frame
+                
+                // I_CaL chega a -8 pA/pF.
+                const corrente_ca = A_TUS[55] * 5.0; 
                 const corrente_k = (A_TUS[50] + A_TUS[51] + A_TUS[52] + A_TUS[57]) * 10.0;
                 
-                // Cálcio intracelular é pequenininho (~0.0001 a 0.001 mM). Escalando por 50000 -> 5 a 50
-                const ca_int = S_TUS[3] * 50000.0;
+                // Filtros de Linha de Base Dinâmica (Filtro Passa-Alta)
+                // Os íons intracelulares flutuam e fazem a linha "descendo até sumir" devido à bomba Na/K buscando novo equilíbrio.
+                // Isso ancora a linha no centro da tela permanentemente e mostra apenas a variação do batimento!
+                base_ca = base_ca * 0.99 + S_TUS[3] * 0.01;
+                const ca_int = (S_TUS[3] - base_ca) * 20000.0;
                 
-                // Sódio intracelular é bem estável em ~10mM. Tira o offset e escala as variações.
-                const na_int = (S_TUS[2] - 10.0) * 10.0;
+                base_na = base_na * 0.999 + S_TUS[2] * 0.001;
+                const na_int = (S_TUS[2] - base_na) * 5000.0;
                 
-                const corrente_f = A_SEV[51] * 20.0; // I_f é minúsculo no Nó SA
+                // I_f (Funny)
+                const corrente_f = A_SEV[51] * 2000.0;
 
                 batchData.push({
                     t: time,

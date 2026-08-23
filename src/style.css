@@ -17,14 +17,18 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+html, body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
 body {
     background-color: var(--bg-dark);
     color: var(--text-main);
-    height: 100vh;
     display: grid;
     grid-template-columns: 25vw 1fr;
     grid-template-rows: 8vh 1fr;
-    overflow: hidden;
 }
 
 /* Top HUD */
@@ -157,11 +161,13 @@ select {
 /* Main Display */
 main {
     display: grid;
-    grid-template-rows: 1fr 1fr 1fr 1fr;
+    /* Linhas divididas 25% pra cada um (usando minmax pra prevenir estourar a div pai) */
+    grid-template-rows: repeat(4, minmax(0, 1fr));
     padding: 2vh;
     gap: 2vh;
     height: 100%;
     min-height: 0;
+    overflow: hidden;
 }
 
 .canvas-wrapper {
