@@ -87,6 +87,10 @@ let v_rest = -85;
 let current_v_min = 0;
 let in_ap = false;
 let t_ap_start = 0;
+let last_ecg_vent = -85;
+let v_atr_prev = -80;
+let t_atr = 0;
+let t_t_wave = 0;
 // ------------------------------------
 
 // Escuta mensagens vindas do Main Thread (Interface)
@@ -328,6 +332,12 @@ function startEngine() {
             if (v_sa > -20 && v_sa_prev <= -20) {
                 t_sa = timeSec * 1000.0;
             }
+            if (v_atr > -20 && v_atr_prev <= -20) {
+                t_atr = timeSec * 1000.0;
+            }
+            if (v_vent < -10 && v_vent_prev >= -10) {
+                t_t_wave = timeSec * 1000.0; // Início da repolarização rápida (Fase 3)
+            }
             if (v_vent > -20 && v_vent_prev <= -20) {
                 t_vent_prev = t_vent;
                 t_vent = timeSec * 1000.0;
@@ -351,6 +361,7 @@ function startEngine() {
                 current_v_min = v_vent;
             }
             v_sa_prev = v_sa;
+            v_atr_prev = v_atr;
             v_vent_prev = v_vent;
             // ------------------------------------------------
 
@@ -363,13 +374,51 @@ function startEngine() {
                 let av = v_av;
                 let vent = v_vent;
 
-                // ECG Mock temporário baseado na repolarização (a ser aprimorado)
+                // --- Geração do Pseudo-ECG (Híbrido Espaço-Temporal) ---
                 let ecg = 0;
-                if (vent > 0) ecg = 10;
-                else if (vent > -60 && vent < 0) ecg = 20 * (kFactor * kFactor);
+                let t_ms = timeSec * 1000.0;
+
+                // 1. Onda P (Ativação Atrial). Ocorre quando o átrio despolariza.
+                // Usamos um envelope de 80ms para simular a propagação espacial.
+                let pWave = 0;
+                let timeSinceAtr = t_ms - t_atr;
+                if (timeSinceAtr > 0 && timeSinceAtr < 80) {
+                    pWave = Math.sin((timeSinceAtr / 80) * Math.PI) * 12.0; 
+                }
+
+                // 2. Complexo QRS (Ativação Ventricular)
+                let qrs = 0;
+                let timeSinceVent = t_ms - t_vent;
+                let qrsWidth = 90.0 / (blockNa || 1.0); // Alarga com bloqueadores de Sódio
+                if (timeSinceVent > 0 && timeSinceVent < qrsWidth) {
+                    // QRS bifásico (Onda R e S)
+                    let phase = timeSinceVent / qrsWidth; 
+                    if (phase < 0.4) {
+                        qrs = Math.sin((phase / 0.4) * Math.PI) * 60.0; // Onda R
+                    } else if (phase < 0.7) {
+                        qrs = -Math.sin(((phase - 0.4) / 0.3) * Math.PI) * 15.0; // Onda S
+                    }
+                }
+
+                // 3. Onda T (Repolarização Ventricular)
+                // Como uma única célula repolariza muito rápido gerando um pico (T apiculada falsa), 
+                // usamos um envelope de ~160ms disparado pela queda da voltagem (-10mV) para recriar o "morrinho".
+                // Fisiologia Pura:
+                // - Amiodarona (blockK diminui): Alarga a onda T
+                // - Hipercalemia (kFactor aumenta): Estreita e eleva a onda T (T apiculada verdadeira!)
+                let tWave = 0;
+                let timeSinceT = t_ms - t_t_wave;
                 
-                // Adicionar Onda P (Átrio despolarizando)
-                if (atr > 0) ecg += 5;
+                let tWaveWidth = 160.0 / (blockK * kFactor);
+                let tWaveHeight = 20.0 * (kFactor / Math.sqrt(blockK)); // Fator estético realista
+                
+                if (timeSinceT > 0 && timeSinceT < tWaveWidth) { 
+                    // Onda T = metade de um seno ("morrinho")
+                    tWave = Math.sin((timeSinceT / tWaveWidth) * Math.PI) * tWaveHeight;
+                }
+
+                ecg = pWave + qrs + tWave;
+                // --------------------------------------------------------------
 
                 batchData.push({
                     t: time,
