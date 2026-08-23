@@ -72,6 +72,23 @@ const C_TUS_BASE = new Float64Array(C_TUS);
 // Variáveis de Estado - Fase 3 (Modelo Diferencial)
 // (v_sa e w_sa removidos, usando STATES array)
 
+let lastBeatCount = -1;
+
+// --- Variáveis de Tracking do HUD ---
+let v_sa_prev = -80;
+let v_vent_prev = -85;
+let t_sa = 0;
+let t_vent = 0;
+let t_vent_prev = 0;
+let bpm = 75;
+let pr = 160;
+let qt = 400;
+let v_rest = -85;
+let current_v_min = 0;
+let in_ap = false;
+let t_ap_start = 0;
+// ------------------------------------
+
 // Escuta mensagens vindas do Main Thread (Interface)
 self.onmessage = (e: MessageEvent) => {
     const { type, payload } = e.data;
@@ -307,6 +324,36 @@ function startEngine() {
             const v_av = S_INA[0];
             const v_vent = S_TUS[0];
 
+            // --- HUD Metrics Calculation (alta resolução) ---
+            if (v_sa > -20 && v_sa_prev <= -20) {
+                t_sa = timeSec * 1000.0;
+            }
+            if (v_vent > -20 && v_vent_prev <= -20) {
+                t_vent_prev = t_vent;
+                t_vent = timeSec * 1000.0;
+                let rr = t_vent - t_vent_prev;
+                if (rr > 100 && rr < 5000) {
+                    bpm = (bpm * 0.7) + ((60000.0 / rr) * 0.3); // Média móvel suave
+                }
+                pr = t_vent - t_sa;
+                if (pr < 0 || pr > 600) pr = 0; // PR inválido se SA não bateu antes
+                
+                in_ap = true;
+                t_ap_start = timeSec * 1000.0;
+                v_rest = current_v_min;
+                current_v_min = v_vent;
+            }
+            if (in_ap && v_vent < -60) {
+                in_ap = false;
+                qt = (timeSec * 1000.0) - t_ap_start;
+            }
+            if (v_vent < current_v_min) {
+                current_v_min = v_vent;
+            }
+            v_sa_prev = v_sa;
+            v_vent_prev = v_vent;
+            // ------------------------------------------------
+
             // "Downsampling": salvamos os dados a cada 0.1ms (10 passos) para UI
             if (i % 10 === 0) {
                 const kFactor = (params['sl-k'] || 5.4) / 5.4;
@@ -338,9 +385,17 @@ function startEngine() {
         }
 
         // Despacha o pacote de amostras matemáticas prontas para a UI pintar
-        self.postMessage({
-            type: 'DATA_BATCH',
-            payload: batchData
+        self.postMessage({ 
+            type: 'DATA_BATCH', 
+            payload: batchData,
+            hud: {
+                bpm: Math.round(bpm),
+                pr: Math.round(pr),
+                qrs: Math.round(90 / (blockNa || 1)), // Simulação de alargamento de QRS se bloquear Sódio
+                qt: Math.round(qt),
+                vrest: Math.round(v_rest),
+                rr: Math.round(t_vent - t_vent_prev)
+            }
         });
 
     }, 16); 
