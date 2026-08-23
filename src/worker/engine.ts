@@ -30,6 +30,7 @@ let av_fired = false;
 
 initSeveri(C_SEV, R_SEV, S_SEV);
 initAtrium(C_ATR, R_ATR, S_ATR);
+C_ATR[8] = 0; // Desliga o marcapasso nativo do Músculo Atrial (obedece apenas ao SA)
 initInada(C_INA, R_INA, S_INA);
 initTussher(C_TUS, R_TUS, S_TUS);
 
@@ -209,8 +210,8 @@ function startEngine() {
             const v_av = S_INA[0];
             const v_vent = S_TUS[0];
 
-            // "Downsampling": salvamos os dados a cada 1ms (100 passos) para UI
-            if (i % 100 === 0) {
+            // "Downsampling": salvamos os dados a cada 0.1ms (10 passos) para UI
+            if (i % 10 === 0) {
                 const kFactor = (params['sl-k'] || 5.4) / 5.4;
 
                 let sa = v_sa;

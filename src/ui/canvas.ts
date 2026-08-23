@@ -32,34 +32,48 @@ export function initCanvas() {
     function drawMockup() {
         if (canvases[0].width === 0) resizeCanvases();
 
-        // Só desenha se houver dados do Worker no buffer
-        if (dataBuffer.length < speedX) {
+        if (dataBuffer.length === 0) {
             requestAnimationFrame(drawMockup);
             return;
         }
 
-        // Puxa o ponto mais recente do buffer para garantir sincronia em TEMPO REAL
-        const sig = dataBuffer[dataBuffer.length - 1]; 
-        const t = sig.t;
-        dataBuffer.length = 0; // Esvazia o buffer consumindo todos os pacotes pendentes
-
         const viewMode = (document.getElementById('view-mode') as HTMLSelectElement)?.value || 'continuous';
-        const currentBeatCount = Math.floor(t / beatPeriod);
-        let triggered = false;
+        const showSA = (document.getElementById('show-sa') as HTMLInputElement)?.checked;
+        const showAtr = (document.getElementById('show-atr') as HTMLInputElement)?.checked;
+        const showAV = (document.getElementById('show-av') as HTMLInputElement)?.checked;
+        const showVent = (document.getElementById('show-vent') as HTMLInputElement)?.checked;
+        const ghost = (document.getElementById('ghost-toggle') as HTMLInputElement)?.checked;
 
+        const localBuffer = [...dataBuffer];
+        dataBuffer.length = 0; 
+        
+        // speedX base: 1.5 pixels per frame (16ms)
+        // We now have packets every 0.1ms. So each packet represents 0.1/16 of a frame.
+        const speedXPerSample = speedX * (0.1 / 16.0);
+
+        // Pre-calculate Total X Advance to clear the screen ahead
+        let totalXAdvance = speedXPerSample * localBuffer.length;
+
+        // Process triggers for "single" mode
+        let triggered = false;
         if (viewMode === 'single') {
-            if (currentBeatCount > lastBeatCount) {
-                x = 0;
-                lastBeatCount = currentBeatCount;
-                triggered = true;
+            for (const sig of localBuffer) {
+                const currentBeatCount = Math.floor(sig.t / beatPeriod);
+                if (currentBeatCount > lastBeatCount) {
+                    lastBeatCount = currentBeatCount;
+                    triggered = true;
+                    x = 0; // Trigger reset
+                }
             }
         }
 
+        // Handle Background Wiping
         if (viewMode === 'continuous') {
             contexts.forEach((ctx, i) => {
                 ctx!.fillStyle = '#000';
-                ctx!.fillRect(x + speedX, 0, speedX * 10, canvases[i].height);
-                if (x === 0) ctx!.fillRect(0, 0, speedX * 10, canvases[i].height);
+                // Apaga um bloco à frente da caneta (largura dependente do avanço + margem)
+                ctx!.fillRect(x + 1, 0, totalXAdvance + 10, canvases[i].height);
+                if (x === 0) ctx!.fillRect(0, 0, totalXAdvance + 10, canvases[i].height);
             });
         } else if (viewMode === 'single' && triggered) {
             contexts.forEach((ctx, i) => {
@@ -73,73 +87,69 @@ export function initCanvas() {
             });
         }
 
-        if (x < canvases[0].width) {
-            // Checkboxes
-            const showSA = (document.getElementById('show-sa') as HTMLInputElement)?.checked;
-            const showAtr = (document.getElementById('show-atr') as HTMLInputElement)?.checked;
-            const showAV = (document.getElementById('show-av') as HTMLInputElement)?.checked;
-            const showVent = (document.getElementById('show-vent') as HTMLInputElement)?.checked;
-            const ghost = (document.getElementById('ghost-toggle') as HTMLInputElement)?.checked;
-
-            const drawPoint = (ctx: CanvasRenderingContext2D, yVal: number, color: string, id: string) => {
-                const y = ctx.canvas.height - ((yVal + 100) / 150) * ctx.canvas.height;
-
-                if (x === 0) lastYs[id] = y;
-                const lastY = lastYs[id] !== undefined ? lastYs[id] : y;
-                
-                ctx.beginPath();
-                ctx.moveTo(x - speedX, lastY);
-                ctx.lineTo(x, y);
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 1.0;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-                ctx.stroke();
-
-                if (ghost) {
-                    ctx.beginPath();
-                    ctx.moveTo(x - speedX * 20 - speedX, lastY);
-                    ctx.lineTo(x - speedX * 20, y);
-                    ctx.strokeStyle = `rgba(${color === '#e74c3c' ? '231,76,60' : color === '#f1c40f' ? '241,196,15' : '46,204,113'}, 0.2)`;
-                    ctx.lineWidth = 1.0;
-                    ctx.lineCap = 'round';
-                    ctx.lineJoin = 'round';
-                    ctx.stroke();
-                }
-                lastYs[id] = y;
-            };
-
-            // Linha 1: PA (Sobrepostos)
-            if (showSA) drawPoint(contexts[0]!, sig.sa, '#e74c3c', 'sa'); // Red
-            if (showAtr) drawPoint(contexts[0]!, sig.atr, '#3498db', 'atr'); // Blue
-            if (showAV) drawPoint(contexts[0]!, sig.av, '#f1c40f', 'av'); // Yellow
-            if (showVent) drawPoint(contexts[0]!, sig.vent, '#2ecc71', 'vent'); // Green
-
-            // Linha 2: ECG
-            const ecgY = (canvases[1].height / 2) - sig.ecg;
-            if (x === 0) lastYs['ecg'] = ecgY;
-            const lastEcgY = lastYs['ecg'] !== undefined ? lastYs['ecg'] : ecgY;
+        // Batch Draw Function
+        const drawChannel = (ctx: CanvasRenderingContext2D, dataKey: string, color: string, id: string, isEcg = false, isMock = false, mockFn?: (t:number)=>number) => {
+            ctx.beginPath();
+            let currentX = x;
             
-            contexts[1]!.beginPath();
-            contexts[1]!.moveTo(x - speedX, lastEcgY);
-            contexts[1]!.lineTo(x, ecgY);
-            contexts[1]!.strokeStyle = '#00ffff';
-            contexts[1]!.lineWidth = 1.0;
-            contexts[1]!.lineCap = 'round';
-            contexts[1]!.lineJoin = 'round';
-            contexts[1]!.stroke();
-            lastYs['ecg'] = ecgY;
+            // Pega o último Y salvo para começar a linha sem quebra
+            let startY = lastYs[id];
+            if (startY === undefined) {
+                const firstVal = isMock ? mockFn!(localBuffer[0].t) : (localBuffer[0] as any)[dataKey];
+                startY = isEcg ? (ctx.canvas.height / 2) - firstVal : ctx.canvas.height - ((firstVal + 100) / 150) * ctx.canvas.height;
+            }
+            
+            ctx.moveTo(currentX, startY);
 
-            // Linha 3 & 4 (Mock lines with arbitrary signals from vent phase)
-            const sig3 = Math.sin(t * 0.05) * 20;
-            const sig4 = Math.cos(t * 0.02) * 10;
-            drawPoint(contexts[2]!, sig3, '#9b59b6', 'ch3'); // Purple
-            drawPoint(contexts[3]!, sig4, '#e67e22', 'ch4'); // Orange
+            for (let i = 0; i < localBuffer.length; i++) {
+                const sig = localBuffer[i];
+                if (currentX >= ctx.canvas.width && viewMode !== 'single') {
+                    // Wrap-around
+                    ctx.stroke(); // Fecha o traço atual
+                    if (ghost) {
+                        ctx.beginPath();
+                        ctx.moveTo(currentX - 20, startY);
+                        // logica ghost ignorada no meio do wrap para simplicidade
+                    }
+                    ctx.beginPath();
+                    currentX = 0;
+                    
+                    const val = isMock ? mockFn!(sig.t) : (sig as any)[dataKey];
+                    const rawY = isEcg ? (ctx.canvas.height / 2) - val : ctx.canvas.height - ((val + 100) / 150) * ctx.canvas.height;
+                    ctx.moveTo(currentX, rawY);
+                }
 
-            x += speedX;
+                currentX += speedXPerSample;
+                const val = isMock ? mockFn!(sig.t) : (sig as any)[dataKey];
+                const y = isEcg ? (ctx.canvas.height / 2) - val : ctx.canvas.height - ((val + 100) / 150) * ctx.canvas.height;
+                
+                ctx.lineTo(currentX, y);
+                lastYs[id] = y;
+            }
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.5;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+        };
+
+        // Render channels
+        if (showSA) drawChannel(contexts[0]!, 'sa', '#e74c3c', 'sa');
+        if (showAtr) drawChannel(contexts[0]!, 'atr', '#3498db', 'atr');
+        if (showAV) drawChannel(contexts[0]!, 'av', '#f1c40f', 'av');
+        if (showVent) drawChannel(contexts[0]!, 'vent', '#2ecc71', 'vent');
+        
+        drawChannel(contexts[1]!, 'ecg', '#00ffff', 'ecg', true);
+        
+        drawChannel(contexts[2]!, '', '#9b59b6', 'ch3', false, true, (t) => Math.sin(t * 0.05) * 20);
+        drawChannel(contexts[3]!, '', '#e67e22', 'ch4', false, true, (t) => Math.cos(t * 0.02) * 10);
+
+        // Atualiza a posição X global da caneta
+        for (let i = 0; i < localBuffer.length; i++) {
+            x += speedXPerSample;
+            if (x >= canvases[0].width && viewMode !== 'single') x = 0;
         }
-
-        if (x >= canvases[0].width && viewMode !== 'single') x = 0;
 
         requestAnimationFrame(drawMockup);
     }
