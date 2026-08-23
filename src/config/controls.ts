@@ -29,6 +29,7 @@ export const controlsData: ControlGroup[] = [
                 { value: "paged", text: "Paginação Longa" }
             ]},
             { type: "checkbox", id: "show-sa", label: "Nó SA (Gatilho)", checked: true },
+            { type: "checkbox", id: "show-atr", label: "Átrio (Contração)", checked: true },
             { type: "checkbox", id: "show-av", label: "Nó AV (Condução)", checked: true },
             { type: "checkbox", id: "show-vent", label: "Ventrículo (Motor)", checked: true },
             { type: "checkbox", id: "ghost-toggle", label: "Onda Fantasma (Histórico)", checked: true }

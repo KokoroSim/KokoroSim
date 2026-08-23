@@ -76,6 +76,7 @@ export function initCanvas() {
         if (x < canvases[0].width) {
             // Checkboxes
             const showSA = (document.getElementById('show-sa') as HTMLInputElement)?.checked;
+            const showAtr = (document.getElementById('show-atr') as HTMLInputElement)?.checked;
             const showAV = (document.getElementById('show-av') as HTMLInputElement)?.checked;
             const showVent = (document.getElementById('show-vent') as HTMLInputElement)?.checked;
             const ghost = (document.getElementById('ghost-toggle') as HTMLInputElement)?.checked;
@@ -110,6 +111,7 @@ export function initCanvas() {
 
             // Linha 1: PA (Sobrepostos)
             if (showSA) drawPoint(contexts[0]!, sig.sa, '#e74c3c', 'sa'); // Red
+            if (showAtr) drawPoint(contexts[0]!, sig.atr, '#3498db', 'atr'); // Blue
             if (showAV) drawPoint(contexts[0]!, sig.av, '#f1c40f', 'av'); // Yellow
             if (showVent) drawPoint(contexts[0]!, sig.vent, '#2ecc71', 'vent'); // Green
 

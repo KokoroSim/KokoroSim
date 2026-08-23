@@ -11,20 +11,25 @@ let intervalId: number | null = null;
 let params: Record<string, any> = {};
 
 import { initConsts as initSeveri, computeRates as ratesSeveri } from './severi';
+import { initConsts as initAtrium, computeRates as ratesAtrium } from './courtemanche';
 import { initConsts as initInada, computeRates as ratesInada } from './inada';
 import { initConsts as initTussher, computeRates as ratesTussher } from './tentussher';
 
 const C_SEV = new Float64Array(104), R_SEV = new Float64Array(33), S_SEV = new Float64Array(33), A_SEV = new Float64Array(90);
+const C_ATR = new Float64Array(49), R_ATR = new Float64Array(21), S_ATR = new Float64Array(21), A_ATR = new Float64Array(75);
 const C_INA = new Float64Array(58), R_INA = new Float64Array(29), S_INA = new Float64Array(29), A_INA = new Float64Array(81);
 const C_TUS = new Float64Array(46), R_TUS = new Float64Array(17), S_TUS = new Float64Array(17), A_TUS = new Float64Array(69);
 
 // Variáveis de controle do Sistema de Gatilhos (Pingers de Condução)
+let timerAtrium = -1;
 let timerAV = -1; 
 let timerVent = -1;
 let sa_fired = false;
+let atrium_fired = false;
 let av_fired = false;
 
 initSeveri(C_SEV, R_SEV, S_SEV);
+initAtrium(C_ATR, R_ATR, S_ATR);
 initInada(C_INA, R_INA, S_INA);
 initTussher(C_TUS, R_TUS, S_TUS);
 
@@ -115,9 +120,37 @@ function startEngine() {
             // --- DETECTOR DE DISPARO DO SA ---
             if (S_SEV[0] > -20 && !sa_fired) {
                 sa_fired = true;
-                timerAV = 100; // Tempo de viagem até o Nó AV (Intervalo PR base)
+                timerAtrium = 15; // Tempo curto para espalhar para o Átrio
             } else if (S_SEV[0] < -40) {
                 sa_fired = false;
+            }
+
+            // --- INTEGRAR MÚSCULO ATRIAL (Courtemanche 1998 - humano) ---
+            let stim_atrium = 0;
+            if (timerAtrium > -1.0) {
+                timerAtrium -= DT;
+                if (timerAtrium > -1.0 && timerAtrium <= 0) {
+                    stim_atrium = 50; 
+                }
+            }
+
+            // Courtemanche tem canais rápidos de Sódio que explodem se o DT for muito grande.
+            // Precisamos dividir a integração em micro-passos (subSteps).
+            const subStepsAtr = 10;
+            const subDTAtr = DT / subStepsAtr;
+            for (let k = 0; k < subStepsAtr; k++) {
+                const subTimeAtr = time + k * subDTAtr;
+                ratesAtrium(subTimeAtr, C_ATR, R_ATR, S_ATR, A_ATR);
+                for (let j = 0; j < 21; j++) S_ATR[j] += R_ATR[j] * subDTAtr;
+                S_ATR[0] += stim_atrium * subDTAtr;
+            }
+
+            // --- DETECTOR DE DISPARO DO ÁTRIO ---
+            if (S_ATR[0] > -10 && !atrium_fired) {
+                atrium_fired = true;
+                timerAV = 80; // Tempo de viagem do Átrio até o Nó AV (Onda P -> Nó AV)
+            } else if (S_ATR[0] < -40) {
+                atrium_fired = false;
             }
 
             // --- ESTIMULADOR DO AV ---
@@ -172,6 +205,7 @@ function startEngine() {
             }
 
             const v_sa = S_SEV[0];
+            const v_atr = S_ATR[0];
             const v_av = S_INA[0];
             const v_vent = S_TUS[0];
 
@@ -180,6 +214,7 @@ function startEngine() {
                 const kFactor = (params['sl-k'] || 5.4) / 5.4;
 
                 let sa = v_sa;
+                let atr = v_atr;
                 let av = v_av;
                 let vent = v_vent;
 
@@ -187,10 +222,14 @@ function startEngine() {
                 let ecg = 0;
                 if (vent > 0) ecg = 10;
                 else if (vent > -60 && vent < 0) ecg = 20 * (kFactor * kFactor);
+                
+                // Adicionar Onda P (Átrio despolarizando)
+                if (atr > 0) ecg += 5;
 
                 batchData.push({
                     t: time,
                     sa, 
+                    atr,
                     av,
                     vent,
                     ecg 
