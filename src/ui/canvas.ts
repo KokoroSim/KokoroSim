@@ -25,8 +25,20 @@ export function initCanvas() {
     let dataBuffer: any[] = [];
     
     // Injetado pelo main.ts
+    // Injetado pelo main.ts
     (window as any).pushData = function(batch: any[]) {
         dataBuffer.push(...batch);
+    };
+
+    (window as any).clearData = function() {
+        dataBuffer = [];
+        currentX = 0;
+        contexts.forEach(ctx => {
+            if (!ctx) return;
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            ctx.beginPath();
+        });
     };
     
     function drawMockup() {
@@ -166,5 +178,11 @@ export function initCanvas() {
 export function pushData(batch: any[]) {
     if ((window as any).pushData) {
         (window as any).pushData(batch);
+    }
+}
+
+export function clearData() {
+    if ((window as any).clearData) {
+        (window as any).clearData();
     }
 }

@@ -28,58 +28,76 @@ let sa_fired = false;
 let atrium_fired = false;
 let av_fired = false;
 
-initSeveri(C_SEV, R_SEV, S_SEV);
-initAtrium(C_ATR, R_ATR, S_ATR);
-C_ATR[8] = 0; // Desliga o marcapasso nativo do Músculo Atrial (obedece apenas ao SA)
-initInada(C_INA, R_INA, S_INA);
-initTussher(C_TUS, R_TUS, S_TUS);
+function resetEngine() {
+    time = 0;
+    timerAtrium = -1;
+    timerAV = -1;
+    timerVent = -1;
+    sa_fired = false;
+    atrium_fired = false;
+    av_fired = false;
 
-// === TUNING FISIOLÓGICO DO NÓ SA (SEVERI) PARA ~96 BPM ===
-// Reduz as correntes de entrada da Fase 4 e aumenta a de saída para deitar a inclinação (BPM humano)
-// Essa configuração mantém uma margem segura para a Acetilcolina (Simpático/Parassimpático) não matar a célula.
-C_SEV[82] *= 0.25; // Corta 75% da g_f_Na (Corrente Funny)
-C_SEV[83] *= 0.25; // Corta 75% da g_f_K (Corrente Funny)
-C_SEV[37] *= 0.75; // Corta 25% de P_CaL (Cálcio Lento)
-C_SEV[79] *= 1.25; // Aumenta 25% de g_Kr (Potássio Rápido, empurra pra baixo)
-C_SEV[35] *= 0.50; // Corta 50% de g_Na (Sódio background/rápido)
-// Aumenta o tamanho (Capacitância) da célula para níveis humanos, atrasando a carga/descarga em 40%
-// Isso empurra a frequência final de 96 BPM para redondos 75 BPM sem quebrar a dinâmica do modelo!
-C_SEV[3] *= 1.40;
+    initSeveri(C_SEV, R_SEV, S_SEV);
+    initAtrium(C_ATR, R_ATR, S_ATR);
+    C_ATR[8] = 0; 
+    initInada(C_INA, R_INA, S_INA);
+    initTussher(C_TUS, R_TUS, S_TUS);
 
-// === TUNING FISIOLÓGICO DO NÓ AV (INADA) PARA FASE 4 LENTA ===
-// Nós reduzimos as correntes de marca-passo nativas (I_f e Fuga) a uma fração bem pequena.
-// Isso impede que o AV atinja o limiar sozinho antes de 800ms (não escapa do SA),
-// mas permite que o gráfico mostre a clássica rampa lenta ascendente da Fase 4.
-C_INA[4] *= 0.15; // Mantém apenas 15% da Corrente Funny original
-C_INA[10] *= 0.45; // Sweet-spot: 40% da Corrente de Fuga cria a rampa sem escapar
-// (C_INA[11] = -60 removido: a voltagem agora vai flutuar livre e suavemente)
+    C_SEV[82] *= 0.25; 
+    C_SEV[83] *= 0.25; 
+    C_SEV[37] *= 0.75; 
+    C_SEV[79] *= 1.25; 
+    C_SEV[35] *= 0.50; 
+    C_SEV[3] *= 1.40;
 
-// === TUNING FISIOLÓGICO DO VENTRÍCULO (TEN TUSSCHER 2004) ===
-// O artigo original define 3 tipos de células mudando apenas 2 condutâncias:
-// - Epicárdica: g_to = 0.294
-// - M-Cell: g_to = 0.294, g_Ks = 0.098
-// - Endocárdica: g_to = 0.073
-// Aqui definimos o valor oficial da célula Endocárdica:
-C_TUS[20] = 0.073; 
+    C_INA[4] *= 0.15; // Mantém apenas 15% da Corrente Funny original
+    C_INA[10] *= 0.45; // Sweet-spot: 40% da Corrente de Fuga cria a rampa sem escapar
 
-// Salva o estado basal das constantes após o tuning para podermos aplicar 
-// modificadores farmacológicos e fisiológicos dinamicamente
-const C_SEV_BASE = new Float64Array(C_SEV);
-const C_ATR_BASE = new Float64Array(C_ATR);
-const C_INA_BASE = new Float64Array(C_INA);
-const C_TUS_BASE = new Float64Array(C_TUS);
+    C_TUS[20] = 0.073;
 
-// Variáveis de Estado - Fase 3 (Modelo Diferencial)
-// (v_sa e w_sa removidos, usando STATES array)
+    // Reinicia o HUD e Tracking
+    v_sa_prev = -80;
+    v_vent_prev = -85;
+    t_sa = 0;
+    t_vent = 0;
+    t_vent_prev = -800; // Define o beat artificial anterior para dar exatamente 75BPM no primeiro cálculo
+    bpm = 75;
+    pr = 160;
+    qt = 400;
+    v_rest = -85;
+    current_v_min = 0;
+    in_ap = false;
+    t_ap_start = 0;
+    
+    last_ecg_vent = -85;
+    v_atr_prev = -80;
+    t_atr = 0;
+    t_t_wave = 0;
+    peak_ina = 0;
+    base_na = 11.6;
+    base_ca = 0.0002;
+    
+    // Atualiza os vetores BASE usados pelos fármacos
+    C_SEV_BASE.set(C_SEV);
+    C_ATR_BASE.set(C_ATR);
+    C_INA_BASE.set(C_INA);
+    C_TUS_BASE.set(C_TUS);
 
-let lastBeatCount = -1;
+    // Avisa a UI para limpar os gráficos
+    postMessage({ type: 'DATA_CLEAR' });
+}
 
-// --- Variáveis de Tracking do HUD ---
+// Inicializamos os arrays globais
+const C_SEV_BASE = new Float64Array(104);
+const C_ATR_BASE = new Float64Array(49);
+const C_INA_BASE = new Float64Array(58);
+const C_TUS_BASE = new Float64Array(46);
+
 let v_sa_prev = -80;
 let v_vent_prev = -85;
 let t_sa = 0;
 let t_vent = 0;
-let t_vent_prev = 0;
+let t_vent_prev = -800;
 let bpm = 75;
 let pr = 160;
 let qt = 400;
@@ -87,6 +105,7 @@ let v_rest = -85;
 let current_v_min = 0;
 let in_ap = false;
 let t_ap_start = 0;
+
 let last_ecg_vent = -85;
 let v_atr_prev = -80;
 let t_atr = 0;
@@ -94,6 +113,8 @@ let t_t_wave = 0;
 let peak_ina = 0;
 let base_na = 11.6;
 let base_ca = 0.0002;
+
+resetEngine(); // Chamada Inicial
 // ------------------------------------
 
 // Escuta mensagens vindas do Main Thread (Interface)
@@ -115,6 +136,8 @@ self.onmessage = (e: MessageEvent) => {
     } else if (type === 'RESUME') {
         isRunning = true;
         startEngine();
+    } else if (type === 'RESET') {
+        resetEngine();
     }
 };
 

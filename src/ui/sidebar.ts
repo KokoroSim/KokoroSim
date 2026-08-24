@@ -4,6 +4,26 @@ export function initSidebar() {
     const sidebar = document.getElementById('controls-sidebar');
     if (!sidebar) return;
 
+    // Global Reset Button
+    const resetAllBtn = document.createElement('button');
+    resetAllBtn.className = 'btn-reset-all';
+    resetAllBtn.textContent = '☢ RESETAR SIMULAÇÃO ☢';
+    resetAllBtn.style.cssText = 'background: #e74c3c; color: #fff; border: none; padding: 1.5vh; font-weight: bold; cursor: pointer; border-radius: 0.5vh; margin-bottom: 2vh; font-size: 2vh; transition: 0.2s; box-shadow: 0 0 10px rgba(231, 76, 60, 0.5); display: block; width: 100%;';
+    resetAllBtn.onmouseover = () => resetAllBtn.style.background = '#c0392b';
+    resetAllBtn.onmouseout = () => resetAllBtn.style.background = '#e74c3c';
+    resetAllBtn.addEventListener('click', () => {
+        // Clica virtualmente em todos os resets individuais
+        document.querySelectorAll('.btn-reset').forEach((btn: any) => btn.click());
+        
+        // Pede pro motor limpar a memória e resetar o relógio
+        if ((window as any).worker) {
+            (window as any).worker.postMessage({ type: 'RESET' });
+        }
+    });
+    
+    // Insere no topo
+    sidebar.insertBefore(resetAllBtn, sidebar.firstChild);
+
     controlsData.forEach((group, index) => {
         const groupDiv = document.createElement('div');
         groupDiv.className = 'control-group';

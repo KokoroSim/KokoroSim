@@ -28,10 +28,10 @@ export const controlsData: ControlGroup[] = [
                 { value: "single", text: "Gatilho Único" },
                 { value: "paged", text: "Paginação Longa" }
             ]},
-            { type: "checkbox", id: "show-sa", label: "Nó SA (Gatilho)", checked: true },
-            { type: "checkbox", id: "show-atr", label: "Átrio (Contração)", checked: true },
-            { type: "checkbox", id: "show-av", label: "Nó AV (Condução)", checked: true },
-            { type: "checkbox", id: "show-vent", label: "Ventrículo (Motor)", checked: true },
+            { type: "checkbox", id: "show-sa", label: "<span style='color:#e74c3c'>■</span> Nó SA (Gatilho)", checked: true },
+            { type: "checkbox", id: "show-atr", label: "<span style='color:#3498db'>■</span> Átrio (Contração)", checked: true },
+            { type: "checkbox", id: "show-av", label: "<span style='color:#f1c40f'>■</span> Nó AV (Condução)", checked: true },
+            { type: "checkbox", id: "show-vent", label: "<span style='color:#2ecc71'>■</span> Ventrículo (Motor)", checked: true },
             { type: "checkbox", id: "ghost-toggle", label: "Onda Fantasma (Histórico)", checked: true }
         ]
     },

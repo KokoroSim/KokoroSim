@@ -1,6 +1,6 @@
 import './style.css';
 import { initSidebar } from './ui/sidebar';
-import { initCanvas, pushData } from './ui/canvas';
+import { initCanvas, pushData, clearData } from './ui/canvas';
 import EngineWorker from './worker/engine?worker';
 
 export const worker = new EngineWorker();
@@ -37,6 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     prrrEl.innerText = ratio;
                 }
             }
+        } else if (e.data.type === 'DATA_CLEAR') {
+            clearData();
         }
     };
 });
