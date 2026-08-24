@@ -50,7 +50,19 @@
             <canvas id="canvas-ch4"></canvas>
         </div>
     </main>
+    <div id="about-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center;">
+        <div style="background: #111; color: #ddd; width: 80vw; max-width: 800px; max-height: 80vh; padding: 20px; border-radius: 10px; border: 1px solid #333; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px;">
+                <h2 style="margin: 0;">Sobre o SimCardio</h2>
+                <button id="close-about" style="background: #e74c3c; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">X</button>
+            </div>
+            <div id="about-content" style="overflow-y: auto; padding-right: 10px;">
+                Carregando...
+            </div>
+        </div>
+    </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

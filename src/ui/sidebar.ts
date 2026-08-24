@@ -4,11 +4,15 @@ export function initSidebar() {
     const sidebar = document.getElementById('controls-sidebar');
     if (!sidebar) return;
 
+    // Container para os botões do topo
+    const topButtonsDiv = document.createElement('div');
+    topButtonsDiv.style.cssText = 'display: flex; gap: 1vw; margin-bottom: 2vh;';
+
     // Global Reset Button
     const resetAllBtn = document.createElement('button');
     resetAllBtn.className = 'btn-reset-all';
     resetAllBtn.textContent = '☢ RESETAR SIMULAÇÃO ☢';
-    resetAllBtn.style.cssText = 'background: #e74c3c; color: #fff; border: none; padding: 1.5vh; font-weight: bold; cursor: pointer; border-radius: 0.5vh; margin-bottom: 2vh; font-size: 2vh; transition: 0.2s; box-shadow: 0 0 10px rgba(231, 76, 60, 0.5); display: block; width: 100%;';
+    resetAllBtn.style.cssText = 'flex: 2; background: #e74c3c; color: #fff; border: none; padding: 1.5vh; font-weight: bold; cursor: pointer; border-radius: 0.5vh; font-size: 1.8vh; transition: 0.2s; box-shadow: 0 0 10px rgba(231, 76, 60, 0.5); display: block;';
     resetAllBtn.onmouseover = () => resetAllBtn.style.background = '#c0392b';
     resetAllBtn.onmouseout = () => resetAllBtn.style.background = '#e74c3c';
     resetAllBtn.addEventListener('click', () => {
@@ -20,9 +24,44 @@ export function initSidebar() {
             (window as any).worker.postMessage({ type: 'RESET' });
         }
     });
+
+    // About Button
+    const aboutBtn = document.createElement('button');
+    aboutBtn.textContent = 'ℹ SOBRE';
+    aboutBtn.style.cssText = 'flex: 1; background: #3498db; color: #fff; border: none; padding: 1.5vh; font-weight: bold; cursor: pointer; border-radius: 0.5vh; font-size: 1.8vh; transition: 0.2s;';
+    aboutBtn.onmouseover = () => aboutBtn.style.background = '#2980b9';
+    aboutBtn.onmouseout = () => aboutBtn.style.background = '#3498db';
+    aboutBtn.addEventListener('click', async () => {
+        const modal = document.getElementById('about-modal');
+        const content = document.getElementById('about-content');
+        if (modal && content) {
+            modal.style.display = 'flex';
+            try {
+                const response = await fetch('./README.md');
+                if (!response.ok) throw new Error('Não foi possível carregar o README.');
+                const text = await response.text();
+                // Utiliza a lib marked injetada via CDN no index.html
+                content.innerHTML = (window as any).marked ? (window as any).marked.parse(text) : `<pre style="white-space: pre-wrap; font-family: monospace;">${text}</pre>`;
+            } catch (err) {
+                content.innerHTML = 'Erro ao carregar o conteúdo do Sobre.';
+            }
+        }
+    });
+    
+    // Configurar o botão de fechar do modal
+    const closeAboutBtn = document.getElementById('close-about');
+    if (closeAboutBtn) {
+        closeAboutBtn.addEventListener('click', () => {
+            const modal = document.getElementById('about-modal');
+            if (modal) modal.style.display = 'none';
+        });
+    }
+
+    topButtonsDiv.appendChild(resetAllBtn);
+    topButtonsDiv.appendChild(aboutBtn);
     
     // Insere no topo
-    sidebar.insertBefore(resetAllBtn, sidebar.firstChild);
+    sidebar.insertBefore(topButtonsDiv, sidebar.firstChild);
 
     controlsData.forEach((group, index) => {
         const groupDiv = document.createElement('div');
