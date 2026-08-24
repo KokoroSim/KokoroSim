@@ -39,9 +39,9 @@ export const controlsData: ControlGroup[] = [
         id: "group-ions",
         title: "1. Íons e Eletrólitos",
         items: [
-            { type: "slider", id: "sl-k", label: "Potássio [K+]_o", min: 1.5, max: 9.0, value: 5.4, step: 0.1, unit: " mEq/L", help: "O impacto recai sobre o Potencial de Equilíbrio de Nernst e afeta a força motriz de todas as correntes iônicas. Mínimo (1.5) é letal, máximo (9.0) causa parada em diástole." },
-            { type: "slider", id: "sl-ca", label: "Cálcio [Ca2+]_o", min: 0.5, max: 4.0, value: 2.0, step: 0.1, unit: " mmol/L", help: "Afeta a força motriz das correntes de cálcio. Hipocalcemia severa (0.5) até hipercalcemia grave (4.0)." },
-            { type: "slider", id: "sl-na", label: "Sódio [Na+]_o", min: 110, max: 160, value: 140, step: 1.0, unit: " mEq/L", help: "Afeta a força motriz das correntes de sódio. Hiponatremia grave (110) até hipernatremia (160)." }
+            { type: "slider", id: "sl-k", label: "Potássio [K+]_o", min: 2.0, max: 8.5, value: 5.4, step: 0.1, unit: " mEq/L", help: "Mínimo (2.0) causa hiperexcitabilidade, máximo (8.5) causa parada em diástole (todas as células param)." },
+            { type: "slider", id: "sl-ca", label: "Cálcio [Ca2+]_o", min: 1.0, max: 3.5, value: 2.0, step: 0.1, unit: " mmol/L", help: "Hipocalcemia (1.0) prolonga QT, hipercalcemia (3.5) encurta QT." },
+            { type: "slider", id: "sl-na", label: "Sódio [Na+]_o", min: 125, max: 155, value: 140, step: 1.0, unit: " mEq/L", help: "Reduzir o Sódio diminui a amplitude do Potencial de Ação. Mínimo ajustado (125) para evitar Bloqueio Sinoatrial isolado." }
         ]
     },
     {
