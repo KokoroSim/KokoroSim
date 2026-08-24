@@ -127,13 +127,14 @@ export function initCanvas() {
                     currentX = 0;
                     
                     const val = isMock ? mockFn!(sig.t) : (sig as any)[dataKey];
-                    const rawY = isEcg ? (ctx.canvas.height / 2) - val : ctx.canvas.height - ((val + 100) / 150) * ctx.canvas.height;
+                    // Range biológico seguro: de -130mV até +50mV (Tamanho de 180mV). Zero está em (130/180) = ~72% da altura.
+                    const rawY = isEcg ? (ctx.canvas.height / 2) - val : ctx.canvas.height - ((val + 130) / 180) * ctx.canvas.height;
                     ctx.moveTo(currentX, rawY);
                 }
 
                 currentX += speedXPerSample;
                 const val = isMock ? mockFn!(sig.t) : (sig as any)[dataKey];
-                const y = isEcg ? (ctx.canvas.height / 2) - val : ctx.canvas.height - ((val + 100) / 150) * ctx.canvas.height;
+                const y = isEcg ? (ctx.canvas.height / 2) - val : ctx.canvas.height - ((val + 130) / 180) * ctx.canvas.height;
                 
                 ctx.lineTo(currentX, y);
                 lastYs[id] = y;
