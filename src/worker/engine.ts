@@ -48,7 +48,7 @@ function resetEngine() {
     C_SEV[37] *= 0.75; 
     C_SEV[79] *= 1.25; 
     C_SEV[35] *= 0.50; 
-    C_SEV[3] *= 1.40;
+    C_SEV[3] *= 1.80;
 
     C_INA[4] *= 0.15; // Mantém apenas 15% da Corrente Funny original
     C_INA[10] *= 0.45; // Sweet-spot: 40% da Corrente de Fuga cria a rampa sem escapar
