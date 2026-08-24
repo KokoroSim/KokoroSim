@@ -25,3 +25,7 @@ A construção do simulador seguirá passos modulares focados em isolar a matem�
 *   **Fase 7: Áudio e UX Final**
     *   Sintetizar o *Bip* (Pico da Fase 0) e os sons B1/B2 (*Tum-Tá* nas Fases 2 e 3).
 
+*   **Fase 8: Módulo Eletromecânico e Hemodinâmico (Diagrama de Wiggers)**
+    *   Implementar modelo de Acoplamento Excitação-Contração (*Excitation-Contraction Coupling*) baseado em Niederer-Hunter-Smith, utilizando o transiente de Cálcio intracelular ($[Ca^{2+}]_i$) do modelo ten Tusscher para calcular a tensão ativa ($T_a$) dos miócitos ventriculares.
+    *   Modelar a mecânica da câmara ventricular através de Elastância Variável no Tempo (modelo *Suga-Sagawa*), convertendo a tensão ativa em Pressão Ventricular Esquerda (LVP).
+    *   Acoplar um modelo hidráulico base (*Windkessel* de 2 ou 3 elementos) para simular as válvulas cardíacas (mitral/aórtica) e calcular a Pressão Aórtica (AoP), gerando o clássico gráfico de pressão hemodinâmico.
