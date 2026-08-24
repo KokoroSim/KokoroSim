@@ -1,6 +1,7 @@
 import './style.css';
 import { initSidebar } from './ui/sidebar';
 import { initCanvas, pushData, clearData } from './ui/canvas';
+import { audioSystem } from './ui/audio';
 import EngineWorker from './worker/engine?worker';
 
 export const worker = new EngineWorker();
@@ -13,10 +14,40 @@ document.addEventListener('DOMContentLoaded', () => {
     // Iniciar o Worker com parâmetros iniciais vazios (ou pegando do DOM depois)
     worker.postMessage({ type: 'INIT', payload: {} });
 
+    // Audio binding
+    const cbAudio = document.getElementById('cb-audio') as HTMLInputElement;
+    if (cbAudio) {
+        cbAudio.addEventListener('change', async () => {
+            if (cbAudio.checked) {
+                await audioSystem.init();
+            }
+            audioSystem.toggle(cbAudio.checked);
+        });
+    }
+
+    let lastVentV = -80;
+
     // Escutar os pacotes do Integrador de Euler
     worker.onmessage = (e: MessageEvent) => {
         if (e.data.type === 'DATA_BATCH') {
-            pushData(e.data.payload);
+            const batch = e.data.payload;
+            pushData(batch);
+            
+            for (let i = 0; i < batch.length; i++) {
+                const ventV = batch[i][4]; // S_TUS[0] = índice 4
+                
+                // Detectar pico de despolarização (B1 e Bip)
+                if (lastVentV <= -30 && ventV > -30) {
+                    audioSystem.playB1();
+                    audioSystem.playBip(200); // 1000Hz (Bip clássico mais agudo)
+                } 
+                // Detectar fim da repolarização (B2)
+                else if (lastVentV >= -75 && ventV < -75) {
+                    audioSystem.playB2();
+                }
+                
+                lastVentV = ventV;
+            }
             
             if (e.data.hud) {
                 const h = e.data.hud;

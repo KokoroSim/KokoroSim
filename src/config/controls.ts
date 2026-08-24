@@ -21,13 +21,14 @@ export interface ControlGroup {
 export const controlsData: ControlGroup[] = [
     {
         id: "group-visual",
-        title: "0. Visualização",
+        title: "0. Visualização e Áudio",
         items: [
             { type: "select", id: "view-mode", options: [
                 { value: "continuous", text: "Varredura Contínua" },
                 { value: "single", text: "Gatilho Único" },
                 { value: "paged", text: "Paginação Longa" }
             ]},
+            { type: "checkbox", id: "cb-audio", label: "Som (Bip e B1/B2)", checked: false },
             { type: "checkbox", id: "show-sa", label: "<span style='color:#e74c3c'>■</span> Nó SA (Gatilho)", checked: true },
             { type: "checkbox", id: "show-atr", label: "<span style='color:#3498db'>■</span> Átrio (Contração)", checked: true },
             { type: "checkbox", id: "show-av", label: "<span style='color:#f1c40f'>■</span> Nó AV (Condução)", checked: true },
