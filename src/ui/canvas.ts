@@ -32,7 +32,7 @@ export function initCanvas() {
 
     (window as any).clearData = function() {
         dataBuffer = [];
-        currentX = 0;
+        x = 0;
         contexts.forEach(ctx => {
             if (!ctx) return;
             ctx.fillStyle = '#000';

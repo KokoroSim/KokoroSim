@@ -69,7 +69,7 @@ function resetEngine() {
     in_ap = false;
     t_ap_start = 0;
     
-    last_ecg_vent = -85;
+
     v_atr_prev = -80;
     t_atr = 0;
     t_t_wave = 0;
@@ -106,7 +106,7 @@ let current_v_min = 0;
 let in_ap = false;
 let t_ap_start = 0;
 
-let last_ecg_vent = -85;
+
 let v_atr_prev = -80;
 let t_atr = 0;
 let t_t_wave = 0;
