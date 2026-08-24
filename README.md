@@ -74,3 +74,10 @@ Os fármacos atuam como frações inibitórias na condutância de canais especí
 ---
 
 O SimCardio busca alinhar a responsividade visual de interfaces modernas ao rigor acadêmico da biologia sistêmica computacional, fornecendo uma base experimental contínua para estudos in silico das dinâmicas cardíacas.
+
+## Licença (GPLv3)
+Este projeto está sob a licença **GNU General Public License v3.0**. Você é livre para:
+* **Usar** o software para qualquer fim (incluindo uso acadêmico e comercial).
+* **Modificar** o código e adaptar as equações para os seus estudos.
+* **Distribuir** cópias do software ou das modificações.
+Entretanto, ao distribuir qualquer trabalho derivado deste projeto, o código-fonte deve permanecer aberto e sob a mesma licença GPLv3, assegurando que o conhecimento biológico permaneça livre e acessível à comunidade.
