@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
             pushData(batch);
             
             for (let i = 0; i < batch.length; i++) {
-                const ventV = batch[i][4]; // S_TUS[0] = índice 4
+                const ventV = batch[i].vent; 
                 
                 // Detectar pico de despolarização (B1 e Bip)
                 if (lastVentV <= -30 && ventV > -30) {
