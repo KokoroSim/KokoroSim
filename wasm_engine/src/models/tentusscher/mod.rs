@@ -1,5 +1,5 @@
 #![allow(non_snake_case)]
-#![allow(unused_variables)]
+
 
 const R: f64 = 8.314;
 const T: f64 = 310.0;
@@ -11,9 +11,6 @@ const STIM_PERIOD: f64 = 1000.0;
 const STIM_DURATION: f64 = 1.0;
 const STIM_AMPLITUDE: f64 = -52.0;
 const P_KNA: f64 = 0.03;
-const K_O: f64 = 5.4;
-const NA_O: f64 = 140.0;
-const CA_O: f64 = 2.0;
 const G_K1: f64 = 5.405;
 const G_KR: f64 = 0.096;
 const G_KS: f64 = 0.245;
@@ -100,7 +97,7 @@ impl VentricleCell {
         Self::default()
     }
 
-    pub fn compute_i_stim(&self) -> f64 {
+    pub fn compute_i_stim(&self, _p: &crate::models::Pharmaco) -> f64 {
         let t_cycle = self.time - (self.time / STIM_PERIOD).floor() * STIM_PERIOD;
         if t_cycle >= STIM_START && t_cycle <= STIM_START + STIM_DURATION {
             STIM_AMPLITUDE
@@ -109,28 +106,28 @@ impl VentricleCell {
         }
     }
 
-    pub fn compute_e_na(&self) -> f64 {
-        (R * T / F) * (NA_O / self.na_i).ln()
+    pub fn compute_e_na(&self, p: &crate::models::Pharmaco) -> f64 {
+        (R * T / F) * (p.nao / self.na_i).ln()
     }
 
-    pub fn compute_e_k(&self) -> f64 {
-        (R * T / F) * (K_O / self.k_i).ln()
+    pub fn compute_e_k(&self, p: &crate::models::Pharmaco) -> f64 {
+        (R * T / F) * (p.effective_ko() / self.k_i).ln()
     }
 
-    pub fn compute_e_ks(&self) -> f64 {
-        (R * T / F) * ((K_O + P_KNA * NA_O) / (self.k_i + P_KNA * self.na_i)).ln()
+    pub fn compute_e_ks(&self, p: &crate::models::Pharmaco) -> f64 {
+        (R * T / F) * ((p.ko + P_KNA * p.nao) / (self.k_i + P_KNA * self.na_i)).ln()
     }
 
-    pub fn compute_e_ca(&self) -> f64 {
-        (0.5 * R * T / F) * (CA_O / self.ca_i).ln()
+    pub fn compute_e_ca(&self, p: &crate::models::Pharmaco) -> f64 {
+        (0.5 * R * T / F) * (p.cao / self.ca_i).ln()
     }
 
-    pub fn step(&mut self, dt: f64) {
+    pub fn step(&mut self, dt: f64, p: &crate::models::Pharmaco) {
         // Compute reversal potentials
-        let e_na = self.compute_e_na();
-        let e_k = self.compute_e_k();
-        let e_ks = self.compute_e_ks();
-        let e_ca = self.compute_e_ca();
+        let e_na = self.compute_e_na(p);
+        let e_k = self.compute_e_k(p);
+        let e_ks = self.compute_e_ks(p);
+        let e_ca = self.compute_e_ca(p);
 
         let v = self.v;
 
@@ -138,37 +135,37 @@ impl VentricleCell {
         let alpha_k1 = 0.1 / (1.0 + f64::exp(0.06 * (v - e_k - 200.0)));
         let beta_k1 = (3.0 * f64::exp(0.0002 * (v - e_k + 100.0)) + f64::exp(0.1 * (v - e_k - 10.0))) / (1.0 + f64::exp(-0.5 * (v - e_k)));
         let xk1_inf = alpha_k1 / (alpha_k1 + beta_k1);
-        let i_k1 = G_K1 * xk1_inf * (K_O / 5.4).sqrt() * (v - e_k);
+        let i_k1 = G_K1 * xk1_inf * (p.ko / 5.4).sqrt() * (v - e_k) * p.block_k;
 
         // Transient Outward
-        let i_to = G_TO * self.r * self.s * (v - e_k);
+        let i_to = G_TO * self.r * self.s * (v - e_k) * p.block_k;
 
         // Rapid Time Dependent K+
-        let i_kr = G_KR * (K_O / 5.4).sqrt() * self.xr1 * self.xr2 * (v - e_k);
+        let i_kr = G_KR * (p.ko / 5.4).sqrt() * self.xr1 * self.xr2 * (v - e_k) * p.block_k;
 
         // Slow Time Dependent K+
-        let i_ks = G_KS * self.xs.powi(2) * (v - e_ks);
+        let i_ks = G_KS * self.xs.powi(2) * (v - e_ks) * p.block_k;
 
         // L-type Ca2+ Current
-        let i_cal = (G_CAL * self.d * self.f * self.f_ca * 4.0 * v * F.powi(2) / (R * T)) *
-            (self.ca_i * f64::exp(2.0 * v * F / (R * T)) - 0.341 * CA_O) /
-            (f64::exp(2.0 * v * F / (R * T)) - 1.0);
+        let i_cal = ((G_CAL * self.d * self.f * self.f_ca * 4.0 * v * F.powi(2) / (R * T)) *
+            (self.ca_i * f64::exp(2.0 * v * F / (R * T)) - 0.341 * p.cao) /
+            (f64::exp(2.0 * v * F / (R * T)) - 1.0)) * p.block_ca * p.isch_block() * p.ans_ca_modifier();
 
         // Na+/K+ Pump
-        let i_nak = (P_NAK * K_O / (K_O + K_MK) * self.na_i / (self.na_i + K_MNA)) /
-            (1.0 + 0.1245 * f64::exp(-0.1 * v * F / (R * T)) + 0.0353 * f64::exp(-v * F / (R * T)));
+        let i_nak = ((P_NAK * p.ko / (p.ko + K_MK) * self.na_i / (self.na_i + K_MNA)) /
+            (1.0 + 0.1245 * f64::exp(-0.1 * v * F / (R * T)) + 0.0353 * f64::exp(-v * F / (R * T)))) * p.block_nak;
 
         // Fast Na+
-        let i_na = G_NA * self.m.powi(3) * self.h * self.j * (v - e_na);
+        let i_na = G_NA * self.m.powi(3) * self.h * self.j * (v - e_na) * p.block_na * p.isch_block();
 
         // Background Na+
         let i_b_na = G_BNA * (v - e_na);
 
         // Na+/Ca2+ Exchanger
         let i_naca = K_NACA *
-            (f64::exp(GAMMA * v * F / (R * T)) * self.na_i.powi(3) * CA_O -
-             f64::exp((GAMMA - 1.0) * v * F / (R * T)) * NA_O.powi(3) * self.ca_i * ALPHA) /
-            ((KM_NAI.powi(3) + NA_O.powi(3)) * (KM_CA + CA_O) *
+            (f64::exp(GAMMA * v * F / (R * T)) * self.na_i.powi(3) * p.cao -
+             f64::exp((GAMMA - 1.0) * v * F / (R * T)) * p.nao.powi(3) * self.ca_i * ALPHA) /
+            ((KM_NAI.powi(3) + p.nao.powi(3)) * (KM_CA + p.cao) *
              (1.0 + K_SAT * f64::exp((GAMMA - 1.0) * v * F / (R * T))));
 
         // Background Ca2+
@@ -181,7 +178,7 @@ impl VentricleCell {
         let i_p_ca = G_PCA * self.ca_i / (self.ca_i + K_PCA);
 
         // Stimulus
-        let i_stim = self.compute_i_stim();
+        let i_stim = self.compute_i_stim(p);
 
         // Calculate state derivatives
         // dv/dt
