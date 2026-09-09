@@ -21,27 +21,51 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout main
         uses: actions/checkout@v4
-      
-      - name: Setup Node
-        uses: actions/setup-node@v4
         with:
-          node-version: 24
+          path: main-repo
           
-      - name: Install dependencies
-        run: npm install
-        
-      - name: Build project
-        run: npm run build
-        
+      - name: Checkout v1.0.0
+        uses: actions/checkout@v4
+        with:
+          ref: v1.0.0
+          path: v1-repo
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Build main (Wasm)
+        run: |
+          cd main-repo/ui
+          wasm-pack build --target web
+
+      - name: Setup Bun (for v1)
+        uses: oven-sh/setup-bun@v1
+
+      - name: Build v1 (Vite)
+        run: |
+          cd v1-repo
+          bun install
+          bunx vite build --base=/v1/
+          
+      - name: Arrange files
+        run: |
+          # Copy v1 dist into the main ui folder
+          cp -r v1-repo/dist main-repo/ui/v1
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
-        
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist'
+          path: './main-repo/ui'
           
       - name: Deploy to GitHub Pages
         id: deployment

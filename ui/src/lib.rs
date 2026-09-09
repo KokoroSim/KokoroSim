@@ -19,21 +19,21 @@ fn App() -> Element {
     let mut system = use_signal(|| HeartSystem::new());
     
     // Sliders state
-    let mut ko = use_signal(|| 5.4);
-    let mut cao = use_signal(|| 2.0);
-    let mut nao = use_signal(|| 140.0);
-    let mut block_na = use_signal(|| 0.0);
-    let mut block_k = use_signal(|| 0.0);
-    let mut block_ca = use_signal(|| 0.0);
-    let mut block_nak = use_signal(|| 0.0);
-    let mut symp = use_signal(|| 0.0);
-    let mut parasymp = use_signal(|| 0.0);
-    let mut isch = use_signal(|| 0.0);
+    let ko = use_signal(|| 5.4);
+    let cao = use_signal(|| 2.0);
+    let nao = use_signal(|| 140.0);
+    let block_na = use_signal(|| 0.0);
+    let block_k = use_signal(|| 0.0);
+    let block_ca = use_signal(|| 0.0);
+    let block_nak = use_signal(|| 0.0);
+    let symp = use_signal(|| 0.0);
+    let parasymp = use_signal(|| 0.0);
+    let isch = use_signal(|| 0.0);
     
-    let mut show_sa = use_signal(|| true);
-    let mut show_av = use_signal(|| true);
-    let mut show_atrium = use_signal(|| true);
-    let mut show_vent = use_signal(|| true);
+    let show_sa = use_signal(|| true);
+    let show_av = use_signal(|| true);
+    let show_atrium = use_signal(|| true);
+    let show_vent = use_signal(|| true);
     
     use_future(move || async move {
         // Create plotters (Canvas IDs match the HTML)

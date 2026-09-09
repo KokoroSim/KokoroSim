@@ -41,7 +41,7 @@ impl Plotter {
                     
                     // Clear background conditionally
                     if clear {
-                        ctx.set_fill_style(&wasm_bindgen::JsValue::from_str("#000000"));
+                        ctx.set_fill_style_str("#000000");
                         ctx.fill_rect(0.0, 0.0, width, height);
                     }
 
@@ -53,7 +53,7 @@ impl Plotter {
 
                     // Draw line
                     ctx.begin_path();
-                    ctx.set_stroke_style(&wasm_bindgen::JsValue::from_str(color));
+                    ctx.set_stroke_style_str(color);
                     ctx.set_line_width(2.0);
                     ctx.set_shadow_color(color);
                     ctx.set_shadow_blur(5.0);

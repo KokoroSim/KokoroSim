@@ -358,11 +358,11 @@ impl InadaCell {
         let a_67 = self.g_st*self.qa_gate*self.qi_gate*(self.v - self.e_st);
         let a_42 = self.g_k1*(0.0500000+0.0500000/(1.000000+((self.v+30.00000).exp()/5.000000)));
         let a_49 = ( a_42*(p.ko/(p.ko+0.0590000)).powf(3.000000)*(self.v+81.09000))/(1.000000+(( 1.039300*(self.v+81.09000+3.060000).exp())/self.rtonf));
-        let a_57 = (( - self.qn*self.v).exp()/( 2.000000*self.rtonf));
+        let a_57 = ( - self.qn*self.v).exp()/( 2.000000*self.rtonf) ;
         let a_52 = 1.000000+ (p.cao/self.kco)*(1.000000+(( self.qco*self.v).exp()/self.rtonf))+p.nao/self.k1no+(p.nao).powf(2.000000)/( self.k1no*self.k2no)+(p.nao).powf(3.000000)/( self.k1no*self.k2no*self.k3no);
         let a_54 = ( ((p.nao).powf(2.000000)/( self.k1no*self.k2no)+(p.nao).powf(3.000000)/( self.k1no*self.k2no*self.k3no))*(( - self.qn*self.v).exp()/( 2.000000*self.rtonf)))/a_52;
         let a_55 = ( (p.cao/self.kco)*(( - self.qco*self.v).exp()/self.rtonf))/a_52;
-        let a_53 = (( self.qn*self.v).exp()/( 2.000000*self.rtonf));
+        let a_53 = ( self.qn*self.v).exp()/( 2.000000*self.rtonf) ;
         let a_60 = a_57*self.k34*(a_54+a_55)+ a_55*a_53*(self.k43+a_57);
         let a_56 = 1.000000+ (self.casub/self.kci)*(1.000000+(( - self.qci*self.v).exp()/self.rtonf)+self.nai/self.kcni)+self.nai/self.k1ni+(self.nai).powf(2.000000)/( self.k1ni*self.k2ni)+(self.nai).powf(3.000000)/( self.k1ni*self.k2ni*self.k3ni);
         let a_59 = ( (self.casub/self.kci)*(( - self.qci*self.v).exp()/self.rtonf))/a_56;
