@@ -26,10 +26,10 @@ jobs:
         with:
           path: main-repo
           
-      - name: Checkout v1.0.0
+      - name: Checkout v1 branch
         uses: actions/checkout@v4
         with:
-          ref: v1.0.0
+          ref: v1
           path: v1-repo
 
       - name: Setup Rust
@@ -52,7 +52,7 @@ jobs:
         run: |
           cd v1-repo
           bun install
-          bunx vite build --base=/v1/
+          bunx vite build --base=/${{ github.event.repository.name }}/v1/
           
       - name: Arrange files
         run: |
