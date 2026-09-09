@@ -166,7 +166,7 @@ impl HeartSystem {
 
     // Roda um lote completo de cálculos no lado do Rust e retorna um array f64 achatado!
     pub fn run_batch(&mut self, dt: f64, steps: usize, downsample: usize) -> Vec<f64> {
-        let mut batch = Vec::with_capacity((steps / downsample) * 4);
+        let mut batch = Vec::with_capacity((steps / downsample) * 6);
         for i in 0..steps {
             self.step(dt);
             if i % downsample == 0 {
@@ -174,6 +174,8 @@ impl HeartSystem {
                 batch.push(self.av_node.v);
                 batch.push(self.atrium.v);
                 batch.push(self.ventricle.v);
+                batch.push(self.ventricle.ca_i); // 4
+                batch.push(self.ventricle.force); // 5
             }
         }
         batch

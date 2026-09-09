@@ -52,6 +52,7 @@ pub struct VentricleCell {
     pub k_i: f64,
     pub na_i: f64,
     pub ca_i: f64,
+    pub force: f64,
     pub xr1: f64,
     pub xr2: f64,
     pub xs: f64,
@@ -75,6 +76,7 @@ impl Default for VentricleCell {
             k_i: 138.3,
             na_i: 11.6,
             ca_i: 0.0002,
+            force: 0.0,
             xr1: 0.0,
             xr2: 1.0,
             xs: 0.0,
@@ -284,6 +286,14 @@ impl VentricleCell {
         self.ca_sr += dca_sr * dt;
         self.na_i += dna_i * dt;
         self.k_i += dk_i * dt;
+        // Phenomenological Force Model (Hill-type curve with delay)
+        let kd: f64 = 0.0006; // mM, dissociation constant
+        let n: f64 = 3.0; // Hill coefficient
+        let f_steady = (self.ca_i.powf(n)) / (kd.powf(n) + self.ca_i.powf(n));
+        let tau_force = 50.0; // ms, delay for cross-bridge attachment/detachment
+        let dforce = (f_steady - self.force) / tau_force;
+        self.force += dforce * dt;
+
         self.time += dt;
     }
 }
