@@ -6,10 +6,6 @@ const T: f64 = 310.0;
 const F: f64 = 96.485;
 const CM: f64 = 185.0;
 const V_C: f64 = 16404.0;
-const STIM_START: f64 = 10.0;
-const STIM_PERIOD: f64 = 1000.0;
-const STIM_DURATION: f64 = 1.0;
-const STIM_AMPLITUDE: f64 = -52.0;
 const P_KNA: f64 = 0.03;
 const G_K1: f64 = 5.405;
 const G_KR: f64 = 0.096;
@@ -66,6 +62,7 @@ pub struct VentricleCell {
     pub r: f64,
     pub ca_sr: f64,
     pub g: f64,
+    pub i_stim: f64,
 }
 
 impl Default for VentricleCell {
@@ -90,6 +87,7 @@ impl Default for VentricleCell {
             r: 0.0,
             ca_sr: 0.2,
             g: 1.0,
+            i_stim: 0.0,
         }
     }
 }
@@ -97,15 +95,6 @@ impl Default for VentricleCell {
 impl VentricleCell {
     pub fn new() -> Self {
         Self::default()
-    }
-
-    pub fn compute_i_stim(&self, _p: &crate::models::Pharmaco) -> f64 {
-        let t_cycle = self.time - (self.time / STIM_PERIOD).floor() * STIM_PERIOD;
-        if t_cycle >= STIM_START && t_cycle <= STIM_START + STIM_DURATION {
-            STIM_AMPLITUDE
-        } else {
-            0.0
-        }
     }
 
     pub fn compute_e_na(&self, p: &crate::models::Pharmaco) -> f64 {
@@ -179,8 +168,8 @@ impl VentricleCell {
         // Calcium Pump
         let i_p_ca = G_PCA * self.ca_i / (self.ca_i + K_PCA);
 
-        // Stimulus
-        let i_stim = self.compute_i_stim(p);
+        // Stimulus (controlled externally by conduction system)
+        let i_stim = self.i_stim;
 
         // Calculate state derivatives
         // dv/dt

@@ -7,6 +7,9 @@
   - add initial cardiac electrophysiology UI dashboard and simulation engine
   - (ui/engine) adiciona sistema de plotagem em tempo real e modelo de força mecânica
 
+### Bug Fixes
+  - (engine) resolve ventricular dyssynchrony and implement pulse-based physiological conduction
+
 ## Previous Releases
 
 ### [v2.0.0-dev]

@@ -23,6 +23,7 @@ pub struct AtriumCell {
     pub v_gate: f64,
     pub w: f64,
     pub ca_up: f64,
+    pub i_st: f64,
 }
 
 impl Default for AtriumCell {
@@ -49,6 +50,7 @@ impl Default for AtriumCell {
             v_gate: 1.0,
             w: 0.9992,
             ca_up: 1.488,
+            i_st: 0.0,
         }
     }
 }
@@ -298,7 +300,8 @@ impl AtriumCell {
         let i_b_na = c.cm * c.g_b_na * (self.v - e_na);
         let dna_i = (-3.0 * i_nak - (3.0 * i_naca + i_b_na + i_na)) / (c.v_i * c.f_faraday);
         
-        let i_st = 0.0;
+        // Stimulus (controlled externally by conduction system)
+        let i_st = self.i_st;
         
         let i_ca_l = c.cm * c.g_ca_l * self.d * self.f * self.f_ca * (self.v - 65.0) * p.block_ca * p.isch_block() * p.ans_ca_modifier();
         let i_cap = (c.cm * c.i_cap_max * self.ca_i) / (0.0005 + self.ca_i);

@@ -2,343 +2,378 @@ use crate::models::Pharmaco;
 
 pub struct SeveriCell {
     pub v: f64,
-    pub ca_sub: f64,
-    pub nai: f64,
-    pub y: f64,
-    pub m: f64,
-    pub h: f64,
-    pub dl: f64,
-    pub fl: f64,
-    pub fca: f64,
-    pub dt_gate: f64,
-    pub ft_gate: f64,
-    pub r_sr: f64,
-    pub o_sr: f64,
-    pub i_sr: f64,
-    pub ri_sr: f64,
-    pub ca_jsr: f64,
-    pub ca_nsr: f64,
-    pub cai: f64,
-    pub ftmm: f64,
-    pub fcmi: f64,
-    pub fcms: f64,
-    pub ftc: f64,
-    pub ftmc: f64,
-    pub fcq: f64,
-    pub fbapta: f64,
-    pub fbapta_sub: f64,
-    pub q: f64,
-    pub r: f64,
-    pub pas: f64,
-    pub paf: f64,
-    pub piy: f64,
-    pub n: f64,
-    pub a: f64,
+    pub c: [f64; 104],
+    pub c_base: [f64; 104],
+    pub s: [f64; 33],
+    pub r: [f64; 33],
+    pub a: [f64; 90],
+    pub time: f64,
 }
 
 impl Default for SeveriCell {
     fn default() -> Self {
-        Self {
-            v: -52.0,
-            ca_sub: 1e-5,
-            nai: 7.5,
-            y: 0.181334538702451,
-            m: 0.440131579215766,
-            h: 1.3676940140066e-5,
-            dl: 0.0,
-            fl: 0.497133507285601,
-            fca: 0.697998543259722,
-            dt_gate: 0.0,
-            ft_gate: 0.0,
-            r_sr: 0.912317231017262,
-            o_sr: 1.7340201253e-7,
-            i_sr: 7.86181717518e-8,
-            ri_sr: 0.211148145512825,
-            ca_jsr: 0.316762674605,
-            ca_nsr: 1.05386465080816,
-            cai: 1e-5,
-            ftmm: 0.501049376634,
-            fcmi: 0.0373817991524254,
-            fcms: 0.054381370046,
-            ftc: 0.0180519400676086,
-            ftmc: 0.281244308217086,
-            fcq: 0.299624275428735,
-            fbapta: 0.0,
-            fbapta_sub: 0.0,
-            q: 0.506139850982478,
-            r: 0.0144605370597924,
-            pas: 0.322999177802891,
-            paf: 0.0990510403258968,
-            piy: 0.705410877258545,
-            n: 0.0,
-            a: 0.0,
-        }
+        Self::new()
     }
 }
 
 impl SeveriCell {
     pub fn new() -> Self {
-        Self::default()
+        let mut c: [f64; 104] = [0.0; 104];
+        let r: [f64; 33] = [0.0; 33];
+        let mut s: [f64; 33] = [0.0; 33];
+        let a: [f64; 90] = [0.0; 90];
+
+        // Constantes e estados iniciais fiéis a Severi et al. (2012)
+        c[0] = 8314.472;
+        c[1] = 310.0;
+        c[2] = 96485.3415;
+        c[3] = 3.2e-5;
+        c[4] = 0.0;
+        s[0] = -52.0;
+        c[5] = 0.5;
+        c[6] = 0.5;
+        c[7] = -35.0;
+        c[8] = -45.0;
+        c[9] = 0.0;
+        c[10] = 0.0;
+        c[11] = 0.0;
+        c[12] = 0.0;
+        c[13] = 0.0;
+        c[14] = 140.0;
+        c[15] = 140.0;
+        c[16] = 5.4;
+        s[1] = 1e-5;
+        c[17] = 1.8;
+        s[2] = 7.5;
+        c[18] = 45.0;
+        s[3] = 0.181334538702451;
+        c[19] = 1.4;
+        c[20] = 14.0;
+        c[21] = 0.063;
+        c[22] = 4.0;
+        c[23] = 0.1369;
+        c[24] = 0.4315;
+        c[25] = 0.0;
+        c[26] = 26.44;
+        c[27] = 0.0207;
+        c[28] = 395.3;
+        c[29] = 2.289;
+        c[30] = 26.44;
+        c[31] = 4.663;
+        c[32] = 1628.0;
+        c[33] = 561.4;
+        c[34] = 3.663;
+        c[35] = 0.0125;
+        s[4] = 0.440131579215766;
+        s[5] = 1.3676940140066e-5;
+        c[36] = 1e-5;
+        c[37] = 0.2;
+        s[6] = 0.0;
+        s[7] = 0.497133507285601;
+        s[8] = 0.697998543259722;
+        c[38] = 0.01;
+        c[39] = 0.00035;
+        c[40] = 0.02;
+        s[9] = 0.0;
+        s[10] = 0.0;
+        s[11] = 0.912317231017262;
+        s[12] = 1.7340201253e-7;
+        s[13] = 7.86181717518e-8;
+        s[14] = 0.211148145512825;
+        c[41] = 250000000.0;
+        c[42] = 15.0;
+        c[43] = 1.0;
+        c[44] = 0.45;
+        c[45] = 2.5;
+        c[46] = 10000.0;
+        c[47] = 500.0;
+        c[48] = 5.0;
+        c[49] = 60.0;
+        s[15] = 0.316762674605;
+        c[50] = 4e-5;
+        c[51] = 0.04;
+        c[52] = 12.0;
+        c[53] = 0.0006;
+        s[16] = 1.05386465080816;
+        s[17] = 1e-5;
+        c[54] = 0.031;
+        c[55] = 0.062;
+        c[56] = 0.045;
+        c[57] = 10.0;
+        s[18] = 0.501049376634;
+        s[19] = 0.0373817991524254;
+        s[20] = 0.054381370046;
+        s[21] = 0.0180519400676086;
+        s[22] = 0.281244308217086;
+        s[23] = 0.299624275428735;
+        c[58] = 88800.0;
+        c[59] = 2277.0;
+        c[60] = 227700.0;
+        c[61] = 227700.0;
+        c[62] = 534.0;
+        c[63] = 446.0;
+        c[64] = 7.51;
+        c[65] = 751.0;
+        c[66] = 542.0;
+        c[67] = 445.0;
+        c[68] = 2.5;
+        c[69] = 940000.0;
+        c[70] = 119.38;
+        s[24] = 0.0;
+        s[25] = 0.0;
+        c[71] = 6.928;
+        c[72] = 0.0012;
+        c[73] = 0.46;
+        c[74] = 0.0116;
+        c[75] = 4.0;
+        c[76] = 70.0;
+        c[77] = 0.02;
+        c[78] = 0.002;
+        s[26] = 0.506139850982478;
+        s[27] = 0.0144605370597924;
+        c[79] = 0.0021637;
+        s[28] = 0.322999177802891;
+        s[29] = 0.0990510403258968;
+        s[30] = 0.705410877258545;
+        s[31] = 0.0;
+        c[80] = 0.0;
+        c[81] = 0.00864;
+        s[32] = 0.0;
+        c[82] = if c[9] >= 1.0 { 0.03 * (1.0 - 0.66) } else { 0.03 };
+        c[83] = if c[9] >= 1.0 { 0.03 * (1.0 - 0.66) } else { 0.03 };
+        c[84] = if c[12] > 0.0 { -0.25 } else if c[11] > 0.0 { (0.7 * c[11]) / (9e-5 + c[11]) } else { 0.0 };
+        c[85] = (c[0] * c[1]) / c[2];
+        c[86] = if c[12] > 0.0 { 1.2 * 0.00165760 } else { 0.00165760 };
+        c[87] = c[85] * (c[16] / c[15]).ln();
+        c[88] = c[52] * (1.0 - c[84]);
+        c[89] = if c[11] > 0.0 { -1.0 - (9.898 * (c[11]).powf(0.618)) / ((c[11]).powf(0.618) + 0.00122423) } else { 0.0 };
+        c[90] = if c[12] > 0.0 { 7.5 } else { 0.0 };
+        c[91] = if c[12] > 0.0 { 1.2 } else { 1.0 };
+        c[92] = c[14] / (c[31] + c[14]);
+        c[93] = if c[12] > 0.0 { 1.23 } else { 1.0 };
+        c[94] = (0.31 * c[11]) / (c[11] + 9e-5);
+        c[95] = if c[12] > 0.0 { -8.0 } else { 0.0 };
+        c[96] = if c[12] > 0.0 { 0.69 } else { 1.0 };
+        c[97] = 1e-9 * std::f64::consts::PI * c[75].powi(2) * c[76];
+        c[98] = 1e-9 * 2.0 * std::f64::consts::PI * c[77] * (c[75] - c[77] / 2.0) * c[76];
+        c[99] = c[72] * c[97];
+        c[100] = c[73] * c[97] - c[98];
+        c[101] = c[74] * c[97];
+        c[102] = if c[12] > 0.0 { -14.0 } else { 0.0 };
+        c[103] = (3.59880 - 0.0256410) / (1.0 + 1.21550e-06 / (c[11].max(1e-12)).powf(1.69510)) + 0.0256410;
+
+        // Calibrações v1 para frequência cardíaca humana (~75 BPM) e estabilidade de Euler
+        c[82] *= 0.25; 
+        c[83] *= 0.25; 
+        c[37] *= 0.75; 
+        c[79] *= 1.25; 
+        c[35] *= 0.50; 
+        c[3] *= 1.80;
+
+        let mut c_base = [0.0; 104];
+        c_base.copy_from_slice(&c);
+
+        Self {
+            v: s[0],
+            c,
+            c_base,
+            s,
+            r,
+            a,
+            time: 0.0,
+        }
     }
 
-    pub fn compute_i_na(&self, p: &Pharmaco) -> f64 {
-        let e_mh = 26.71 * ((p.nao + 0.12 * p.ko) / (self.nai + 0.12 * p.nao)).ln(); 
-        let g_na = 0.0125 * p.block_na * p.isch_block();
-        g_na * self.m.powi(3) * self.h * (self.v - e_mh)
+    pub fn compute_rates(&mut self, voi: f64) {
+        let c = &self.c;
+        let s = &self.s;
+        let a = &mut self.a;
+        let r = &mut self.r;
+
+        a[4] = c[59] * c[68] * (1.0 - (s[22] + s[18])) - c[65] * s[18];
+        r[18] = a[4];
+        a[1] = c[39] / (c[39] + s[1]);
+        a[5] = (0.001 * a[1]) / c[38];
+        r[8] = (a[1] - s[8]) / a[5];
+        a[2] = c[42] - (c[42] - c[43]) / (1.0 + (c[44] / s[15]).powf(c[45]));
+        a[6] = c[46] / a[2];
+        a[15] = c[47] * a[2];
+        r[11] = (c[48] * s[14] - a[15] * s[1] * s[11]) - (a[6] * s[1].powi(2) * s[11] - c[49] * s[12]);
+        r[12] = (a[6] * s[1].powi(2) * s[11] - c[49] * s[12]) - (a[15] * s[1] * s[12] - c[48] * s[13]);
+        r[13] = (a[15] * s[1] * s[12] - c[48] * s[13]) - (c[49] * s[13] - a[6] * s[1].powi(2) * s[14]);
+        r[14] = (c[49] * s[13] - a[6] * s[1].powi(2) * s[14]) - (c[48] * s[14] - a[15] * s[1] * s[11]);
+        a[3] = if voi > c[5] && voi < c[5] + c[6] { c[7] } else { c[8] };
+        a[7] = if c[4] >= 1.0 { a[3] } else { s[0] };
+        a[8] = 0.716653 / (0.0708 * (-(((a[7] + 5.0) - c[89]) - c[90]) / 20.2791).exp() + 10.6 * (((a[7] - c[89]) - c[90]) / 18.0).exp());
+        a[25] = 1.0 / (1.0 + (((a[7] + 52.5) - c[89] - c[90]) / 9.0).exp());
+        r[3] = (a[25] - s[3]) / a[8];
+        a[10] = 20.0 * (-0.125 * (a[7] + 75.0)).exp();
+        a[27] = 2000.0 / (320.0 * (-0.1 * (a[7] + 75.0)).exp() + 1.0);
+        r[5] = a[10] * (1.0 - s[5]) - a[27] * s[5];
+        a[12] = 1.0 / (1.0 + ((a[7] + 37.4) / 5.3).exp());
+        a[29] = 0.001 * (44.3 + 230.0 * (-((a[7] + 36.0) / 10.0).powi(2)).exp());
+        r[7] = (a[12] - s[7]) / a[29];
+        a[13] = 1.0 / (1.0 + (-(a[7] + 38.3) / 5.5).exp());
+        a[30] = 0.001 / (1.068 * ((a[7] + 38.3) / 30.0).exp() + 1.068 * (-(a[7] + 38.3) / 30.0).exp());
+        r[9] = (a[13] - s[9]) / a[30];
+        a[14] = 1.0 / (1.0 + ((a[7] + 58.7) / 3.8).exp());
+        a[31] = 1.0 / (16.67 * (-(a[7] + 75.0) / 83.3).exp() + 16.67 * ((a[7] + 75.0) / 15.38).exp());
+        r[10] = (a[14] - s[10]) / a[31];
+        a[17] = 1.0 / (1.0 + ((a[7] + 49.0) / 13.0).exp());
+        a[33] = 0.001 * 0.6 * (65.17 / (0.57 * (-0.08 * (a[7] + 44.0)).exp() + 0.065 * (0.1 * (a[7] + 45.93)).exp()) + 10.1);
+        r[26] = (a[17] - s[26]) / a[33];
+        a[18] = 1.0 / (1.0 + (-(a[7] - 19.3) / 15.0).exp());
+        a[34] = 0.001 * 0.66 * 1.4 * (15.59 / (1.037 * (0.09 * (a[7] + 30.61)).exp() + 0.369 * (-0.12 * (a[7] + 23.84)).exp()) + 2.98);
+        r[27] = (a[18] - s[27]) / a[34];
+        a[19] = 1.0 / (1.0 + (-(a[7] + 14.8) / 8.5).exp());
+        a[35] = 0.846554 / (4.2 * (a[7] / 17.0).exp() + 0.15 * (-a[7] / 21.6).exp());
+        r[28] = (a[19] - s[28]) / a[35];
+        a[36] = 1.0 / (30.0 * (a[7] / 10.0).exp() + (-a[7] / 12.0).exp());
+        a[20] = 1.0 / (1.0 + (-(a[7] + 14.8) / 8.5).exp());
+        r[29] = (a[20] - s[29]) / a[36];
+        a[21] = 1.0 / (1.0 + ((a[7] + 28.6) / 17.1).exp());
+        a[37] = 1.0 / (1.0 + ((a[7] + 28.6) / 17.1).exp());
+        a[22] = 1.0 / (100.0 * (-a[7] / 54.645).exp() + 656.0 * (a[7] / 106.157).exp());
+        r[30] = (a[37] - s[30]) / a[22];
+        a[9] = a[7] + 41.0;
+        a[26] = if a[9].abs() < c[36] { 2000.0 } else { (200.0 * a[9]) / (1.0 - (-0.1 * a[9]).exp()) };
+        a[40] = 8000.0 * (-0.056 * (a[7] + 66.0)).exp();
+        r[4] = a[26] * (1.0 - s[4]) - a[40] * s[4];
+        a[24] = 10.0 * (0.0133 * (a[7] + 40.0)).exp();
+        a[39] = c[103] / (c[103] + a[24]);
+        a[44] = 1.0 / (c[103] + a[24]);
+        r[32] = (a[39] - s[32]) / a[44];
+        a[23] = (14.0 / (1.0 + (-((a[7] - 40.0) - c[102]) / 12.0).exp())) / (14.0 / (1.0 + (-((a[7] - 40.0) - c[102]) / 12.0).exp()) + 1.0 * (-(a[7] - c[102]) / 45.0).exp());
+        a[38] = 28.0 / (1.0 + (-((a[7] - 40.0) - c[102]) / 3.0).exp());
+        a[43] = 1.0 * (-(((a[7] - c[102]) - c[80]) - 5.0) / 25.0).exp();
+        a[47] = 1.0 / (a[38] + a[43]);
+        r[31] = (a[23] - s[31]) / a[47];
+        a[11] = 1.0 / (1.0 + (-((a[7] + 20.3) - c[95]) / (c[96] * 4.2)).exp());
+        a[28] = if a[7] == -41.8 { -41.80001 } else if a[7] == 0.0 { 0.0 } else if a[7] == -6.8 { -6.80001 } else { a[7] };
+        a[41] = (-0.02839 * ((a[28] + 41.8) - c[95])) / ((-((a[28] + 41.8) - c[95]) / 2.5).exp() - 1.0) - (0.0849 * ((a[28] + 6.8) - c[95])) / ((-((a[28] + 6.8) - c[95]) / 4.8).exp() - 1.0);
+        a[45] = if a[7] == -1.8 { -1.80001 } else { a[7] };
+        a[48] = (0.01143 * ((a[45] + 1.8) - c[95])) / ((((a[45] + 1.8) - c[95]) / 2.5).exp() - 1.0);
+        a[50] = 0.001 / (a[41] + a[48]);
+        r[6] = (a[11] - s[6]) / a[50];
+        a[16] = if c[13] > 0.0 { 7.5 } else { s[2] };
+        a[32] = c[85] * (c[14] / a[16]).ln();
+        a[52] = c[91] * c[21] * (1.0 + (c[19] / c[16]).powf(1.2)).recip() * (1.0 + (c[20] / a[16]).powf(1.3)).recip() * (1.0 + (-((a[7] - a[32]) + 110.0) / 20.0).exp()).recip();
+        a[54] = ((-c[24] * a[7]) / (2.0 * c[85])).exp();
+        a[60] = 1.0 + (c[17] / c[34]) * (1.0 + ((c[25] * a[7]) / c[85]).exp()) + (c[14] / c[32]) * (1.0 + (c[14] / c[33]) * (1.0 + c[14] / c[31]));
+        a[62] = ((((c[14] / c[32]) * c[14]) / c[33]) * (1.0 + c[14] / c[31]) * ((-c[24] * a[7]) / (2.0 * c[85])).exp()) / a[60];
+        a[61] = ((c[17] / c[34]) * ((c[25] * a[7]) / c[85]).exp()) / a[60];
+        a[58] = ((c[24] * a[7]) / (2.0 * c[85])).exp();
+        a[53] = a[16] / (c[26] + a[16]);
+        a[63] = a[54] * c[92] * (a[62] + a[61]) + a[61] * a[58] * (a[53] + a[54]);
+        a[55] = 1.0 + (s[1] / c[27]) * (1.0 + ((-c[23] * a[7]) / c[85]).exp() + a[16] / c[30]) + (a[16] / c[28]) * (1.0 + (a[16] / c[29]) * (1.0 + a[16] / c[26]));
+        a[56] = ((s[1] / c[27]) * ((-c[23] * a[7]) / c[85]).exp()) / a[55];
+        a[57] = ((((a[16] / c[28]) * a[16]) / c[29]) * (1.0 + a[16] / c[26]) * ((c[24] * a[7]) / (2.0 * c[85])).exp()) / a[55];
+        a[59] = a[58] * a[53] * (a[57] + a[56]) + a[54] * a[56] * (c[92] + a[58]);
+        a[64] = a[57] * a[53] * (a[62] + a[61]) + a[56] * a[62] * (a[53] + a[54]);
+        a[65] = a[62] * c[92] * (a[57] + a[56]) + a[57] * a[61] * (c[92] + a[58]);
+        a[66] = (c[22] * (a[59] * a[61] - a[63] * a[56])) / (a[63] + a[59] + a[64] + a[65]);
+        a[67] = c[85] * ((c[14] + 0.12 * c[16]) / (a[16] + 0.12 * c[15])).ln();
+        a[68] = c[35] * s[4].powi(3) * s[5] * (a[7] - a[67]);
+        a[42] = if c[10] >= 1.0 { (10.6015 / 5.0) / (10.6015 / 5.0 + ((-0.71 * a[7]) / 25.0).exp()) } else { 1.0 };
+        a[46] = ((s[3].powi(2) * c[16]) / (c[16] + c[18])) * c[82] * (a[7] - a[32]) * a[42];
+        let exp_term_71 = (-1.0 * a[7] / c[85]).exp();
+        let denom_71 = if (1.0 - exp_term_71).abs() < 1e-7 { 1e-7 } else { 1.0 - exp_term_71 };
+        a[71] = ((1.85e-5 * c[37] * a[7]) / (c[85] * denom_71)) * (a[16] - c[14] * exp_term_71) * s[6] * s[7] * s[8];
+        r[2] = (-1.0 * (a[68] + a[46] + a[71] + 3.0 * a[52] + 3.0 * a[66])) / (1.0 * (c[100] + c[98]) * c[2]);
+        a[81] = c[58] * s[17] * (1.0 - s[21]) - c[63] * s[21];
+        r[21] = a[81];
+        a[79] = c[88] / (1.0 + c[53] / s[17]);
+        a[82] = (s[16] - s[15]) / c[51];
+        r[16] = a[79] - (a[82] * c[99]) / c[101];
+        a[84] = c[60] * s[17] * (1.0 - (s[22] + s[18])) - c[64] * s[22];
+        r[22] = a[84];
+        a[85] = c[62] * s[15] * (1.0 - s[23]) - c[67] * s[23];
+        r[23] = a[85];
+        a[75] = c[41] * s[12] * (s[15] - s[1]);
+        r[15] = a[82] - (a[75] + c[57] * a[85]);
+        a[49] = ((s[3].powi(2) * c[16]) / (c[16] + c[18])) * c[83] * (a[7] - c[87]) * a[42];
+        a[51] = a[46] + a[49];
+        a[76] = c[79] * (a[7] - c[87]) * (0.9 * s[29] + 0.1 * s[28]) * s[30];
+        a[78] = c[85] * (c[16] / c[15]).ln();
+        a[80] = c[86] * (a[7] - a[78]) * s[31].powi(2);
+        a[74] = c[78] * (a[7] - c[87]) * s[26] * s[27];
+        let exp_term_69 = (-2.0 * a[7] / c[85]).exp();
+        let denom_69 = if (1.0 - exp_term_69).abs() < 1e-7 { 1e-7 } else { 1.0 - exp_term_69 };
+        a[69] = ((2.0 * c[37] * a[7]) / (c[85] * denom_69)) * (s[1] - c[17] * exp_term_69) * s[6] * s[7] * s[8];
+        let exp_term_70 = (-1.0 * a[7] / c[85]).exp();
+        let denom_70 = if (1.0 - exp_term_70).abs() < 1e-7 { 1e-7 } else { 1.0 - exp_term_70 };
+        a[70] = ((0.000365 * c[37] * a[7]) / (c[85] * denom_70)) * (c[15] - c[16] * exp_term_70) * s[6] * s[7] * s[8];
+        a[72] = (a[69] + a[70] + a[71]) * (1.0 - c[94]) * 1.0 * c[93];
+        let exp_term_73 = (-2.0 * a[7] / c[85]).exp();
+        let denom_73 = if (1.0 - exp_term_73).abs() < 1e-7 { 1e-7 } else { 1.0 - exp_term_73 };
+        a[73] = ((2.0 * c[40] * a[7]) / (c[85] * denom_73)) * (s[1] - c[17] * exp_term_73) * s[9] * s[10];
+        a[83] = if c[11] > 0.0 { c[81] * (a[7] - c[87]) * (1.0 + ((a[7] + 20.0) / 20.0).exp()) * s[32] } else { 0.0 };
+        a[86] = a[51] + a[76] + a[80] + a[74] + a[52] + a[66] + a[68] + a[72] + a[73] + a[83];
+        r[0] = -a[86] / c[3];
+        a[87] = c[61] * s[17] * (1.0 - s[19]) - c[66] * s[19];
+        r[19] = a[87];
+        a[88] = c[61] * s[1] * (1.0 - s[20]) - c[66] * s[20];
+        r[20] = a[88];
+        a[77] = (s[1] - s[17]) / c[50];
+        a[89] = if c[13] > 0.0 && voi > c[71] { 10.0 } else { 0.0 };
+        r[17] = ((1.0 * (a[77] * c[98] - a[79] * c[101])) / c[100] - (c[56] * a[87] + c[54] * a[81] + c[55] * a[84])) - (c[69] * s[17] * (a[89] - s[24]) - c[70] * s[24]);
+        r[24] = c[69] * s[17] * (a[89] - s[24]) - c[70] * s[24];
+        r[1] = ((a[75] * c[99]) / c[98] - (((a[69] + a[73]) - 2.0 * a[66]) / (2.0 * c[2] * c[98]) + a[77] + c[56] * a[88])) - (c[69] * s[1] * (a[89] - s[25]) - c[70] * s[25]);
+        r[25] = c[69] * s[1] * (a[89] - s[25]) - c[70] * s[25];
     }
 
-    pub fn compute_i_cal(&self, p: &Pharmaco, ach_block: f64, c_sev_93: f64) -> f64 {
-        let p_cal = 0.2 * p.block_ca * p.isch_block() * (1.0 - ach_block) * c_sev_93;
-        let v_norm = self.v / 26.71;
-        let exp_2v = (-2.0 * v_norm).exp();
-        let exp_v = (-v_norm).exp();
-        
-        let i_sica = (2.0 * p_cal * self.v / (26.71 * (1.0 - exp_2v))) 
-            * (self.ca_sub - p.cao * exp_2v) * self.dl * self.fl * self.fca;
-        
-        let i_sika = (0.000365 * p_cal * self.v / (26.71 * (1.0 - exp_v))) 
-            * (140.0 - p.ko * exp_v) * self.dl * self.fl * self.fca;
-            
-        let i_sina = (1.85e-5 * p_cal * self.v / (26.71 * (1.0 - exp_v))) 
-            * (self.nai - p.nao * exp_v) * self.dl * self.fl * self.fca;
-            
-        i_sica + i_sika + i_sina
-    }
-
-    pub fn compute_i_kr(&self, p: &Pharmaco) -> f64 {
-        let g_kr = 0.0021637 * p.block_k;
-        let e_k = 26.71 * (p.effective_ko() / 140.0_f64).ln();
-        g_kr * (self.v - e_k) * (0.9 * self.paf + 0.1 * self.pas) * self.piy
-    }
-    
-    pub fn compute_i_ks(&self, p: &Pharmaco, c_sev_86: f64) -> f64 {
-        let g_ks = c_sev_86 * p.block_k;
-        let e_ks = 26.71 * ((p.effective_ko() + 0.0) / (140.0 + 0.0_f64)).ln();
-        g_ks * (self.v - e_ks) * self.n.powi(2)
-    }
-
-    pub fn compute_i_to(&self, p: &Pharmaco) -> f64 {
-        let g_to = 0.002;
-        let e_k = 26.71 * (p.effective_ko() / 140.0_f64).ln();
-        g_to * (self.v - e_k) * self.q * self.r
-    }
-    
-    pub fn compute_i_f(&self, p: &Pharmaco) -> f64 {
-        let e_k = 26.71 * (p.effective_ko() / 140.0_f64).ln();
-        let e_na = 26.71 * (p.nao / self.nai).ln();
-        let g_f_na = 0.03;
-        let g_f_k = 0.03;
-        
-        let i_f_na = g_f_na * self.y.powi(2) * (self.v - e_na) * p.ko / (p.ko + 45.0);
-        let i_f_k = g_f_k * self.y.powi(2) * (self.v - e_k) * p.ko / (p.ko + 45.0);
-        i_f_na + i_f_k
-    }
-
-    pub fn step(&mut self, dt: f64, p: &Pharmaco) {
-
+    pub fn step(&mut self, dt_sec: f64, p: &Pharmaco) {
+        // Atualização Farmacológica e Eletrolítica em tempo real
         let iso = p.symp;
         let ach = p.parasymp * 1e-3;
 
+        self.c[12] = iso;
+        self.c[11] = ach;
+
         let eff_iso_84 = iso * -0.25;
         let eff_ach_84 = if ach > 0.0 { (0.7 * ach) / (9e-5 + ach) } else { 0.0 };
-        let c_sev_84 = eff_iso_84 + eff_ach_84;
-        let b_up = 0.0006 * (1.0 - c_sev_84);
+        self.c[84] = eff_iso_84 + eff_ach_84;
 
-        let c_sev_86 = 0.0016576 * (1.0 + 0.2 * iso); // g_ks
-        let c_sev_89 = if ach > 0.0 { -1.0 - (9.898 * ach.powf(0.618)) / (ach.powf(0.618) + 0.00122423) } else { 0.0 };
-        let c_sev_90 = iso * 7.5;
-        let c_sev_91 = 1.0 + 0.2 * iso; // i_nak multiplier
-        let c_sev_93 = 1.0 + 0.23 * iso; // i_cal multiplier
-        let c_sev_94 = (0.31 * ach) / (ach + 9e-5); // ach block for i_cal
-        let c_sev_95 = iso * -8.0; // iso shift for dl gate
-        let c_sev_96 = 1.0 - 0.31 * iso; // iso slope for dl gate
-        let c_sev_102 = iso * -14.0; // iso shift for n gate
-        let alpha_a_val = if ach > 0.0 { (3.59880 - 0.0256410) / (1.0 + 1.21550e-06 / ach.powf(1.69510)) + 0.0256410 } else { 0.0256410 };
+        self.c[86] = 0.00165760 * (1.0 + 0.2 * iso);
+        self.c[89] = if ach > 0.0 { -1.0 - (9.898 * (ach).powf(0.618)) / ((ach).powf(0.618) + 0.00122423) } else { 0.0 };
+        self.c[90] = iso * 7.5;
+        self.c[91] = 1.0 + 0.2 * iso;
+        self.c[93] = 1.0 + 0.23 * iso;
+        self.c[94] = if ach > 0.0 { (0.31 * ach) / (ach + 9e-5) } else { 0.0 };
+        self.c[95] = iso * -8.0;
+        self.c[96] = 1.0 - 0.31 * iso;
+        self.c[102] = iso * -14.0;
+        self.c[103] = if ach > 0.0 { (3.59880 - 0.0256410) / (1.0 + 1.21550e-06 / (ach.max(1e-12)).powf(1.69510)) + 0.0256410 } else { 0.0256410 };
 
-        let e_na = 26.71 * (p.nao / self.nai).ln();
-        let e_k = 26.71 * (p.effective_ko() / 140.0_f64).ln();
+        let effective_ko = p.effective_ko();
+        self.c[87] = self.c_base[85] * (effective_ko / self.c_base[15]).ln();
 
-        // Constants for volumes
-        let v_cell = 1e-9 * std::f64::consts::PI * 16.0 * 70.0;
-        let v_sub = 1e-9 * 2.0 * std::f64::consts::PI * 0.02 * (4.0 - 0.01) * 70.0;
-        let v_jsr = 0.0012 * v_cell;
-        let v_i = 0.46 * v_cell - v_sub;
-        let v_nsr = 0.0116 * v_cell;
+        // 1. Eletrólitos
+        self.c[16] = effective_ko;
+        self.c[17] = p.cao;
+        self.c[14] = p.nao;
 
-        // NaK Current
-        let i_nak = 0.063 * c_sev_91 * p.block_nak * (1.0 + (1.4 / p.ko).powf(1.2)).recip() * (1.0 + (14.0 / self.nai).powf(1.3)).recip() * (1.0 + (-(self.v - e_na) + 110.0) / 20.0).exp().recip();
+        // 2. Fármacos Antiarrítmicos
+        self.c[35] = self.c_base[35] * p.block_na * p.isch_block();
+        self.c[79] = self.c_base[79] * p.block_k;
+        self.c[86] = self.c_base[86] * p.block_k;
+        self.c[37] = self.c_base[37] * p.block_ca * p.isch_block();
+        self.c[21] = self.c_base[21] * p.block_nak;
 
-        // NaCa Current
-        let d_naca = 1.0 + (p.cao / 3.663) * (1.0 + (0.0 * self.v / 26.71).exp()) + (p.nao / 1628.0) * (1.0 + (p.nao / 561.4) * (1.0 + p.nao / 4.663));
-        let k34 = p.nao / (4.663 + p.nao);
-        let k23 = (p.nao / 1628.0 * p.nao / 561.4) * (1.0 + p.nao / 4.663) * (-0.4315 * self.v / (2.0 * 26.71)).exp() / d_naca;
-        let k21 = (p.cao / 3.663) * (0.0 * self.v / 26.71).exp() / d_naca;
-        let k32 = (0.4315 * self.v / (2.0 * 26.71)).exp();
-        let k43 = self.nai / (26.44 + self.nai);
-        let k41 = (-0.4315 * self.v / (2.0 * 26.71)).exp();
-        let d_i = 1.0 + (self.ca_sub / 0.0207) * (1.0 + (-0.1369 * self.v / 26.71).exp() + self.nai / 26.44) + (self.nai / 395.3) * (1.0 + (self.nai / 2.289) * (1.0 + self.nai / 26.44));
-        let k12 = (self.ca_sub / 0.0207) * (-0.1369 * self.v / 26.71).exp() / d_i;
-        let k14 = ((self.nai / 395.3 * self.nai) / 2.289) * (1.0 + self.nai / 26.44) * (0.4315 * self.v / (2.0 * 26.71)).exp() / d_i;
-        
-        let x1 = k41 * k34 * (k23 + k21) + k21 * k32 * (k43 + k41);
-        let x2 = k32 * k43 * (k14 + k12) + k41 * k12 * (k34 + k32);
-        let x3 = k14 * k43 * (k23 + k21) + k12 * k23 * (k43 + k41);
-        let x4 = k23 * k34 * (k14 + k12) + k14 * k21 * (k34 + k32);
-        let i_naca = 4.0 * (x2 * k21 - x1 * k12) / (x1 + x2 + x3 + x4);
-
-        // CaT Current
-        let i_cat = (2.0 * 0.02 * self.v / (26.71 * (1.0 - (-2.0 * self.v / 26.71).exp()))) * (self.ca_sub - p.cao * (-2.0 * self.v / 26.71).exp()) * self.dt_gate * self.ft_gate;
-
-        // KACh Current
-        let g_kach = 0.00864;
-        let i_kach = if ach > 0.0 { g_kach * (self.v - e_k) * (1.0 + ((self.v + 20.0) / 20.0).exp()) * self.a } else { 0.0 };
-
-        // Other Currents
-        let i_na = self.compute_i_na(p);
-        let i_cal = self.compute_i_cal(p, c_sev_94, c_sev_93);
-        let i_kr = self.compute_i_kr(p);
-        let i_ks = self.compute_i_ks(p, c_sev_86);
-        let i_to = self.compute_i_to(p);
-        let i_f = self.compute_i_f(p);
-        
-        // Components of i_cal, i_f for Ca and Na dynamics
-        let p_cal = 0.2 * p.block_ca * p.isch_block() * (1.0 - c_sev_94) * c_sev_93;
-        let i_sica = (2.0 * p_cal * self.v / (26.71 * (1.0 - (-2.0 * self.v / 26.71).exp()))) * (self.ca_sub - p.cao * (-2.0 * self.v / 26.71).exp()) * self.dl * self.fl * self.fca;
-        let i_sina = (1.85e-5 * p_cal * self.v / (26.71 * (1.0 - (-self.v / 26.71).exp()))) * (self.nai - p.nao * (-self.v / 26.71).exp()) * self.dl * self.fl * self.fca;
-        let i_f_na = 0.03 * self.y.powi(2) * (self.v - e_na) * p.ko / (p.ko + 45.0);
-
-        // Sum total current 
-        let i_tot = i_na + i_cal + i_kr + i_ks + i_to + i_f + i_nak + i_naca + i_cat + i_kach;
-        
-        // Update membrane potential
-        let c_m = 3.2e-5;
-        self.v += (-i_tot / c_m) * dt;
-
-        // i_f y gate
-        let y_inf = 1.0 / (1.0 + (((self.v + 52.5) - c_sev_89 - c_sev_90) / 9.0).exp());
-        let tau_y = 0.716653 / (0.0708 * (-((self.v + 5.0) - c_sev_89 - c_sev_90) / 20.2791).exp() + 10.6 * (((self.v - c_sev_89) - c_sev_90) / 18.0).exp());
-        self.y += ((y_inf - self.y) / tau_y) * dt;
-        
-        // i_Na m & h gates
-        let v_shift = self.v + 41.0;
-        let alpha_m = if v_shift.abs() < 1e-5 { 2000.0 } else { (200.0 * v_shift) / (1.0 - (-0.1 * v_shift).exp()) };
-        let beta_m = 8000.0 * (-0.056 * (self.v + 66.0)).exp();
-        self.m += (alpha_m * (1.0 - self.m) - beta_m * self.m) * dt;
-
-        let alpha_h = 20.0 * (-0.125 * (self.v + 75.0)).exp();
-        let beta_h = 2000.0 / (320.0 * (-0.1 * (self.v + 75.0)).exp() + 1.0);
-        self.h += (alpha_h * (1.0 - self.h) - beta_h * self.h) * dt;
-
-        // i_Kr gates
-        let pa_inf = 1.0 / (1.0 + (-(self.v + 14.8) / 8.5).exp());
-        let tau_pas = 0.846554 / (4.2 * (self.v / 17.0).exp() + 0.15 * (-self.v / 21.6).exp());
-        let tau_paf = 1.0 / (30.0 * (self.v / 10.0).exp() + (-self.v / 12.0).exp());
-        self.pas += ((pa_inf - self.pas) / tau_pas) * dt;
-        self.paf += ((pa_inf - self.paf) / tau_paf) * dt;
-        
-        let pi_inf = 1.0 / (1.0 + ((self.v + 28.6) / 17.1).exp());
-        let tau_pi = 1.0 / (100.0 * (-self.v / 54.645).exp() + 656.0 * (self.v / 106.157).exp());
-        self.piy += ((pi_inf - self.piy) / tau_pi) * dt;
-
-        // i_Ks n gate
-        let v_shifted_n = self.v - c_sev_102;
-        let n_inf_term = 14.0 / (1.0 + (-(v_shifted_n - 40.0) / 12.0).exp());
-        let n_inf = n_inf_term / (n_inf_term + (-v_shifted_n / 45.0).exp());
-        let alpha_n = 28.0 / (1.0 + (-(v_shifted_n - 40.0) / 3.0).exp());
-        let beta_n = (-(v_shifted_n - 5.0) / 25.0).exp();
-        let tau_n = 1.0 / (alpha_n + beta_n);
-        self.n += ((n_inf - self.n) / tau_n) * dt;
-        
-        // i_to q & r gates
-        let q_inf = 1.0 / (1.0 + ((self.v + 49.0) / 13.0).exp());
-        let tau_q = 0.001 * 0.6 * (65.17 / (0.57 * (-0.08 * (self.v + 44.0)).exp() + 0.065 * (0.1 * (self.v + 45.93)).exp()) + 10.1);
-        self.q += ((q_inf - self.q) / tau_q) * dt;
-
-        let r_inf = 1.0 / (1.0 + (-(self.v - 19.3) / 15.0).exp());
-        let tau_r = 0.001 * 0.66 * 1.4 * (15.59 / (1.037 * (0.09 * (self.v + 30.61)).exp() + 0.369 * (-0.12 * (self.v + 23.84)).exp()) + 2.98);
-        self.r += ((r_inf - self.r) / tau_r) * dt;
-
-        // i_KACh a gate
-        let beta_a = 10.0 * (0.0133 * (self.v + 40.0)).exp();
-        let alpha_a = alpha_a_val;
-        let a_inf = alpha_a / (alpha_a + beta_a);
-        let tau_a = 1.0 / (alpha_a + beta_a);
-        self.a += ((a_inf - self.a) / tau_a) * dt;
-
-        // i_CaL gates
-        let fca_inf = 0.00035 / (0.00035 + self.ca_sub);
-        let tau_fca = (0.001 * fca_inf) / 0.01;
-        self.fca += ((fca_inf - self.fca) / tau_fca) * dt;
-
-        let fl_inf = 1.0 / (1.0 + ((self.v + 37.4) / 5.3).exp());
-        let tau_fl = 0.001 * (44.3 + 230.0 * (-((self.v + 36.0) / 10.0).powi(2)).exp());
-        self.fl += ((fl_inf - self.fl) / tau_fl) * dt;
-
-        let dl_inf = 1.0 / (1.0 + (-(self.v + 20.3 - c_sev_95) / (c_sev_96 * 4.2)).exp());
-        let v_dl_1 = if (self.v + 41.8).abs() < 1e-5 { -41.80001 } else if (self.v + 6.8).abs() < 1e-5 { -6.80001 } else { self.v };
-        let alpha_dl = (-0.02839 * (v_dl_1 + 41.8 - c_sev_95)) / ((-(v_dl_1 + 41.8 - c_sev_95) / 2.5).exp() - 1.0) 
-                     - (0.0849 * (v_dl_1 + 6.8 - c_sev_95)) / ((-(v_dl_1 + 6.8 - c_sev_95) / 4.8).exp() - 1.0);
-        let v_dl_2 = if (self.v + 1.8).abs() < 1e-5 { -1.80001 } else { self.v };
-        let beta_dl = (0.01143 * (v_dl_2 + 1.8 - c_sev_95)) / (((v_dl_2 + 1.8 - c_sev_95) / 2.5).exp() - 1.0);
-        let tau_dl = 0.001 / (alpha_dl + beta_dl);
-        self.dl += ((dl_inf - self.dl) / tau_dl) * dt;
-
-        // i_CaT gates
-        let dt_inf = 1.0 / (1.0 + (-(self.v + 38.3) / 5.5).exp());
-        let tau_dt = 0.001 / (1.068 * ((self.v + 38.3) / 30.0).exp() + 1.068 * (-(self.v + 38.3) / 30.0).exp());
-        self.dt_gate += ((dt_inf - self.dt_gate) / tau_dt) * dt;
-
-        let ft_inf = 1.0 / (1.0 + ((self.v + 58.7) / 3.8).exp());
-        let tau_ft = 1.0 / (16.67 * (-(self.v + 75.0) / 83.3).exp() + 16.67 * ((self.v + 75.0) / 15.38).exp());
-        self.ft_gate += ((ft_inf - self.ft_gate) / tau_ft) * dt;
-
-        // SR release gates
-        let kcasr = 15.0 - (15.0 - 1.0) / (1.0 + (0.45 / self.ca_jsr).powf(2.5));
-        let kosrca = 10000.0 / kcasr;
-        let kisrca = 500.0 * kcasr;
-
-        let d_r_sr = (5.0 * self.ri_sr - kisrca * self.ca_sub * self.r_sr) - (kosrca * self.ca_sub.powi(2) * self.r_sr - 60.0 * self.o_sr);
-        let d_o_sr = (kosrca * self.ca_sub.powi(2) * self.r_sr - 60.0 * self.o_sr) - (kisrca * self.ca_sub * self.o_sr - 5.0 * self.i_sr);
-        let d_i_sr = (kisrca * self.ca_sub * self.o_sr - 5.0 * self.i_sr) - (60.0 * self.i_sr - kosrca * self.ca_sub.powi(2) * self.ri_sr);
-        let d_ri_sr = (60.0 * self.i_sr - kosrca * self.ca_sub.powi(2) * self.ri_sr) - (5.0 * self.ri_sr - kisrca * self.ca_sub * self.r_sr);
-
-        self.r_sr += d_r_sr * dt;
-        self.o_sr += d_o_sr * dt;
-        self.i_sr += d_i_sr * dt;
-        self.ri_sr += d_ri_sr * dt;
-
-        // Ca buffering rates
-        let d_ftmm = 2277.0 * 2.5 * (1.0 - (self.ftmc + self.ftmm)) - 751.0 * self.ftmm;
-        let d_ftc = 88800.0 * self.cai * (1.0 - self.ftc) - 446.0 * self.ftc;
-        let d_ftmc = 227700.0 * self.cai * (1.0 - (self.ftmc + self.ftmm)) - 7.51 * self.ftmc;
-        let d_fcq = 534.0 * self.ca_jsr * (1.0 - self.fcq) - 445.0 * self.fcq;
-        let d_fcmi = 227700.0 * self.cai * (1.0 - self.fcmi) - 542.0 * self.fcmi;
-        let d_fcms = 227700.0 * self.ca_sub * (1.0 - self.fcms) - 542.0 * self.fcms;
-
-        self.ftmm += d_ftmm * dt;
-        self.ftc += d_ftc * dt;
-        self.ftmc += d_ftmc * dt;
-        self.fcq += d_fcq * dt;
-        self.fcmi += d_fcmi * dt;
-        self.fcms += d_fcms * dt;
-
-        // Ca fluxes
-        let j_up = 12.0 / (1.0 + b_up / self.cai);
-        let j_tr = (self.ca_nsr - self.ca_jsr) / 0.04;
-        let j_srcarel = 250000000.0 * self.o_sr * (self.ca_jsr - self.ca_sub);
-        let j_ca_dif = (self.ca_sub - self.cai) / 4e-5;
-
-        // Na and Ca concentrations
-        let d_nai = -(i_na + i_f_na + i_sina + 3.0 * i_nak + 3.0 * i_naca) / ((v_i + v_sub) * 96485.3415);
-        let d_ca_nsr = j_up - j_tr * v_jsr / v_nsr;
-        let d_ca_jsr = j_tr - (j_srcarel + 10.0 * d_fcq);
-        let d_cai = (j_ca_dif * v_sub - j_up * v_nsr) / v_i - (0.045 * d_fcmi + 0.031 * d_ftc + 0.062 * d_ftmc);
-        let d_ca_sub = j_srcarel * v_jsr / v_sub - (i_sica + i_cat - 2.0 * i_naca) / (2.0 * 96485.3415 * v_sub) - j_ca_dif - 0.045 * d_fcms;
-
-        self.nai += d_nai * dt;
-        self.ca_nsr += d_ca_nsr * dt;
-        self.ca_jsr += d_ca_jsr * dt;
-        self.cai += d_cai * dt;
-        self.ca_sub += d_ca_sub * dt;
+        // Passo de Euler
+        self.compute_rates(self.time);
+        for j in 0..33 {
+            self.s[j] += self.r[j] * dt_sec;
+        }
+        self.v = self.s[0];
+        self.time += dt_sec;
     }
+
+    // Métodos utilitários de compatibilidade para inspeção de correntes
+    pub fn compute_i_na(&self, _p: &Pharmaco) -> f64 { self.a[68] }
+    pub fn compute_i_cal(&self, _p: &Pharmaco, _ach_block: f64, _c_sev_93: f64) -> f64 { self.a[72] }
+    pub fn compute_i_kr(&self, _p: &Pharmaco) -> f64 { self.a[76] }
+    pub fn compute_i_ks(&self, _p: &Pharmaco, _c_sev_86: f64) -> f64 { self.a[80] }
+    pub fn compute_i_to(&self, _p: &Pharmaco) -> f64 { self.a[74] }
+    pub fn compute_i_f(&self, _p: &Pharmaco) -> f64 { self.a[51] }
 }
