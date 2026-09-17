@@ -70,21 +70,28 @@ pub struct HeartSystem {
     av_node: inada::InadaCell,
     atrium: courtemanche::AtriumCell,
     purkinje: purkinje::PurkinjeCell,
-    ventricle: tentusscher::VentricleCell,
+    vent_endo: tentusscher::VentricleCell,
+    vent_m: tentusscher::VentricleCell,
+    vent_epi: tentusscher::VentricleCell,
     time: f64,
     
     // Condução (Pingers & Estímulos Transitórios)
     timer_atrium: f64,
     timer_av: f64,
     timer_purk: f64,
-    timer_vent: f64,
+    timer_endo: f64,
+    timer_m: f64,
+    timer_epi: f64,
     stim_until_atrium: f64,
     stim_until_purk: f64,
-    stim_until_vent: f64,
+    stim_until_endo: f64,
+    stim_until_m: f64,
+    stim_until_epi: f64,
     sa_fired: bool,
     atrium_fired: bool,
     av_fired: bool,
     purk_fired: bool,
+    endo_fired: bool,
 
     // Farmacologia
     pharm: Pharmaco,
@@ -116,19 +123,26 @@ impl HeartSystem {
             av_node: inada::InadaCell::default(),
             atrium: courtemanche::AtriumCell::default(),
             purkinje: purkinje::PurkinjeCell::default(),
-            ventricle: tentusscher::VentricleCell::default(),
+            vent_endo: tentusscher::VentricleCell::new_with_type(tentusscher::VentricleCellType::Endocardial),
+            vent_m: tentusscher::VentricleCell::new_with_type(tentusscher::VentricleCellType::Midmyocardial),
+            vent_epi: tentusscher::VentricleCell::new_with_type(tentusscher::VentricleCellType::Epicardial),
             time: 0.0,
             timer_atrium: -1.0,
             timer_av: -1.0,
             timer_purk: -1.0,
-            timer_vent: -1.0,
+            timer_endo: -1.0,
+            timer_m: -1.0,
+            timer_epi: -1.0,
             stim_until_atrium: -1.0,
             stim_until_purk: -1.0,
-            stim_until_vent: -1.0,
+            stim_until_endo: -1.0,
+            stim_until_m: -1.0,
+            stim_until_epi: -1.0,
             sa_fired: false,
             atrium_fired: false,
             av_fired: false,
             purk_fired: false,
+            endo_fired: false,
             pharm: Pharmaco::default(),
             t_last_atr_beat: -1.0,
             t_last_vent_beat: -1.0,
@@ -164,7 +178,7 @@ impl HeartSystem {
     }
 
     pub fn step(&mut self, dt: f64) {
-        let prev_v_vent = self.ventricle.v;
+        let prev_v_vent = self.vent_endo.v;
         let prev_v_atr = self.atrium.v;
 
         // Gerenciamento dos pulsos transitórios de estímulo elétrico
@@ -190,15 +204,37 @@ impl HeartSystem {
             self.purkinje.i_stim = 0.0;
         }
 
-        if self.stim_until_vent > 0.0 {
-            if self.time < self.stim_until_vent {
-                self.ventricle.i_stim = -52.0;
+        if self.stim_until_endo > 0.0 {
+            if self.time < self.stim_until_endo {
+                self.vent_endo.i_stim = -52.0;
             } else {
-                self.ventricle.i_stim = 0.0;
-                self.stim_until_vent = -1.0;
+                self.vent_endo.i_stim = 0.0;
+                self.stim_until_endo = -1.0;
             }
         } else {
-            self.ventricle.i_stim = 0.0;
+            self.vent_endo.i_stim = 0.0;
+        }
+
+        if self.stim_until_m > 0.0 {
+            if self.time < self.stim_until_m {
+                self.vent_m.i_stim = -52.0;
+            } else {
+                self.vent_m.i_stim = 0.0;
+                self.stim_until_m = -1.0;
+            }
+        } else {
+            self.vent_m.i_stim = 0.0;
+        }
+
+        if self.stim_until_epi > 0.0 {
+            if self.time < self.stim_until_epi {
+                self.vent_epi.i_stim = -52.0;
+            } else {
+                self.vent_epi.i_stim = 0.0;
+                self.stim_until_epi = -1.0;
+            }
+        } else {
+            self.vent_epi.i_stim = 0.0;
         }
 
         // Passo de Integração (Forward Euler)
@@ -207,18 +243,21 @@ impl HeartSystem {
         self.sa_node.step(dt_sec, &self.pharm);
         self.av_node.step(dt_sec, &self.pharm);
         
-        // O Átrio (Courtemanche), Purkinje (Stewart) e Ventrículo (Ten Tusscher) foram modelados em MILISSEGUNDOS
+        // O Átrio (Courtemanche), Purkinje (Stewart) e Ventrículo Transmural (Ten Tusscher) em MILISSEGUNDOS
         self.atrium.step(dt, &self.pharm);
         self.purkinje.step(dt, &self.pharm);
-        self.ventricle.step(dt, &self.pharm);
+        self.vent_endo.step(dt, &self.pharm);
+        self.vent_m.step(dt, &self.pharm);
+        self.vent_epi.step(dt, &self.pharm);
         
         self.time += dt;
         
-        // --- SISTEMA DE CONDUÇÃO (Acoplamento Fisiológico) ---
+        // --- SISTEMA DE CONDUÇÃO (Acoplamento Fisiológico com Dromotropismo Dinâmico) ---
 
-        // Pinger 1: SA -> Átrio (Latência ~15ms de propagação internodal)
+        // Pinger 1: SA -> Átrio (Latência ~15ms modulada por canais de Sódio)
         if self.sa_node.v >= -20.0 && !self.sa_fired {
-            self.timer_atrium = self.time + 15.0;
+            let delay_sa_atr = 15.0 / self.pharm.block_na.max(0.2);
+            self.timer_atrium = self.time + delay_sa_atr;
             self.sa_fired = true;
         } else if self.sa_node.v < -40.0 {
             self.sa_fired = false;
@@ -232,9 +271,10 @@ impl HeartSystem {
             self.timer_atrium = -1.0;
         }
 
-        // Pinger 2: Átrio -> AV (Latência ~50ms de viagem até o Nó AV)
+        // Pinger 2: Átrio -> AV (Latência atrial de ~50ms até o Nó AV)
         if self.atrium.v >= -20.0 && !self.atrium_fired {
-            self.timer_av = self.time + 50.0;
+            let delay_atr_av = 50.0 * (1.0 + self.pharm.isch * 0.3) / self.pharm.block_na.max(0.2);
+            self.timer_av = self.time + delay_atr_av;
             self.atrium_fired = true;
         } else if self.atrium.v < -60.0 {
             self.atrium_fired = false;
@@ -247,9 +287,25 @@ impl HeartSystem {
             self.timer_av = -1.0;
         }
 
-        // Pinger 3: AV -> Purkinje / His (Latência do Feixe de His ~25ms)
+        // Pinger 3: AV -> Purkinje / His
+        // Dromotropismo fisiológico dinâmico:
+        // - Condução decremental dependente de frequência (taquicardia aumenta o atraso)
+        // - Tônus simpático encurta (dromotropismo +) e parassimpático alarga (dromotropismo -)
+        // - Bloqueadores de cálcio (Verapamil) e isquemia aumentam o atraso ou bloqueiam (BAVT)
         if self.av_node.v >= -15.0 && !self.av_fired {
-            self.timer_purk = self.time + 25.0;
+            let rate_factor = if self.bpm > 60.0 {
+                1.0 + ((self.bpm - 60.0) / 120.0) * 0.30
+            } else {
+                1.0 - ((60.0 - self.bpm).min(30.0) / 60.0) * 0.10
+            };
+            let ans_factor = (1.0 - (self.pharm.symp * 0.25) + (self.pharm.parasymp * 0.40) + (self.pharm.isch * 0.50))
+                / self.pharm.block_ca.max(0.15);
+            let dynamic_his_delay = (25.0 * rate_factor * ans_factor).clamp(15.0, 150.0);
+
+            // Bloqueio AV total se bloqueio de Ca2+ for crítico (< 0.35) ou isquemia severa (> 0.85)
+            if self.pharm.block_ca >= 0.35 && self.pharm.isch <= 0.85 {
+                self.timer_purk = self.time + dynamic_his_delay;
+            }
             self.av_fired = true;
         } else if self.av_node.v < -45.0 {
             self.av_fired = false;
@@ -263,24 +319,52 @@ impl HeartSystem {
             self.timer_purk = -1.0;
         }
 
-        // Pinger 4: Purkinje -> Ventrículo (Latência de condução rápida pelas fibras ~15ms)
+        // Pinger 4: Purkinje -> Endocárdio (Condução rápida via rede subendocárdica ~12ms)
         if self.purkinje.v >= -15.0 && !self.purk_fired {
-            self.timer_vent = self.time + 15.0;
+            let latency_purk_endo = 12.0 / self.pharm.block_na.max(0.2);
+            self.timer_endo = self.time + latency_purk_endo;
             self.purk_fired = true;
         } else if self.purkinje.v < -60.0 {
             self.purk_fired = false;
         }
 
-        if self.timer_vent > 0.0 && self.time >= self.timer_vent {
-            if self.ventricle.v < -60.0 {
-                self.stim_until_vent = self.time + 1.5; // Injeção de corrente despolarizante (1.5ms)
-                self.ventricle.i_stim = -52.0;
+        if self.timer_endo > 0.0 && self.time >= self.timer_endo {
+            if self.vent_endo.v < -60.0 {
+                self.stim_until_endo = self.time + 1.5;
+                self.vent_endo.i_stim = -52.0;
             }
-            self.timer_vent = -1.0;
+            self.timer_endo = -1.0;
+        }
+
+        // Pinger 5: Condução Transmural Endocárdio -> Célula M (~6ms) -> Epicárdio (~12ms)
+        if self.vent_endo.v >= -15.0 && !self.endo_fired {
+            let delay_m = 6.0 / self.pharm.block_na.max(0.2);
+            let delay_epi = 12.0 / self.pharm.block_na.max(0.2);
+            self.timer_m = self.time + delay_m;
+            self.timer_epi = self.time + delay_epi;
+            self.endo_fired = true;
+        } else if self.vent_endo.v < -60.0 {
+            self.endo_fired = false;
+        }
+
+        if self.timer_m > 0.0 && self.time >= self.timer_m {
+            if self.vent_m.v < -60.0 {
+                self.stim_until_m = self.time + 1.5;
+                self.vent_m.i_stim = -52.0;
+            }
+            self.timer_m = -1.0;
+        }
+
+        if self.timer_epi > 0.0 && self.time >= self.timer_epi {
+            if self.vent_epi.v < -60.0 {
+                self.stim_until_epi = self.time + 1.5;
+                self.vent_epi.i_stim = -52.0;
+            }
+            self.timer_epi = -1.0;
         }
 
         // --- RASTREADOR FISIOLÓGICO DE MÉTRICAS (HUD) ---
-        let v_vent = self.ventricle.v;
+        let v_vent = self.vent_endo.v;
         let v_atr = self.atrium.v;
 
         // Rastrear potencial mínimo diastólico
@@ -327,17 +411,17 @@ impl HeartSystem {
             self.v_min_cycle = 0.0;
         }
 
-        // 3. Rastrear repolarização ventricular e intervalo QT
+        // 3. Rastrear repolarização ventricular e intervalo QT pela Célula M (platô mais longo)
         if self.in_ap {
-            if v_vent > self.ap_v_peak {
-                self.ap_v_peak = v_vent;
+            if self.vent_m.v > self.ap_v_peak {
+                self.ap_v_peak = self.vent_m.v;
             }
             let time_in_ap = self.time - self.t_ap_start;
             // Critério APD90: retorno a 90% do repouso em relação ao pico
             let repol_threshold = self.v_rest + 0.10 * (self.ap_v_peak - self.v_rest);
             let target_threshold = repol_threshold.max(-60.0);
 
-            if time_in_ap > 100.0 && v_vent <= target_threshold {
+            if time_in_ap > 100.0 && self.vent_m.v <= target_threshold {
                 self.in_ap = false;
                 self.qt = (self.qt * 0.7) + (time_in_ap * 0.3);
             } else if time_in_ap > 1200.0 {
@@ -366,7 +450,7 @@ impl HeartSystem {
 
     // Roda um lote completo de cálculos no lado do Rust e retorna um array f64 achatado!
     pub fn run_batch(&mut self, dt: f64, steps: usize, downsample: usize) -> Vec<f64> {
-        let mut batch = Vec::with_capacity((steps / downsample) * 7);
+        let mut batch = Vec::with_capacity((steps / downsample) * 9);
         for i in 0..steps {
             self.step(dt);
             if i % downsample == 0 {
@@ -374,9 +458,11 @@ impl HeartSystem {
                 batch.push(self.av_node.v);
                 batch.push(self.atrium.v);
                 batch.push(self.purkinje.v);
-                batch.push(self.ventricle.v);
-                batch.push(self.ventricle.ca_i); // 5
-                batch.push(self.ventricle.force); // 6
+                batch.push(self.vent_endo.v);     // 4: Endocárdio
+                batch.push(self.vent_epi.v);      // 5: Epicárdio
+                batch.push(self.vent_endo.ca_i);  // 6: Transiente de Cálcio
+                batch.push(self.vent_endo.force); // 7: Força de contração
+                batch.push(self.compute_ecg());   // 8: ECG Dipolar Transmural
             }
         }
         batch
@@ -387,8 +473,17 @@ impl HeartSystem {
     pub fn get_av_v(&self) -> f64 { self.av_node.v }
     pub fn get_atrium_v(&self) -> f64 { self.atrium.v }
     pub fn get_purkinje_v(&self) -> f64 { self.purkinje.v }
-    pub fn get_ventricle_v(&self) -> f64 { self.ventricle.v }
+    pub fn get_ventricle_v(&self) -> f64 { self.vent_endo.v }
+    pub fn get_vent_endo_v(&self) -> f64 { self.vent_endo.v }
+    pub fn get_vent_m_v(&self) -> f64 { self.vent_m.v }
+    pub fn get_vent_epi_v(&self) -> f64 { self.vent_epi.v }
     pub fn get_time(&self) -> f64 { self.time }
+
+    pub fn compute_ecg(&self) -> f64 {
+        let p_wave = (self.atrium.v + 80.0) * 0.15;
+        let transmural = (self.vent_endo.v - self.vent_epi.v) * 0.55 + (self.vent_m.v - self.vent_epi.v) * 0.25;
+        p_wave + transmural
+    }
 
     pub fn get_hud_metrics(&self) -> HudMetrics {
         HudMetrics {

@@ -9,12 +9,10 @@ const V_C: f64 = 16404.0;
 const P_KNA: f64 = 0.03;
 const G_K1: f64 = 5.405;
 const G_KR: f64 = 0.096;
-const G_KS: f64 = 0.245;
 const G_NA: f64 = 14.838;
 const G_BNA: f64 = 0.00029;
 const G_CAL: f64 = 0.175;
 const G_BCA: f64 = 0.000592;
-const G_TO: f64 = 0.294;
 const P_NAK: f64 = 1.362;
 const K_MK: f64 = 1.0;
 const K_MNA: f64 = 40.0;
@@ -41,8 +39,18 @@ const K_BUF_SR: f64 = 0.3;
 const V_SR: f64 = 1094.0;
 const TAU_FCA: f64 = 2.0;
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum VentricleCellType {
+    Epicardial,
+    Endocardial,
+    Midmyocardial,
+}
+
 #[derive(Clone, Debug)]
 pub struct VentricleCell {
+    pub cell_type: VentricleCellType,
+    pub g_to: f64,
+    pub g_ks: f64,
     pub time: f64,
     pub v: f64,
     pub k_i: f64,
@@ -67,7 +75,25 @@ pub struct VentricleCell {
 
 impl Default for VentricleCell {
     fn default() -> Self {
+        Self::new_with_type(VentricleCellType::Epicardial)
+    }
+}
+
+impl VentricleCell {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn new_with_type(cell_type: VentricleCellType) -> Self {
+        let (g_to, g_ks) = match cell_type {
+            VentricleCellType::Epicardial => (0.294, 0.245),
+            VentricleCellType::Endocardial => (0.073, 0.245),
+            VentricleCellType::Midmyocardial => (0.294, 0.098),
+        };
         Self {
+            cell_type,
+            g_to,
+            g_ks,
             time: 0.0,
             v: -86.2,
             k_i: 138.3,
@@ -90,12 +116,6 @@ impl Default for VentricleCell {
             i_stim: 0.0,
         }
     }
-}
-
-impl VentricleCell {
-    pub fn new() -> Self {
-        Self::default()
-    }
 
     pub fn compute_e_na(&self, p: &crate::models::Pharmaco) -> f64 {
         (R * T / F) * (p.nao / self.na_i).ln()
@@ -110,32 +130,32 @@ impl VentricleCell {
     }
 
     pub fn compute_e_ca(&self, p: &crate::models::Pharmaco) -> f64 {
-        (0.5 * R * T / F) * (p.cao / self.ca_i).ln()
+        0.5 * (R * T / F) * (p.cao / self.ca_i).ln()
     }
 
     pub fn step(&mut self, dt: f64, p: &crate::models::Pharmaco) {
-        // Compute reversal potentials
+        let v = self.v;
+
+        // Reversal Potentials
         let e_na = self.compute_e_na(p);
         let e_k = self.compute_e_k(p);
         let e_ks = self.compute_e_ks(p);
         let e_ca = self.compute_e_ca(p);
 
-        let v = self.v;
-
         // Inward Rectifier K+
         let alpha_k1 = 0.1 / (1.0 + f64::exp(0.06 * (v - e_k - 200.0)));
         let beta_k1 = (3.0 * f64::exp(0.0002 * (v - e_k + 100.0)) + f64::exp(0.1 * (v - e_k - 10.0))) / (1.0 + f64::exp(-0.5 * (v - e_k)));
         let xk1_inf = alpha_k1 / (alpha_k1 + beta_k1);
-        let i_k1 = G_K1 * xk1_inf * (p.ko / 5.4).sqrt() * (v - e_k) * p.block_k;
+        let i_k1 = G_K1 * xk1_inf * (p.effective_ko() / 5.4).sqrt() * (v - e_k) * p.block_k;
 
         // Transient Outward
-        let i_to = G_TO * self.r * self.s * (v - e_k) * p.block_k;
+        let i_to = self.g_to * self.r * self.s * (v - e_k) * p.block_k;
 
         // Rapid Time Dependent K+
         let i_kr = G_KR * (p.ko / 5.4).sqrt() * self.xr1 * self.xr2 * (v - e_k) * p.block_k;
 
         // Slow Time Dependent K+
-        let i_ks = G_KS * self.xs.powi(2) * (v - e_ks) * p.block_k;
+        let i_ks = self.g_ks * self.xs.powi(2) * (v - e_ks) * p.block_k;
 
         // L-type Ca2+ Current
         let i_cal = ((G_CAL * self.d * self.f * self.f_ca * 4.0 * v * F.powi(2) / (R * T)) *
