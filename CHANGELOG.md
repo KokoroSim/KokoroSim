@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Features
+  - (engine,ui) integrate Stewart et al. (2009) human Purkinje cell model into conduction chain
   - (dev) add file watching, livereload, and version footer to local dev environment
   - add initial cardiac electrophysiology UI dashboard and simulation engine
   - (ui/engine) adiciona sistema de plotagem em tempo real e modelo de força mecânica

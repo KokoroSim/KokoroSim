@@ -36,6 +36,7 @@ fn App() -> Element {
     let show_sa = use_signal(|| true);
     let show_av = use_signal(|| true);
     let show_atrium = use_signal(|| true);
+    let show_purkinje = use_signal(|| true);
     let show_vent = use_signal(|| true);
 
     // Dynamic HUD metrics state
@@ -51,13 +52,14 @@ fn App() -> Element {
         let mut frame_count: u32 = 0;
 
         // Create plotters (Canvas IDs match the HTML)
-        let mut pa_plotter_sa = Plotter::new("canvas-pa", 300); // Yellow for SA
-        let mut pa_plotter_av = Plotter::new("canvas-pa", 300); // Purple for AV
-        let mut pa_plotter_atrium = Plotter::new("canvas-pa", 300); // Pink for Atrium
-        let mut pa_plotter_vent = Plotter::new("canvas-pa", 300); // Cyan for Ventricle
-        let mut ecg_plotter = Plotter::new("canvas-ecg", 300); // Neon Green for ECG
-        let mut ch3_plotter = Plotter::new("canvas-ch3", 300); // Channels
-        let mut ch4_plotter = Plotter::new("canvas-ch4", 300); // Calcium
+        let mut pa_plotter_sa = Plotter::new("canvas-pa", 300); // Vermelho para SA
+        let mut pa_plotter_av = Plotter::new("canvas-pa", 300); // Amarelo para AV
+        let mut pa_plotter_atrium = Plotter::new("canvas-pa", 300); // Azul para Átrio
+        let mut pa_plotter_purk = Plotter::new("canvas-pa", 300); // Laranja para Purkinje
+        let mut pa_plotter_vent = Plotter::new("canvas-pa", 300); // Verde para Ventrículo
+        let mut ecg_plotter = Plotter::new("canvas-ecg", 300); // Neon Green/Cyan para ECG
+        let mut ch3_plotter = Plotter::new("canvas-ch3", 300); // Cálcio
+        let mut ch4_plotter = Plotter::new("canvas-ch4", 300); // Força
 
         loop {
             gloo_timers::future::TimeoutFuture::new(16).await;
@@ -83,20 +85,22 @@ fn App() -> Element {
             let downsample = 3333; // Saves 1 point per 3.33ms, fitting 1000ms inside the 300-capacity buffer
             let batch = system.write().run_batch(dt, steps, downsample);
             
-            // Batch is flattened: [sa_v, av_v, atrium_v, ventricle_v, sa_v, ...]
-            let chunk_size = 6;
+            // Batch is flattened: [sa_v, av_v, atrium_v, purk_v, vent_v, cai, force]
+            let chunk_size = 7;
             for chunk in batch.chunks(chunk_size) {
-                if chunk.len() == 6 {
+                if chunk.len() == 7 {
                     let sa = chunk[0];
                     let av = chunk[1];
                     let atrium = chunk[2];
-                    let vent = chunk[3];
-                    let cai = chunk[4];
-                    let force = chunk[5];
+                    let purk = chunk[3];
+                    let vent = chunk[4];
+                    let cai = chunk[5];
+                    let force = chunk[6];
                     
                     pa_plotter_sa.push(sa);
                     pa_plotter_av.push(av);
                     pa_plotter_atrium.push(atrium);
+                    pa_plotter_purk.push(purk);
                     pa_plotter_vent.push(vent);
 
                     // Pseudo-ECG: Diferença entre Átrio e Ventrículo (simplificado)
@@ -111,6 +115,7 @@ fn App() -> Element {
             // 3. Draw to Canvas
             // Prepare drawing flags to determine which one clears the canvas
             let any_vent = show_vent();
+            let any_purk = show_purkinje();
             let any_atrium = show_atrium();
             let any_av = show_av();
             let any_sa = show_sa();
@@ -128,6 +133,10 @@ fn App() -> Element {
             }
             if any_av {
                 pa_plotter_av.draw(-90.0, 50.0, "#f1c40f", !cleared); // Nó AV: Amarelo (#f1c40f)
+                cleared = true;
+            }
+            if any_purk {
+                pa_plotter_purk.draw(-90.0, 50.0, "#e67e22", !cleared); // Purkinje / His: Laranja (#e67e22)
                 cleared = true;
             }
             if any_vent {
@@ -204,6 +213,7 @@ fn App() -> Element {
                                 li { b { "Nó Sinoatrial (SA): " }, "Severi et al. (2012) — Automatismo biológico e modulação autonômica cronotrópica." }
                                 li { b { "Músculo Atrial: " }, "Courtemanche et al. (1998) — Células atriais humanas de resposta rápida." }
                                 li { b { "Nó Atrioventricular (AV): " }, "Inada et al. (2009) — Retardo fisiológico PR e via de condução juncional." }
+                                li { b { "Fibras de Purkinje (His): " }, "Stewart et al. (2009) — Rede de condução rápida e marcapasso terciário de escape." }
                                 li { b { "Músculo Ventricular: " }, "ten Tusscher & Panfilov (2006) — Platô ventricular humano e transiente de cálcio." }
                             }
                             h4 { style: "color: var(--neon-cyan); margin-bottom: 6px;", "Modulação Farmacológica e Autonômica:" }
@@ -240,6 +250,7 @@ fn App() -> Element {
                     Checkbox { label: "Nó SA (Gatilho)".to_string(), color: "#e74c3c".to_string(), checked: show_sa }
                     Checkbox { label: "Átrio (Contração)".to_string(), color: "#3498db".to_string(), checked: show_atrium }
                     Checkbox { label: "Nó AV (Condução)".to_string(), color: "#f1c40f".to_string(), checked: show_av }
+                    Checkbox { label: "Purkinje (Feixe de His)".to_string(), color: "#e67e22".to_string(), checked: show_purkinje }
                     Checkbox { label: "Ventrículo (Motor)".to_string(), color: "#2ecc71".to_string(), checked: show_vent }
                 }
 

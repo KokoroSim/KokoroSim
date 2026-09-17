@@ -2,6 +2,7 @@ pub mod severi;
 pub mod inada;
 pub mod courtemanche;
 pub mod tentusscher;
+pub mod purkinje;
 
 // Aqui ficará o gerenciador de estado global que orquestra as 4 células
 use wasm_bindgen::prelude::*;
@@ -68,18 +69,22 @@ pub struct HeartSystem {
     sa_node: severi::SeveriCell,
     av_node: inada::InadaCell,
     atrium: courtemanche::AtriumCell,
+    purkinje: purkinje::PurkinjeCell,
     ventricle: tentusscher::VentricleCell,
     time: f64,
     
     // Condução (Pingers & Estímulos Transitórios)
     timer_atrium: f64,
     timer_av: f64,
+    timer_purk: f64,
     timer_vent: f64,
     stim_until_atrium: f64,
+    stim_until_purk: f64,
     stim_until_vent: f64,
     sa_fired: bool,
     atrium_fired: bool,
     av_fired: bool,
+    purk_fired: bool,
 
     // Farmacologia
     pharm: Pharmaco,
@@ -110,16 +115,20 @@ impl HeartSystem {
             sa_node: severi::SeveriCell::new(),
             av_node: inada::InadaCell::default(),
             atrium: courtemanche::AtriumCell::default(),
+            purkinje: purkinje::PurkinjeCell::default(),
             ventricle: tentusscher::VentricleCell::default(),
             time: 0.0,
             timer_atrium: -1.0,
             timer_av: -1.0,
+            timer_purk: -1.0,
             timer_vent: -1.0,
             stim_until_atrium: -1.0,
+            stim_until_purk: -1.0,
             stim_until_vent: -1.0,
             sa_fired: false,
             atrium_fired: false,
             av_fired: false,
+            purk_fired: false,
             pharm: Pharmaco::default(),
             t_last_atr_beat: -1.0,
             t_last_vent_beat: -1.0,
@@ -170,6 +179,17 @@ impl HeartSystem {
             self.atrium.i_st = 0.0;
         }
 
+        if self.stim_until_purk > 0.0 {
+            if self.time < self.stim_until_purk {
+                self.purkinje.i_stim = -40.0;
+            } else {
+                self.purkinje.i_stim = 0.0;
+                self.stim_until_purk = -1.0;
+            }
+        } else {
+            self.purkinje.i_stim = 0.0;
+        }
+
         if self.stim_until_vent > 0.0 {
             if self.time < self.stim_until_vent {
                 self.ventricle.i_stim = -52.0;
@@ -187,8 +207,9 @@ impl HeartSystem {
         self.sa_node.step(dt_sec, &self.pharm);
         self.av_node.step(dt_sec, &self.pharm);
         
-        // O Átrio (Courtemanche) e Ventrículo (Ten Tusscher) foram modelados em MILISSEGUNDOS
+        // O Átrio (Courtemanche), Purkinje (Stewart) e Ventrículo (Ten Tusscher) foram modelados em MILISSEGUNDOS
         self.atrium.step(dt, &self.pharm);
+        self.purkinje.step(dt, &self.pharm);
         self.ventricle.step(dt, &self.pharm);
         
         self.time += dt;
@@ -226,12 +247,28 @@ impl HeartSystem {
             self.timer_av = -1.0;
         }
 
-        // Pinger 3: AV -> Ventrículo (Latência Feixe de His ~40ms de retardo hisiano)
+        // Pinger 3: AV -> Purkinje / His (Latência do Feixe de His ~25ms)
         if self.av_node.v >= -15.0 && !self.av_fired {
-            self.timer_vent = self.time + 40.0;
+            self.timer_purk = self.time + 25.0;
             self.av_fired = true;
         } else if self.av_node.v < -45.0 {
             self.av_fired = false;
+        }
+
+        if self.timer_purk > 0.0 && self.time >= self.timer_purk {
+            if self.purkinje.v < -60.0 {
+                self.stim_until_purk = self.time + 1.5; // Injeção de corrente despolarizante (1.5ms)
+                self.purkinje.i_stim = -40.0;
+            }
+            self.timer_purk = -1.0;
+        }
+
+        // Pinger 4: Purkinje -> Ventrículo (Latência de condução rápida pelas fibras ~15ms)
+        if self.purkinje.v >= -15.0 && !self.purk_fired {
+            self.timer_vent = self.time + 15.0;
+            self.purk_fired = true;
+        } else if self.purkinje.v < -60.0 {
+            self.purk_fired = false;
         }
 
         if self.timer_vent > 0.0 && self.time >= self.timer_vent {
@@ -329,16 +366,17 @@ impl HeartSystem {
 
     // Roda um lote completo de cálculos no lado do Rust e retorna um array f64 achatado!
     pub fn run_batch(&mut self, dt: f64, steps: usize, downsample: usize) -> Vec<f64> {
-        let mut batch = Vec::with_capacity((steps / downsample) * 6);
+        let mut batch = Vec::with_capacity((steps / downsample) * 7);
         for i in 0..steps {
             self.step(dt);
             if i % downsample == 0 {
                 batch.push(self.sa_node.v);
                 batch.push(self.av_node.v);
                 batch.push(self.atrium.v);
+                batch.push(self.purkinje.v);
                 batch.push(self.ventricle.v);
-                batch.push(self.ventricle.ca_i); // 4
-                batch.push(self.ventricle.force); // 5
+                batch.push(self.ventricle.ca_i); // 5
+                batch.push(self.ventricle.force); // 6
             }
         }
         batch
@@ -348,6 +386,7 @@ impl HeartSystem {
     pub fn get_sa_v(&self) -> f64 { self.sa_node.v }
     pub fn get_av_v(&self) -> f64 { self.av_node.v }
     pub fn get_atrium_v(&self) -> f64 { self.atrium.v }
+    pub fn get_purkinje_v(&self) -> f64 { self.purkinje.v }
     pub fn get_ventricle_v(&self) -> f64 { self.ventricle.v }
     pub fn get_time(&self) -> f64 { self.time }
 
