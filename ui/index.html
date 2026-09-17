@@ -12,5 +12,27 @@
         import init from './pkg/ui.js';
         init();
     </script>
+    <script>
+        // SimCardio LiveReload Client (desenvolvimento local)
+        (function() {
+            let lastBuildId = null;
+            async function pollLiveReload() {
+                try {
+                    const res = await fetch('/__livereload__?t=' + Date.now());
+                    if (res.ok) {
+                        const id = await res.text();
+                        if (lastBuildId !== null && id !== lastBuildId) {
+                            console.log('[SimCardio LiveReload] Nova build detectada (' + id + '). Recarregando...');
+                            window.location.reload();
+                            return;
+                        }
+                        lastBuildId = id;
+                    }
+                } catch (_) {}
+                setTimeout(pollLiveReload, 800);
+            }
+            pollLiveReload();
+        })();
+    </script>
 </body>
 </html>

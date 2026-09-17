@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Features
+  - (dev) add file watching, livereload, and version footer to local dev environment
   - add initial cardiac electrophysiology UI dashboard and simulation engine
   - (ui/engine) adiciona sistema de plotagem em tempo real e modelo de força mecânica
 
