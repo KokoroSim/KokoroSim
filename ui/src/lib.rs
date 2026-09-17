@@ -37,7 +37,8 @@ fn App() -> Element {
     let show_av = use_signal(|| true);
     let show_atrium = use_signal(|| true);
     let show_purkinje = use_signal(|| true);
-    let show_vent = use_signal(|| true);
+    let show_endo = use_signal(|| true);
+    let show_epi = use_signal(|| true);
 
     // Dynamic HUD metrics state
     let mut bpm = use_signal(|| 75.0);
@@ -56,8 +57,9 @@ fn App() -> Element {
         let mut pa_plotter_av = Plotter::new("canvas-pa", 300); // Amarelo para AV
         let mut pa_plotter_atrium = Plotter::new("canvas-pa", 300); // Azul para Átrio
         let mut pa_plotter_purk = Plotter::new("canvas-pa", 300); // Laranja para Purkinje
-        let mut pa_plotter_vent = Plotter::new("canvas-pa", 300); // Verde para Ventrículo
-        let mut ecg_plotter = Plotter::new("canvas-ecg", 300); // Neon Green/Cyan para ECG
+        let mut pa_plotter_endo = Plotter::new("canvas-pa", 300); // Verde Clínico para Endocárdio
+        let mut pa_plotter_epi = Plotter::new("canvas-pa", 300); // Verde Menta para Epicárdio
+        let mut ecg_plotter = Plotter::new("canvas-ecg", 300); // Neon Cyan para ECG Dipolar
         let mut ch3_plotter = Plotter::new("canvas-ch3", 300); // Cálcio
         let mut ch4_plotter = Plotter::new("canvas-ch4", 300); // Força
 
@@ -85,26 +87,27 @@ fn App() -> Element {
             let downsample = 3333; // Saves 1 point per 3.33ms, fitting 1000ms inside the 300-capacity buffer
             let batch = system.write().run_batch(dt, steps, downsample);
             
-            // Batch is flattened: [sa_v, av_v, atrium_v, purk_v, vent_v, cai, force]
-            let chunk_size = 7;
+            // Batch is flattened: [sa_v, av_v, atrium_v, purk_v, endo_v, epi_v, cai, force, ecg]
+            let chunk_size = 9;
             for chunk in batch.chunks(chunk_size) {
-                if chunk.len() == 7 {
+                if chunk.len() == 9 {
                     let sa = chunk[0];
                     let av = chunk[1];
                     let atrium = chunk[2];
                     let purk = chunk[3];
-                    let vent = chunk[4];
-                    let cai = chunk[5];
-                    let force = chunk[6];
+                    let endo = chunk[4];
+                    let epi = chunk[5];
+                    let cai = chunk[6];
+                    let force = chunk[7];
+                    let ecg = chunk[8];
                     
                     pa_plotter_sa.push(sa);
                     pa_plotter_av.push(av);
                     pa_plotter_atrium.push(atrium);
                     pa_plotter_purk.push(purk);
-                    pa_plotter_vent.push(vent);
+                    pa_plotter_endo.push(endo);
+                    pa_plotter_epi.push(epi);
 
-                    // Pseudo-ECG: Diferença entre Átrio e Ventrículo (simplificado)
-                    let ecg = (atrium * 0.1) + (vent * 0.9);
                     ecg_plotter.push(ecg);
                     
                     ch3_plotter.push(cai);
@@ -114,7 +117,8 @@ fn App() -> Element {
 
             // 3. Draw to Canvas
             // Prepare drawing flags to determine which one clears the canvas
-            let any_vent = show_vent();
+            let any_epi = show_epi();
+            let any_endo = show_endo();
             let any_purk = show_purkinje();
             let any_atrium = show_atrium();
             let any_av = show_av();
@@ -139,17 +143,21 @@ fn App() -> Element {
                 pa_plotter_purk.draw(-90.0, 50.0, "#e67e22", !cleared); // Purkinje / His: Laranja (#e67e22)
                 cleared = true;
             }
-            if any_vent {
-                pa_plotter_vent.draw(-90.0, 50.0, "#2ecc71", !cleared); // Ventrículo: Verde Clínico (#2ecc71)
+            if any_endo {
+                pa_plotter_endo.draw(-90.0, 50.0, "#2ecc71", !cleared); // Endocárdio: Verde Clínico (#2ecc71)
+                cleared = true;
+            }
+            if any_epi {
+                pa_plotter_epi.draw(-90.0, 50.0, "#1abc9c", !cleared); // Epicárdio: Verde Menta (#1abc9c)
                 cleared = true;
             }
 
             // If nothing was drawn, clear it manually
             if !cleared {
-                pa_plotter_vent.draw(-90.0, 50.0, "#000000", true); // Dummy draw to clear
+                pa_plotter_endo.draw(-90.0, 50.0, "#000000", true); // Dummy draw to clear
             }
             
-            ecg_plotter.draw(-90.0, 50.0, "#00ffff", true); // Ciano (#00ffff) para DII (ECG)
+            ecg_plotter.draw(-35.0, 120.0, "#00ffff", true); // Ciano (#00ffff) para DII (ECG Transmural)
             ch3_plotter.draw(0.0, 0.002, "#9b59b6", true); // Roxo (#9b59b6) para Cálcio
             ch4_plotter.draw(0.0, 1.2, "#e67e22", true); // Laranja (#e67e22) para Força
 
@@ -212,9 +220,9 @@ fn App() -> Element {
                             ul { style: "margin-left: 20px; margin-bottom: 12px;",
                                 li { b { "Nó Sinoatrial (SA): " }, "Severi et al. (2012) — Automatismo biológico e modulação autonômica cronotrópica." }
                                 li { b { "Músculo Atrial: " }, "Courtemanche et al. (1998) — Células atriais humanas de resposta rápida." }
-                                li { b { "Nó Atrioventricular (AV): " }, "Inada et al. (2009) — Retardo fisiológico PR e via de condução juncional." }
+                                li { b { "Nó Atrioventricular (AV): " }, "Inada et al. (2009) — Dromotropismo dinâmico dependente de taxa, tônus autonômico e canais de cálcio." }
                                 li { b { "Fibras de Purkinje (His): " }, "Stewart et al. (2009) — Rede de condução rápida e marcapasso terciário de escape." }
-                                li { b { "Músculo Ventricular: " }, "ten Tusscher & Panfilov (2006) — Platô ventricular humano e transiente de cálcio." }
+                                li { b { "Heterogeneidade Transmural: " }, "ten Tusscher & Panfilov (2006) — Subtipos Endocárdio, Célula M e Epicárdio gerando ECG dipolar P-QRS-T real." }
                             }
                             h4 { style: "color: var(--neon-cyan); margin-bottom: 6px;", "Modulação Farmacológica e Autonômica:" }
                             p { "Permite intervenção direta nos eletrólitos extracelulares (K+, Ca2+, Na+), tônus autonômico (simpático e parassimpático), condições isquêmicas e quatro classes de fármacos antiarrítmicos (Lidocaína, Amiodarona, Verapamil e Digoxina)." }
@@ -228,7 +236,7 @@ fn App() -> Element {
                 div { class: "hud-item", "PR: ", span { id: "hud-pr", "{pr_str}" } }
                 div { class: "hud-item", "QRS: ", span { id: "hud-qrs", "{qrs_str}" } }
                 div { class: "hud-item", "QT: ", span { id: "hud-qt", "{qt_str}" } }
-                div { class: "hud-item", "V_rest: ", span { id: "hud-vrest", "{vrest_str}" } }
+                div { class: "hud-item", "V.Rep: ", span { id: "hud-vrest", "{vrest_str}" } }
                 div { class: "hud-item", "PR/RR: ", span { id: "hud-pr-rr", "{pr_rr_str}" } }
             }
 
@@ -251,7 +259,8 @@ fn App() -> Element {
                     Checkbox { label: "Átrio (Contração)".to_string(), color: "#3498db".to_string(), checked: show_atrium }
                     Checkbox { label: "Nó AV (Condução)".to_string(), color: "#f1c40f".to_string(), checked: show_av }
                     Checkbox { label: "Purkinje (Feixe de His)".to_string(), color: "#e67e22".to_string(), checked: show_purkinje }
-                    Checkbox { label: "Ventrículo (Motor)".to_string(), color: "#2ecc71".to_string(), checked: show_vent }
+                    Checkbox { label: "Endocárdio (Subendocárdico)".to_string(), color: "#2ecc71".to_string(), checked: show_endo }
+                    Checkbox { label: "Epicárdio (Subepicárdico)".to_string(), color: "#1abc9c".to_string(), checked: show_epi }
                 }
 
                 Accordion { label: "1. Íons e Eletrólitos".to_string(), open: false,

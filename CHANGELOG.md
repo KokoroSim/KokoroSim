@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Features
+  - (ui) display transmural ventricular action potentials and dipolar ECG waveform
   - (engine) implement dynamic AV conduction dromotropism and transmural ventricular heterogeneity (Epi, M-cell, Endo)
   - (engine,ui) integrate Stewart et al. (2009) human Purkinje cell model into conduction chain
   - (dev) add file watching, livereload, and version footer to local dev environment
