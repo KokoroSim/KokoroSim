@@ -13,6 +13,20 @@ crate-type = ["cdylib"]
 dioxus = { version = "0.5", features = ["web"] }
 engine = { path = "../engine" }
 gloo-timers = { version = "0.3", features = ["futures"] }
-web-sys = { version = "0.3", features = ["HtmlCanvasElement", "CanvasRenderingContext2d", "Window", "Document"] }
+web-sys = { version = "0.3", features = [
+    "HtmlCanvasElement", 
+    "CanvasRenderingContext2d", 
+    "Window", 
+    "Document",
+    "AudioContext",
+    "AudioDestinationNode",
+    "AudioNode",
+    "AudioParam",
+    "GainNode",
+    "OscillatorNode",
+    "OscillatorType",
+    "BiquadFilterNode",
+    "BiquadFilterType"
+] }
 wasm-bindgen = "0.2"
 console_error_panic_hook = "0.1"

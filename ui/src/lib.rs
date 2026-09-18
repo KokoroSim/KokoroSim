@@ -7,6 +7,8 @@ use wasm_bindgen::prelude::*;
 mod plot;
 use plot::Plotter;
 
+mod audio;
+
 const VERSION: &str = env!("SIMCARDIO_VERSION");
 const BUILD_TIME: &str = env!("SIMCARDIO_BUILD_TIME");
 
@@ -42,6 +44,10 @@ fn App() -> Element {
     let show_epi = use_signal(|| true);
     let show_fibroblast = use_signal(|| false);
 
+    // Audio & Monitoring state (desativados por padrão)
+    let mut sound_uti = use_signal(|| false);
+    let mut sound_bulhas = use_signal(|| false);
+
     // Dynamic HUD metrics state
     let mut bpm = use_signal(|| 75.0);
     let mut pr = use_signal(|| 160.0);
@@ -54,17 +60,21 @@ fn App() -> Element {
     use_future(move || async move {
         let mut frame_count: u32 = 0;
 
-        // Create plotters (Canvas IDs match the HTML)
-        let mut pa_plotter_sa = Plotter::new("canvas-pa", 300); // Vermelho para SA
-        let mut pa_plotter_av = Plotter::new("canvas-pa", 300); // Amarelo para AV
-        let mut pa_plotter_atrium = Plotter::new("canvas-pa", 300); // Azul para Átrio
-        let mut pa_plotter_purk = Plotter::new("canvas-pa", 300); // Laranja para Purkinje
-        let mut pa_plotter_endo = Plotter::new("canvas-pa", 300); // Verde Clínico para Endocárdio
-        let mut pa_plotter_epi = Plotter::new("canvas-pa", 300); // Verde Menta para Epicárdio
-        let mut pa_plotter_fib = Plotter::new("canvas-pa", 300); // Lilás para Fibroblasto
-        let mut ecg_plotter = Plotter::new("canvas-ecg", 300); // Neon Cyan para ECG Dipolar
-        let mut ch3_plotter = Plotter::new("canvas-ch3", 300); // Cálcio
-        let mut ch4_plotter = Plotter::new("canvas-ch4", 300); // Força
+        // Create plotters com capacidade expandida (500 pontos) para acomodar ~2.5 segundos de histórico
+        let buffer_capacity = 500;
+        let mut pa_plotter_sa = Plotter::new("canvas-pa", buffer_capacity); // Vermelho para SA
+        let mut pa_plotter_av = Plotter::new("canvas-pa", buffer_capacity); // Amarelo para AV
+        let mut pa_plotter_atrium = Plotter::new("canvas-pa", buffer_capacity); // Azul para Átrio
+        let mut pa_plotter_purk = Plotter::new("canvas-pa", buffer_capacity); // Laranja para Purkinje
+        let mut pa_plotter_endo = Plotter::new("canvas-pa", buffer_capacity); // Verde Clínico para Endocárdio
+        let mut pa_plotter_epi = Plotter::new("canvas-pa", buffer_capacity); // Verde Menta para Epicárdio
+        let mut pa_plotter_fib = Plotter::new("canvas-pa", buffer_capacity); // Lilás para Fibroblasto
+        let mut ecg_plotter = Plotter::new("canvas-ecg", buffer_capacity); // Neon Cyan para ECG Dipolar
+        let mut ch3_plotter = Plotter::new("canvas-ch3", buffer_capacity); // Cálcio
+        let mut hemo_plotter_lvp = Plotter::new("canvas-ch4", buffer_capacity); // LVP Ventricular (Ciano)
+        let mut hemo_plotter_aop = Plotter::new("canvas-ch4", buffer_capacity); // AoP Aórtica (Coral)
+
+        let mut audio = audio::AudioManager::new();
 
         loop {
             gloo_timers::future::TimeoutFuture::new(16).await;
@@ -86,15 +96,17 @@ fn App() -> Element {
             );
             
             // 2. Step Engine
-            let dt = 0.001; // reduced dt for numerical stability
-            let steps = 16000; // 16ms of simulation at dt=0.001 (1x real-time speed)
-            let downsample = 3333; // Saves 1 point per 3.33ms, fitting 1000ms inside the 300-capacity buffer
+            // Amostragem compacta ("espremida"): 1 ponto a cada 5.0ms (downsample=5000)
+            // Em 500 amostras temos 2500ms (2.5s) de traçado visível, comportando > 3 ciclos completos
+            let dt = 0.001; // dt de integração numérica
+            let steps = 16000; // 16ms de simulação por frame (velocidade 1x tempo real)
+            let downsample = 5000; // 5ms por ponto amostrado
             let batch = system.write().run_batch(dt, steps, downsample);
             
-            // Batch is flattened: [sa_v, av_v, atrium_v, purk_v, endo_v, epi_v, fib_v, cai, force, ecg]
-            let chunk_size = 10;
+            // Batch achatado de 12 canais: [sa, av, atr, purk, endo, epi, fib, cai, lvp, aop, ecg, sound_events]
+            let chunk_size = 12;
             for chunk in batch.chunks(chunk_size) {
-                if chunk.len() == 10 {
+                if chunk.len() == 12 {
                     let sa = chunk[0];
                     let av = chunk[1];
                     let atrium = chunk[2];
@@ -103,8 +115,10 @@ fn App() -> Element {
                     let epi = chunk[5];
                     let fib = chunk[6];
                     let cai = chunk[7];
-                    let force = chunk[8];
-                    let ecg = chunk[9];
+                    let lvp = chunk[8];
+                    let aop = chunk[9];
+                    let ecg = chunk[10];
+                    let sound_code = chunk[11] as u32;
                     
                     pa_plotter_sa.push(sa);
                     pa_plotter_av.push(av);
@@ -115,9 +129,20 @@ fn App() -> Element {
                     pa_plotter_fib.push(fib);
 
                     ecg_plotter.push(ecg);
-                    
                     ch3_plotter.push(cai);
-                    ch4_plotter.push(force);
+                    hemo_plotter_lvp.push(lvp);
+                    hemo_plotter_aop.push(aop);
+
+                    // Disparo dos eventos acústicos de acordo com as checkboxes ativas
+                    if (sound_code & 1) != 0 && sound_uti() {
+                        audio.play_uti_beep();
+                    }
+                    if (sound_code & 2) != 0 && sound_bulhas() {
+                        audio.play_b1();
+                    }
+                    if (sound_code & 4) != 0 && sound_bulhas() {
+                        audio.play_b2();
+                    }
                 }
             }
 
@@ -147,7 +172,7 @@ fn App() -> Element {
                 cleared = true;
             }
             if any_purk {
-                pa_plotter_purk.draw(-90.0, 50.0, "#e67e22", !cleared); // Purkinje / His: Laranja (#e67e22)
+                pa_plotter_purk.draw(-90.0, 50.0, "#e67e22", !cleared); // Purkinje: Laranja (#e67e22)
                 cleared = true;
             }
             if any_endo {
@@ -170,7 +195,10 @@ fn App() -> Element {
             
             ecg_plotter.draw(-35.0, 120.0, "#00ffff", true); // Ciano (#00ffff) para DII (ECG Transmural)
             ch3_plotter.draw(0.0, 0.002, "#9b59b6", true); // Roxo (#9b59b6) para Cálcio
-            ch4_plotter.draw(0.0, 1.2, "#e67e22", true); // Laranja (#e67e22) para Força
+            
+            // Hemodinâmica: LVP e AoP sobrepostas (0 a 140 mmHg)
+            hemo_plotter_lvp.draw(0.0, 140.0, "#00cec9", true); // Ciano Claro (#00cec9) para LVP Ventricular
+            hemo_plotter_aop.draw(0.0, 140.0, "#ff7675", false); // Coral (#ff7675) para Pressão Aórtica (AoP)
 
             // 4. Update HUD metrics at ~10 Hz (every 6 frames)
             frame_count = frame_count.wrapping_add(1);
@@ -205,6 +233,8 @@ fn App() -> Element {
         parasymp.set(0.0);
         isch.set(0.0);
         fibrosis.set(0.0);
+        sound_uti.set(false);
+        sound_bulhas.set(false);
         system.set(HeartSystem::new());
     };
 
@@ -236,6 +266,7 @@ fn App() -> Element {
                                 li { b { "Fibras de Purkinje (His): " }, "Stewart et al. (2009) — Rede de condução rápida e marcapasso terciário de escape." }
                                 li { b { "Heterogeneidade Transmural: " }, "ten Tusscher & Panfilov (2006) — Subtipos Endocárdio, Célula M e Epicárdio gerando ECG dipolar P-QRS-T real." }
                                 li { b { "Fibroblastos Cardíacos: " }, "MacCannell et al. (2007) — Acoplamento eletrotônico via gap junctions, dreno capacitivo e fibrose miocárdica." }
+                                li { b { "Hemodinâmica e Mecânica: " }, "Elastância variável no tempo (Suga-Sagawa) e modelo arterial Windkessel acoplados ao cálcio intracelular, com bulhas (B1/B2) e monitor UTI." }
                             }
                             h4 { style: "color: var(--neon-cyan); margin-bottom: 6px;", "Modulação Farmacológica e Autonômica:" }
                             p { "Permite intervenção direta nos eletrólitos extracelulares (K+, Ca2+, Na+), tônus autonômico (simpático e parassimpático), condições isquêmicas, fibrose miocárdica e quatro classes de fármacos antiarrítmicos (Lidocaína, Amiodarona, Verapamil e Digoxina)." }
@@ -354,6 +385,11 @@ fn App() -> Element {
                         val: fibrosis
                     }
                 }
+
+                Accordion { label: "5. Monitorização & Áudio".to_string(), open: true,
+                    Checkbox { label: "🔊 Bip de Monitor (UTI - Onda R)".to_string(), color: "#2ecc71".to_string(), checked: sound_uti }
+                    Checkbox { label: "🩺 Bulhas Cardíacas (B1 / B2)".to_string(), color: "#e74c3c".to_string(), checked: sound_bulhas }
+                }
             }
 
             main {
@@ -370,7 +406,7 @@ fn App() -> Element {
                     canvas { id: "canvas-ch3" }
                 }
                 div { class: "canvas-wrapper",
-                    div { class: "canvas-label", "Força Ativa (Contração)" }
+                    div { class: "canvas-label", "Hemodinâmica: LVP Ventricular (#00cec9) & AoP Aórtica (#ff7675) [mmHg]" }
                     canvas { id: "canvas-ch4" }
                 }
             }
