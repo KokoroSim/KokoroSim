@@ -202,66 +202,54 @@ impl VentricleCell {
         let alpha_xr1 = 450.0 / (1.0 + f64::exp((-45.0 - v) / 10.0));
         let beta_xr1 = 6.0 / (1.0 + f64::exp((v + 30.0) / 11.5));
         let tau_xr1 = alpha_xr1 * beta_xr1;
-        let dxr1 = (xr1_inf - self.xr1) / tau_xr1;
 
         let xr2_inf = 1.0 / (1.0 + f64::exp((v + 88.0) / 24.0));
         let alpha_xr2 = 3.0 / (1.0 + f64::exp((-60.0 - v) / 20.0));
         let beta_xr2 = 1.12 / (1.0 + f64::exp((v - 60.0) / 20.0));
         let tau_xr2 = alpha_xr2 * beta_xr2;
-        let dxr2 = (xr2_inf - self.xr2) / tau_xr2;
 
         let xs_inf = 1.0 / (1.0 + f64::exp((-5.0 - v) / 14.0));
         let alpha_xs = 1100.0 / (1.0 + f64::exp((-10.0 - v) / 6.0)).sqrt();
         let beta_xs = 1.0 / (1.0 + f64::exp((v - 60.0) / 20.0));
         let tau_xs = alpha_xs * beta_xs;
-        let dxs = (xs_inf - self.xs) / tau_xs;
 
         let m_inf = 1.0 / (1.0 + f64::exp((-56.86 - v) / 9.03)).powi(2);
         let alpha_m = 1.0 / (1.0 + f64::exp((-60.0 - v) / 5.0));
         let beta_m = 0.1 / (1.0 + f64::exp((v + 35.0) / 5.0)) + 0.1 / (1.0 + f64::exp((v - 50.0) / 200.0));
         let tau_m = alpha_m * beta_m;
-        let dm = (m_inf - self.m) / tau_m;
 
         let h_inf = 1.0 / (1.0 + f64::exp((v + 71.55) / 7.43)).powi(2);
         let alpha_h = if v < -40.0 { 0.057 * f64::exp(-(v + 80.0) / 6.8) } else { 0.0 };
         let beta_h = if v < -40.0 { 2.7 * f64::exp(0.079 * v) + 310000.0 * f64::exp(0.3485 * v) } else { 0.77 / (0.13 * (1.0 + f64::exp((v + 10.66) / -11.1))) };
         let tau_h = 1.0 / (alpha_h + beta_h);
-        let dh = (h_inf - self.h) / tau_h;
 
         let j_inf = 1.0 / (1.0 + f64::exp((v + 71.55) / 7.43)).powi(2);
         let alpha_j = if v < -40.0 { (-25428.0 * f64::exp(0.2444 * v) - 6.948e-6 * f64::exp(-0.04391 * v)) * (v + 37.78) / (1.0 + f64::exp(0.311 * (v + 79.23))) } else { 0.0 };
         let beta_j = if v < -40.0 { 0.02424 * f64::exp(-0.01052 * v) / (1.0 + f64::exp(-0.1378 * (v + 40.14))) } else { 0.6 * f64::exp(0.057 * v) / (1.0 + f64::exp(-0.1 * (v + 32.0))) };
         let tau_j = 1.0 / (alpha_j + beta_j);
-        let dj = (j_inf - self.j) / tau_j;
 
         let d_inf = 1.0 / (1.0 + f64::exp((-5.0 - v) / 7.5));
         let alpha_d = 1.4 / (1.0 + f64::exp((-35.0 - v) / 13.0)) + 0.25;
         let beta_d = 1.4 / (1.0 + f64::exp((v + 5.0) / 5.0));
         let gamma_d = 1.0 / (1.0 + f64::exp((50.0 - v) / 20.0));
         let tau_d = alpha_d * beta_d + gamma_d;
-        let dd = (d_inf - self.d) / tau_d;
 
         let f_inf = 1.0 / (1.0 + f64::exp((v + 20.0) / 7.0));
         let tau_f = 1125.0 * f64::exp(-(v + 27.0).powi(2) / 240.0) + 80.0 + 165.0 / (1.0 + f64::exp((25.0 - v) / 10.0));
-        let df = (f_inf - self.f) / tau_f;
 
         let alpha_fca = 1.0 / (1.0 + (self.ca_i / 0.000325).powi(8));
         let beta_fca = 0.1 / (1.0 + f64::exp((self.ca_i - 0.0005) / 0.0001));
         let gama_fca = 0.2 / (1.0 + f64::exp((self.ca_i - 0.00075) / 0.0008));
         let fca_inf = (alpha_fca + beta_fca + gama_fca + 0.23) / 1.46;
-        let df_ca = if fca_inf > self.f_ca && v > -60.0 { 0.0 } else { (fca_inf - self.f_ca) / TAU_FCA };
 
         let s_inf = 1.0 / (1.0 + f64::exp((v + 20.0) / 5.0));
         let tau_s = 85.0 * f64::exp(-(v + 45.0).powi(2) / 320.0) + 5.0 / (1.0 + f64::exp((v - 20.0) / 5.0)) + 3.0;
-        let ds = (s_inf - self.s) / tau_s;
 
         let r_inf = 1.0 / (1.0 + f64::exp((20.0 - v) / 6.0));
         let tau_r = 9.5 * f64::exp(-(v + 40.0).powi(2) / 1800.0) + 0.8;
-        let dr = (r_inf - self.r) / tau_r;
 
         // Intracellular Calcium Dynamics
         let g_inf = if self.ca_i < 0.00035 { 1.0 / (1.0 + (self.ca_i / 0.00035).powi(6)) } else { 1.0 / (1.0 + (self.ca_i / 0.00035).powi(16)) };
-        let dg = if g_inf > self.g && v > -60.0 { 0.0 } else { (g_inf - self.g) / TAU_G };
 
         let i_rel = (A_REL * self.ca_sr.powi(2) / (B_REL.powi(2) + self.ca_sr.powi(2)) + C_REL) * self.d * self.g;
         let i_up = VMAX_UP / (1.0 + K_UP.powi(2) / self.ca_i.powi(2));
@@ -279,28 +267,40 @@ impl VentricleCell {
         let dna_i = -(i_na + i_b_na + 3.0 * i_nak + 3.0 * i_naca) * CM / (V_C * F);
         let dk_i = -(i_k1 + i_to + i_kr + i_ks + i_p_k + i_stim - 2.0 * i_nak) * CM / (V_C * F);
 
-        // Update states (Forward Euler)
+#[inline(always)]
+fn rush_larsen(val: f64, inf: f64, tau: f64, dt: f64) -> f64 {
+    if tau > 1e-7 {
+        inf + (val - inf) * (-dt / tau).exp()
+    } else {
+        inf
+    }
+}
+
+        // Update states (Rush-Larsen for gates, Forward Euler for concentrations & voltage)
         self.v += dv * dt;
-        self.xr1 += dxr1 * dt;
-        self.xr2 += dxr2 * dt;
-        self.xs += dxs * dt;
-        self.m += dm * dt;
-        self.h += dh * dt;
-        self.j += dj * dt;
-        self.d += dd * dt;
-        self.f += df * dt;
-        self.f_ca += df_ca * dt;
-        self.s += ds * dt;
-        self.r += dr * dt;
-        self.g += dg * dt;
-        self.ca_i += dca_i * dt;
-        self.ca_sr += dca_sr * dt;
-        self.na_i += dna_i * dt;
-        self.k_i += dk_i * dt;
+        self.xr1 = rush_larsen(self.xr1, xr1_inf, tau_xr1, dt).clamp(0.0, 1.0);
+        self.xr2 = rush_larsen(self.xr2, xr2_inf, tau_xr2, dt).clamp(0.0, 1.0);
+        self.xs = rush_larsen(self.xs, xs_inf, tau_xs, dt).clamp(0.0, 1.0);
+        self.m = rush_larsen(self.m, m_inf, tau_m, dt).clamp(0.0, 1.0);
+        self.h = rush_larsen(self.h, h_inf, tau_h, dt).clamp(0.0, 1.0);
+        self.j = rush_larsen(self.j, j_inf, tau_j, dt).clamp(0.0, 1.0);
+        self.d = rush_larsen(self.d, d_inf, tau_d, dt).clamp(0.0, 1.0);
+        self.f = rush_larsen(self.f, f_inf, tau_f, dt).clamp(0.0, 1.0);
+        self.f_ca = rush_larsen(self.f_ca, fca_inf, TAU_FCA, dt).clamp(0.0, 1.0);
+        self.s = rush_larsen(self.s, s_inf, tau_s, dt).clamp(0.0, 1.0);
+        self.r = rush_larsen(self.r, r_inf, tau_r, dt).clamp(0.0, 1.0);
+        self.g = rush_larsen(self.g, g_inf, TAU_G, dt).clamp(0.0, 1.0);
+        
+        self.ca_i = (self.ca_i + dca_i * dt).max(1e-7);
+        self.ca_sr = (self.ca_sr + dca_sr * dt).max(1e-7);
+        self.na_i = (self.na_i + dna_i * dt).max(1.0);
+        self.k_i = (self.k_i + dk_i * dt).max(1.0);
+
         // Phenomenological Force Model (Hill-type curve with delay)
         let kd: f64 = 0.0006; // mM, dissociation constant
         let n: f64 = 3.0; // Hill coefficient
-        let f_steady = (self.ca_i.powf(n)) / (kd.powf(n) + self.ca_i.powf(n));
+        let ca_safe = self.ca_i.max(1e-7);
+        let f_steady = (ca_safe.powf(n)) / (kd.powf(n) + ca_safe.powf(n));
         let tau_force = 50.0; // ms, delay for cross-bridge attachment/detachment
         let dforce = (f_steady - self.force) / tau_force;
         self.force += dforce * dt;

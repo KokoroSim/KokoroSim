@@ -164,7 +164,6 @@ impl AtriumCell {
         let c = Constants::new(p);
         
         let f_ca_inf = (1.0 + self.ca_i / 0.00035).powi(-1);
-        let df_ca = (f_ca_inf - self.f_ca) / c.tau_f_ca;
         
         let d_inf = (1.0 + ((self.v + 10.0) / -8.0).exp()).powi(-1);
         let tau_d = if (self.v + 10.0).abs() < 1e-10 {
@@ -172,11 +171,9 @@ impl AtriumCell {
         } else {
             (1.0 - ((self.v + 10.0) / -6.24).exp()) / (0.035 * (self.v + 10.0) * (1.0 + ((self.v + 10.0) / -6.24).exp()))
         };
-        let dd = (d_inf - self.d) / tau_d;
         
         let f_inf = (-(self.v + 28.0) / 6.9).exp() / (1.0 + (-(self.v + 28.0) / 6.9).exp());
         let tau_f = 9.0 * (0.0197 * (-(0.0337_f64).powi(2) * (self.v + 10.0).powi(2)).exp() + 0.02).powi(-1);
-        let df = (f_inf - self.f) / tau_f;
         
         let tau_w = if (self.v - 7.9).abs() < 1e-10 {
             6.0 * 0.2 / 1.3
@@ -184,7 +181,6 @@ impl AtriumCell {
             6.0 * (1.0 - (-(self.v - 7.9) / 5.0).exp()) / ((1.0 + 0.3 * (-(self.v - 7.9) / 5.0).exp()) * 1.0 * (self.v - 7.9))
         };
         let w_inf = 1.0 - (1.0 + (-(self.v - 40.0) / 17.0).exp()).powi(-1);
-        let dw = (w_inf - self.w) / tau_w;
         
         let alpha_m = if self.v == -47.13 {
             3.2
@@ -194,7 +190,6 @@ impl AtriumCell {
         let beta_m = 0.08 * (-self.v / 11.0).exp();
         let m_inf = alpha_m / (alpha_m + beta_m);
         let tau_m = 1.0 / (alpha_m + beta_m);
-        let dm = (m_inf - self.m) / tau_m;
         
         let alpha_h = if self.v < -40.0 {
             0.135 * ((self.v + 80.0) / -6.8).exp()
@@ -208,7 +203,6 @@ impl AtriumCell {
         };
         let h_inf = alpha_h / (alpha_h + beta_h);
         let tau_h = 1.0 / (alpha_h + beta_h);
-        let dh = (h_inf - self.h) / tau_h;
         
         let alpha_j = if self.v < -40.0 {
             (-127140.0 * (0.2444 * self.v).exp() - 3.474e-5 * (-0.04391 * self.v).exp()) * (self.v + 37.78) / (1.0 + (0.311 * (self.v + 79.23)).exp())
@@ -222,31 +216,26 @@ impl AtriumCell {
         };
         let j_inf = alpha_j / (alpha_j + beta_j);
         let tau_j = 1.0 / (alpha_j + beta_j);
-        let dj = (j_inf - self.j) / tau_j;
         
         let alpha_oa = 0.65 * (((self.v - -10.0) / -8.5).exp() + ((self.v - -10.0 - 40.0) / -59.0).exp()).powi(-1);
         let beta_oa = 0.65 * (2.5 + ((self.v - -10.0 + 72.0) / 17.0).exp()).powi(-1);
         let tau_oa = (alpha_oa + beta_oa).powi(-1) / c.k_q10;
         let oa_inf = (1.0 + ((self.v - -10.0 + 10.47) / -17.54).exp()).powi(-1);
-        let doa = (oa_inf - self.oa) / tau_oa;
         
         let alpha_oi = (18.53 + 1.0 * ((self.v - -10.0 + 103.7) / 10.95).exp()).powi(-1);
         let beta_oi = (35.56 + 1.0 * ((self.v - -10.0 - 8.74) / -7.44).exp()).powi(-1);
         let tau_oi = (alpha_oi + beta_oi).powi(-1) / c.k_q10;
         let oi_inf = (1.0 + ((self.v - -10.0 + 33.1) / 5.3).exp()).powi(-1);
-        let doi = (oi_inf - self.oi) / tau_oi;
         
         let alpha_ua = 0.65 * (((self.v - -10.0) / -8.5).exp() + ((self.v - -10.0 - 40.0) / -59.0).exp()).powi(-1);
         let beta_ua = 0.65 * (2.5 + ((self.v - -10.0 + 72.0) / 17.0).exp()).powi(-1);
         let tau_ua = (alpha_ua + beta_ua).powi(-1) / c.k_q10;
         let ua_inf = (1.0 + ((self.v - -10.0 + 20.3) / -9.6).exp()).powi(-1);
-        let dua = (ua_inf - self.ua) / tau_ua;
         
         let alpha_ui = (21.0 + 1.0 * ((self.v - -10.0 - 195.0) / -28.0).exp()).powi(-1);
         let beta_ui = 1.0 / ((self.v - -10.0 - 168.0) / -16.0).exp();
         let tau_ui = (alpha_ui + beta_ui).powi(-1) / c.k_q10;
         let ui_inf = (1.0 + ((self.v - -10.0 - 109.45) / 27.48).exp()).powi(-1);
-        let dui = (ui_inf - self.ui) / tau_ui;
         
         let alpha_xr = if (self.v + 14.1).abs() < 1e-10 {
             0.0015
@@ -260,7 +249,6 @@ impl AtriumCell {
         };
         let tau_xr = (alpha_xr + beta_xr).powi(-1);
         let xr_inf = (1.0 + ((self.v + 14.1) / -6.5).exp()).powi(-1);
-        let dxr = (xr_inf - self.xr) / tau_xr;
         
         let alpha_xs = if (self.v - 19.9).abs() < 1e-10 {
             0.00068
@@ -274,7 +262,6 @@ impl AtriumCell {
         };
         let tau_xs = 0.5 * (alpha_xs + beta_xs).powi(-1);
         let xs_inf = (1.0 + ((self.v - 19.9) / -12.7).exp()).powf(-0.5);
-        let dxs = (xs_inf - self.xs) / tau_xs;
         
         let e_k = (c.r * c.t / c.f_faraday) * (p.effective_ko() / self.k_i).ln();
         let i_k1 = (c.cm * c.g_k1 * (self.v - e_k)) / (1.0 + (0.07 * (self.v + 80.0)).exp());
@@ -318,11 +305,9 @@ impl AtriumCell {
         let fn_val = 1000.0 * (1e-15 * c.v_rel * i_rel - (1e-15 / (2.0 * c.f_faraday)) * (0.5 * i_ca_l - 0.2 * i_naca));
         
         let u_inf = (1.0 + (-(fn_val - 3.4175e-13) / 1.367e-15).exp()).powi(-1);
-        let du = (u_inf - self.u) / c.tau_u;
         
         let tau_v_gate = 1.91 + 2.09 * (1.0 + (-(fn_val - 3.4175e-13) / 1.367e-15).exp()).powi(-1);
         let v_inf = 1.0 - (1.0 + (-(fn_val - 6.835e-14) / 1.367e-15).exp()).powi(-1);
-        let dv_gate = (v_inf - self.v_gate) / tau_v_gate;
         
         let i_up = c.i_up_max / (1.0 + c.k_up / self.ca_i);
         let i_up_leak = (c.i_up_max * self.ca_up) / c.ca_up_max;
@@ -334,27 +319,37 @@ impl AtriumCell {
         
         let dca_i = b1 / b2;
         
-        // Forward Euler updates
+        #[inline(always)]
+        fn rush_larsen(val: f64, inf: f64, tau: f64, dt: f64) -> f64 {
+            if tau > 1e-7 {
+                inf + (val - inf) * (-dt / tau).exp()
+            } else {
+                inf
+            }
+        }
+
+        // State updates: Rush-Larsen for gates, Forward Euler with lower bounds for concentrations & voltage
         self.v += dv * dt;
-        self.na_i += dna_i * dt;
-        self.m += dm * dt;
-        self.h += dh * dt;
-        self.j += dj * dt;
-        self.k_i += dk_i * dt;
-        self.oa += doa * dt;
-        self.oi += doi * dt;
-        self.ua += dua * dt;
-        self.ui += dui * dt;
-        self.xr += dxr * dt;
-        self.xs += dxs * dt;
-        self.ca_i += dca_i * dt;
-        self.d += dd * dt;
-        self.f += df * dt;
-        self.f_ca += df_ca * dt;
-        self.ca_rel += dca_rel * dt;
-        self.u += du * dt;
-        self.v_gate += dv_gate * dt;
-        self.w += dw * dt;
-        self.ca_up += dca_up * dt;
+        self.na_i = (self.na_i + dna_i * dt).max(1.0);
+        self.k_i = (self.k_i + dk_i * dt).max(1.0);
+        self.ca_i = (self.ca_i + dca_i * dt).max(1e-7);
+        self.ca_rel = (self.ca_rel + dca_rel * dt).max(1e-7);
+        self.ca_up = (self.ca_up + dca_up * dt).max(1e-7);
+
+        self.m = rush_larsen(self.m, m_inf, tau_m, dt).clamp(0.0, 1.0);
+        self.h = rush_larsen(self.h, h_inf, tau_h, dt).clamp(0.0, 1.0);
+        self.j = rush_larsen(self.j, j_inf, tau_j, dt).clamp(0.0, 1.0);
+        self.oa = rush_larsen(self.oa, oa_inf, tau_oa, dt).clamp(0.0, 1.0);
+        self.oi = rush_larsen(self.oi, oi_inf, tau_oi, dt).clamp(0.0, 1.0);
+        self.ua = rush_larsen(self.ua, ua_inf, tau_ua, dt).clamp(0.0, 1.0);
+        self.ui = rush_larsen(self.ui, ui_inf, tau_ui, dt).clamp(0.0, 1.0);
+        self.xr = rush_larsen(self.xr, xr_inf, tau_xr, dt).clamp(0.0, 1.0);
+        self.xs = rush_larsen(self.xs, xs_inf, tau_xs, dt).clamp(0.0, 1.0);
+        self.d = rush_larsen(self.d, d_inf, tau_d, dt).clamp(0.0, 1.0);
+        self.f = rush_larsen(self.f, f_inf, tau_f, dt).clamp(0.0, 1.0);
+        self.f_ca = rush_larsen(self.f_ca, f_ca_inf, c.tau_f_ca, dt).clamp(0.0, 1.0);
+        self.u = rush_larsen(self.u, u_inf, c.tau_u, dt).clamp(0.0, 1.0);
+        self.v_gate = rush_larsen(self.v_gate, v_inf, tau_v_gate, dt).clamp(0.0, 1.0);
+        self.w = rush_larsen(self.w, w_inf, tau_w, dt).clamp(0.0, 1.0);
     }
 }

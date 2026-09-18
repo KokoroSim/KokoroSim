@@ -149,66 +149,56 @@ impl PurkinjeCell {
             + 200.0 / (1.0 + f64::exp((13.0 - v) / 10.0))
             + 180.0 / (1.0 + f64::exp((v + 30.0) / 10.0))
             + 20.0;
-        let df = (f_inf - self.f) / tau_f;
 
         // L-type calcium inactivation: f2
         let f2_inf = 0.67 / (1.0 + f64::exp((v + 35.0) / 7.0)) + 0.33;
         let tau_f2 = 562.0 * f64::exp(-(v + 27.0).powi(2) / 240.0)
             + 31.0 / (1.0 + f64::exp((25.0 - v) / 10.0))
             + 80.0 / (1.0 + f64::exp((v + 30.0) / 10.0));
-        let df2 = (f2_inf - self.f2) / tau_f2;
 
         // Calcium-dependent inactivation: fCass
         let fcass_inf = 0.6 / (1.0 + (self.ca_ss / 0.05).powi(2)) + 0.4;
         let tau_fcass = 80.0 / (1.0 + (self.ca_ss / 0.05).powi(2)) + 2.0;
-        let df_cass = (fcass_inf - self.f_cass) / tau_fcass;
 
         // Transient outward current: s gate
         let s_inf = 1.0 / (1.0 + f64::exp((v + 27.0) / 13.0));
         let tau_s = 85.0 * f64::exp(-(v + 25.0).powi(2) / 320.0)
             + 5.0 / (1.0 + f64::exp((v - 40.0) / 5.0))
             + 42.0;
-        let ds = (s_inf - self.s) / tau_s;
 
         // Transient outward current: r gate
         let r_inf = 1.0 / (1.0 + f64::exp((20.0 - v) / 13.0));
         let tau_r = 10.45 * f64::exp(-(v + 40.0).powi(2) / 1800.0) + 7.3;
-        let dr = (r_inf - self.r) / tau_r;
 
         // Hyperpolarization-activated (funny) current: y gate
         let y_inf = 1.0 / (1.0 + f64::exp((v + 80.6) / 6.8));
         let alpha_y = f64::exp(-2.9 - 0.04 * v);
         let beta_y = f64::exp(3.6 + 0.11 * v);
         let tau_y = 4000.0 / (alpha_y + beta_y);
-        let dy = (y_inf - self.y) / tau_y;
 
         // Rapid delayed rectifier: Xr1 gate
         let xr1_inf = 1.0 / (1.0 + f64::exp((-26.0 - v) / 7.0));
         let alpha_xr1 = 450.0 / (1.0 + f64::exp((-45.0 - v) / 10.0));
         let beta_xr1 = 6.0 / (1.0 + f64::exp((v + 30.0) / 11.5));
         let tau_xr1 = alpha_xr1 * beta_xr1;
-        let dxr1 = (xr1_inf - self.xr1) / tau_xr1;
 
         // Rapid delayed rectifier: Xr2 gate
         let xr2_inf = 1.0 / (1.0 + f64::exp((v + 88.0) / 24.0));
         let alpha_xr2 = 3.0 / (1.0 + f64::exp((-60.0 - v) / 20.0));
         let beta_xr2 = 1.12 / (1.0 + f64::exp((v - 60.0) / 20.0));
         let tau_xr2 = alpha_xr2 * beta_xr2;
-        let dxr2 = (xr2_inf - self.xr2) / tau_xr2;
 
         // Slow delayed rectifier: Xs gate
         let xs_inf = 1.0 / (1.0 + f64::exp((-5.0 - v) / 14.0));
         let alpha_xs = 1400.0 / (1.0 + f64::exp((5.0 - v) / 6.0)).sqrt();
         let beta_xs = 1.0 / (1.0 + f64::exp((v - 35.0) / 15.0));
         let tau_xs = alpha_xs * beta_xs + 80.0;
-        let dxs = (xs_inf - self.xs) / tau_xs;
 
         // Fast sodium current: m gate
         let m_inf = 1.0 / (1.0 + f64::exp((-56.86 - v) / 9.03)).powi(2);
         let alpha_m = 1.0 / (1.0 + f64::exp((-60.0 - v) / 5.0));
         let beta_m = 0.1 / (1.0 + f64::exp((v + 35.0) / 5.0)) + 0.1 / (1.0 + f64::exp((v - 50.0) / 200.0));
         let tau_m = alpha_m * beta_m;
-        let dm = (m_inf - self.m) / tau_m;
 
         // Fast sodium current: h gate
         let h_inf = 1.0 / (1.0 + f64::exp((v + 71.55) / 7.43)).powi(2);
@@ -219,7 +209,6 @@ impl PurkinjeCell {
             0.77 / (0.13 * (1.0 + f64::exp((v + 10.66) / -11.1)))
         };
         let tau_h = 1.0 / (alpha_h + beta_h);
-        let dh = (h_inf - self.h) / tau_h;
 
         // Fast sodium current: j gate
         let j_inf = 1.0 / (1.0 + f64::exp((v + 71.55) / 7.43)).powi(2);
@@ -235,7 +224,6 @@ impl PurkinjeCell {
             (0.6 * f64::exp(0.057 * v)) / (1.0 + f64::exp(-0.1 * (v + 32.0)))
         };
         let tau_j = 1.0 / (alpha_j + beta_j);
-        let dj = (j_inf - self.j) / tau_j;
 
         // L-type calcium activation: d gate
         let d_inf = 1.0 / (1.0 + f64::exp((-8.0 - v) / 7.5));
@@ -243,7 +231,6 @@ impl PurkinjeCell {
         let beta_d = 1.4 / (1.0 + f64::exp((v + 5.0) / 5.0));
         let gamma_d = 1.0 / (1.0 + f64::exp((50.0 - v) / 20.0));
         let tau_d = alpha_d * beta_d + gamma_d;
-        let dd = (d_inf - self.d) / tau_d;
 
         // --- Transmembrane Currents ---
         // Na+/K+ pump
@@ -336,27 +323,37 @@ impl PurkinjeCell {
         let ca_ss_bufss = 1.0 / (1.0 + (BUF_SS * K_BUF_SS) / (self.ca_ss + K_BUF_SS).powi(2));
         let dca_ss = ca_ss_bufss * (-(i_cal * CM) / (2.0 * V_SS * F) + (i_rel * V_SR) / V_SS - (i_xfer * V_C) / V_SS);
 
-        // Forward Euler Integration Step
+#[inline(always)]
+fn rush_larsen(val: f64, inf: f64, tau: f64, dt: f64) -> f64 {
+    if tau > 1e-7 {
+        inf + (val - inf) * (-dt / tau).exp()
+    } else {
+        inf
+    }
+}
+
+        // Update states (Rush-Larsen for gates, Forward Euler for concentrations & voltage)
         self.v += dv * dt;
-        self.f += df * dt;
-        self.f2 += df2 * dt;
-        self.f_cass += df_cass * dt;
-        self.s += ds * dt;
-        self.r += dr * dt;
-        self.y += dy * dt;
-        self.xr1 += dxr1 * dt;
-        self.xr2 += dxr2 * dt;
-        self.xs += dxs * dt;
-        self.m += dm * dt;
-        self.h += dh * dt;
-        self.j += dj * dt;
-        self.d += dd * dt;
-        self.na_i += dna_i * dt;
-        self.k_i += dk_i * dt;
-        self.ca_i += dca_i * dt;
-        self.ca_sr += dca_sr * dt;
-        self.ca_ss += dca_ss * dt;
-        self.r_prime += dr_prime * dt;
+        self.f = rush_larsen(self.f, f_inf, tau_f, dt).clamp(0.0, 1.0);
+        self.f2 = rush_larsen(self.f2, f2_inf, tau_f2, dt).clamp(0.0, 1.0);
+        self.f_cass = rush_larsen(self.f_cass, fcass_inf, tau_fcass, dt).clamp(0.0, 1.0);
+        self.s = rush_larsen(self.s, s_inf, tau_s, dt).clamp(0.0, 1.0);
+        self.r = rush_larsen(self.r, r_inf, tau_r, dt).clamp(0.0, 1.0);
+        self.y = rush_larsen(self.y, y_inf, tau_y, dt).clamp(0.0, 1.0);
+        self.xr1 = rush_larsen(self.xr1, xr1_inf, tau_xr1, dt).clamp(0.0, 1.0);
+        self.xr2 = rush_larsen(self.xr2, xr2_inf, tau_xr2, dt).clamp(0.0, 1.0);
+        self.xs = rush_larsen(self.xs, xs_inf, tau_xs, dt).clamp(0.0, 1.0);
+        self.m = rush_larsen(self.m, m_inf, tau_m, dt).clamp(0.0, 1.0);
+        self.h = rush_larsen(self.h, h_inf, tau_h, dt).clamp(0.0, 1.0);
+        self.j = rush_larsen(self.j, j_inf, tau_j, dt).clamp(0.0, 1.0);
+        self.d = rush_larsen(self.d, d_inf, tau_d, dt).clamp(0.0, 1.0);
+        
+        self.na_i = (self.na_i + dna_i * dt).max(1.0);
+        self.k_i = (self.k_i + dk_i * dt).max(1.0);
+        self.ca_i = (self.ca_i + dca_i * dt).max(1e-7);
+        self.ca_sr = (self.ca_sr + dca_sr * dt).max(1e-7);
+        self.ca_ss = (self.ca_ss + dca_ss * dt).max(1e-7);
+        self.r_prime = (self.r_prime + dr_prime * dt).clamp(0.0, 1.0);
 
         self.time += dt;
     }

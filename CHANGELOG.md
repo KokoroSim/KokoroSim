@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Features
+  - (engine) optimize numerical integration with hybrid Rush-Larsen method for mobile and low-power hardware
   - (ui) add Web Audio synthesizer for ICU monitor beep and B1/B2 heart sounds, Wiggers hemodynamics chart, and compressed time window
   - (engine) implement electromechanical coupling, time-varying elastance, and 3-element Windkessel hemodynamics
   - (ui) add myocardial fibrosis control slider and fibroblast visualization
