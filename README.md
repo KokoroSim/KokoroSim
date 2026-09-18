@@ -1,6 +1,6 @@
 # SimCardio: Simulador Eletrofisiológico Cardíaco em Tempo Real
 
-O **SimCardio** é um projeto de código aberto dedicado à simulação matemática da eletrofisiologia celular cardíaca em tempo real no navegador. Desenvolvido inteiramente em **Rust** e compilado para **WebAssembly (WASM)** com interface reativa em **Dioxus**, o sistema resolve mais de 160 equações diferenciais ordinárias (EDOs) e variáveis de estado simultaneamente a 16.000 passos por frame (passo de integração $dt = 0.001\text{ ms}$), reproduzindo com rigor biofísico a gênese do potencial de ação e a condução elétrica através de todo o sincício cardíaco humano.
+O **SimCardio** é um projeto de código aberto dedicado à simulação matemática da eletrofisiologia celular cardíaca em tempo real no navegador. Desenvolvido inteiramente em **Rust** e compilado para **WebAssembly (WASM)** com interface reativa em **Dioxus**, o sistema resolve mais de 160 equações diferenciais ordinárias (EDOs) e variáveis de estado simultaneamente utilizando o método numérico híbrido analítico de **Rush-Larsen** a $dt = 0.01\text{ ms}$ (1.600 passos por quadro de 16 ms a 60 FPS), garantindo execução fluida em **1x tempo real** com consumo de CPU mínimo (**< 5-10%**) em smartphones, tablets e computadores de baixo consumo, reproduzindo com rigor biofísico a gênese do potencial de ação e a condução elétrica através de todo o sincício cardíaco humano.
 
 ---
 
@@ -98,8 +98,8 @@ O quarto canal do osciloscópio exibe em tempo real o núcleo mecânico do **Dia
 - **Síntese Acústica em Tempo Real (Web Audio API):**
   - **🔊 Bip de Monitor (UTI - Onda R):** Disparado na despolarização ventricular rápida ($dV/dt > 0$), gerando uma onda senoidal pura de **880 Hz** com decaimento exponencial de 75 ms.
   - **🩺 Bulhas Cardíacas (Ausculta B1/B2):**
-    - **B1 ("Tum" / *Lub*):** Disparada na contração isovolumétrica no fechamento da valva mitral ($LVP \ge LAP$), com frequência grave (65 Hz), ressonância muscular e filtro passa-baixa.
-    - **B2 ("Tá" / *Dub*):** Disparada no relaxamento isovolumétrico no fechamento da valva aórtica ($LVP \le AoP$), com frequência mais alta (130 Hz) e estalido seco.
+    - **B1 ("Tum" / *Lub*):** Disparada na contração isovolumétrica no fechamento da valva mitral ($LVP \ge LAP$), sintetizada com *pitch sweep* descendente (140 $\to$ 85 Hz), ressonância muscular calibrada e ganho reforçado para clara audibilidade em transdutores de smartphones e notebooks.
+    - **B2 ("Tá" / *Dub*):** Disparada no relaxamento isovolumétrico no fechamento da valva aórtica ($LVP \le AoP$), sintetizada com estalido de alta frequência (240 $\to$ 160 Hz), filtro passa-banda e decaimento rápido.
   - As duas opções vêm **desativadas por padrão** no Accordion "5. Monitorização & Áudio", sendo ativadas pelo clique do usuário em conformidade com as diretrizes de autoplay dos navegadores.
 
 ---

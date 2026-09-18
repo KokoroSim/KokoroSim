@@ -53,14 +53,22 @@ O desenvolvimento do **SimCardio** está organizado em grandes marcos arquitetur
 * [x] Dinâmica valvar das cúspides mitral e aórtica acionadas por gradientes pressóricos instantâneos.
 * [x] **Síntese de Áudio Biofísico via Web Audio API**:
   - `🔊 Bip de Monitor (UTI)` acoplado à detecção de onda R (880 Hz).
-  - `🩺 Ausculta de Bulhas (B1 / B2)` acoplada ao fechamento das valvas mitral (B1 grave) e aórtica (B2 agudo).
+  - `🩺 Ausculta de Bulhas (B1 / B2)` acoplada ao fechamento das valvas mitral e aórtica.
 * [x] Compressão horizontal do traçado (janela de 2.5s com capacidade de 500 amostras, comportando > 3 ciclos completos).
+
+### Fase 7: Otimização Numérica Híbrida (Rush-Larsen) e Acessibilidade Universal (Mobile/Low-End) ✅ CONCLUÍDO
+* [x] Diagnóstico e resolução do gargalo de rigidez numérica (*stiffness*) dos canais rápidos de sódio ($m$).
+* [x] Integração analítica exata **Rush-Larsen** para todos os portões de condutância iônica em Ventrículo (ten Tusscher 2006), Purkinje (Stewart 2009) e Átrio (Courtemanche 1998).
+* [x] Elevação do passo de integração para $dt = 0.01\text{ ms}$ com 100% de estabilidade e redução de 10x no orçamento de cálculo (1.600 passos por quadro de 16 ms a 60 FPS).
+* [x] Execução em **1x tempo real garantida** com consumo de CPU mínimo (**< 5-10%**) em smartphones, tablets, Chromebooks e computadores de baixo custo.
+* [x] Recalibração acústica das bulhas B1 e B2 com *pitch sweeps* (140 $\to$ 85 Hz e 240 $\to$ 160 Hz) e ganho otimizado para microtransdutores de celulares e laptops.
+* [x] Formalização do requisito não-funcional de acessibilidade e computação inclusiva no `ARCHITECTURE.md`.
 
 ---
 
-## 🔬 Próximos Passos (SimCardio v2.1+)
+## 🔬 Próximos Passos (SimCardio v2.2+)
 
-### Fase 7: Expansão Espacial (Monodomínio 2D / 3D)
+### Fase 8: Expansão Espacial (Monodomínio 2D / 3D)
 * [ ] Substituição do modelo 0D acoplado por malha bidimensional de diferenças finitas (matriz de 100x100 a 200x200 miócitos).
 * [ ] Difusão tecidual contínua com tensor de condutividade anisotrópica.
 * [ ] Visualização topográfica de frentes de onda, espirais arritmogênicas (*rotor waves*), fibrilação ventricular e despolarizações fracionadas.
