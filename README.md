@@ -36,6 +36,11 @@ O simulador implementa 5 modelos eletrofisiológicos padrão-ouro validados pela
      - **Célula M (Mid-miocárdio):** Densidade reduzida de $I_{Ks}$ ($G_{Ks} = 0.098\text{ nS/pF}$), conferindo o platô mais longo de todas as camadas. Principal determinante do intervalo QT e substrato para arritmias de reentrada.
      - **Epicárdio (Subepicárdico):** Densidade de $I_{to}$ robusta ($G_{to} = 0.294\text{ nS/pF}$), entalhe proeminente na Fase 1 e **APD mais curto**. É a última camada a ser despolarizada, mas a **primeira a repolarizar**.
 
+6. **Fibroblastos Cardíacos e Miofibroblastos:**
+   - **Modelo:** MacCannell et al. (2007)
+   - **Referência:** MacCannell KA, Bazzazi H, Chilton L, Shibukawa Y, Clark RB, Giles WR. *A mathematical model of electrotonic interactions between ventricular myocytes and fibroblasts.* Biophys J. 2007.
+   - **Função:** Modela células não-excitáveis com potencial de repouso despolarizado ($-35\text{ a }-45\text{ mV}$) e correntes $I_{Kv}$, $I_{K1}$, $I_b$ e $I_{NaK}$. Acopla-se eletrotonicamente aos miócitos por junções comunicantes (*gap junctions*), atuando como dreno capacitivo, despolarizando o repouso do miócito e diminuindo a velocidade de condução intramiocárdica.
+
 ---
 
 ## ⚡ Sistema de Condução e Dromotropismo Dinâmico
@@ -56,6 +61,12 @@ O Nó Atrioventricular não possui um atraso fixo; sua velocidade de condução 
 - **Verapamil e Bloqueadores de Cálcio:** Como o nó AV depende do cálcio para a Fase 0, a inibição de $I_{Ca,L}$ induz alargamento acentuado da condução (BAV de 1º grau) ou bloqueio completo (BAV de 2º e 3º grau), momento no qual as fibras de Purkinje assumem o marcapasso por automatismo terciário.
 - **Isquemia Tecidual:** Lentifica a condução nodal e prolonga o intervalo PR.
 
+### 3. Acoplamento Eletrotônico Miócito-Fibroblasto e Fibrose Miocárdica
+A fibrose cardíaca pós-isquêmica ou senescente é simulada através da proliferação e acoplamento de fibroblastos não-excitáveis aos miócitos ventriculares via junções comunicantes de conexina-43/45:
+- **Efeito Dreno Capacitivo:** Como os fibroblastos repousam a potenciais menos negativos ($-35\text{ a }-45\text{ mV}$), o acoplamento eletrotônico drena corrente dos miócitos vizinhos durante a despolarização e injeta corrente durante o repouso.
+- **Despolarização Parcial Diastólica:** O potencial de repouso ventricular é elevado de $-86\text{ mV}$ para até $-76\text{ mV}$, promovendo inativação em estado estacionário dos canais rápidos de sódio $I_{Na}$.
+- **Retardo Conducional e Bloqueios:** O $dV/dt_{\max}$ da Fase 0 ventricular é atenuado e a condução transmural sofre lentificação progressiva, criando o substrato clássico de arritmias por reentrada e dispersão tecidual.
+
 ---
 
 ## 📈 Eletrocardiograma (ECG) Baseado em Dipolo Transmural
@@ -75,11 +86,12 @@ $$\text{ECG}(t) = 0.15 \cdot (V_{atrio}(t) + 80) + 0.55 \cdot (V_{endo}(t) - V_{
 
 ---
 
-## 🎛️ Modulação Farmacológica e Eletrolítica
+## 🎛️ Modulação Farmacológica, Eletrolítica e Patológica
 
 - **Potássio $[K^+]_o$ (2.0 a 8.5 mEq/L):** Modula o potencial de repouso ($V_{rest}$) pela equação de Nernst. Hipocalemia causa hiperexcitabilidade e pós-despolarizações; hipercalemia severa causa inativação permanente dos canais de sódio e parada diastólica.
 - **Cálcio $[Ca^{2+}]_o$ (1.0 a 3.5 mmol/L):** Regula a corrente $I_{Ca,L}$, modulando a duração do platô ventricular e o intervalo QT.
 - **Sódio $[Na^+]_o$ (125 a 155 mEq/L):** Determina a amplitude e velocidade da Fase 0 nas células rápidas (Átrio, Purkinje e Ventrículo).
+- **Fibrose Miocárdica (0% a 100%):** Aumenta a densidade e o acoplamento de junções comunicantes miócito-fibroblasto ($G_{gap}$ até $4.0\text{ nS}$), deprimindo $dV/dt$, prolongando a condução e gerando dispersão da repolarização.
 - **Antiarrítmicos (Classes I a IV de Vaughan Williams):**
   - *Classe I (Lidocaína):* Bloqueio fracionário de canais de $Na^+$, alargando o complexo QRS e reduzindo a velocidade de condução transmural.
   - *Classe III (Amiodarona):* Bloqueio de canais de $K^+$ ($I_{Kr}$, $I_{Ks}$), prolongando o platô e o intervalo QT.

@@ -55,3 +55,17 @@ Este documento detalha o "porquê" das decisões de engenharia, arquitetura de s
   - Uma única célula ventricular repolariza de cima para baixo ($+20 \to -86\text{ mV}$), o que inevitavelmente produz uma deflexão negativa (Onda T invertida no traçado clássico).
   - No miocárdio humano real, o epicárdio repolariza antes do endocárdio devido à maior densidade de canais $I_{to}$. Portanto, o vetor elétrico de repolarização aponta do endocárdio para o epicárdio, na mesma direção do vetor de despolarização (QRS).
   - A heterogeneidade transmural das 3 camadas (Endocárdio, Célula M, Epicárdio) permite que o complexo **P - Q - R - S - T** com **Onda T positiva e concordante** emerja de forma 100% orgânica a partir das leis de Maxwell e da biofísica celular.
+
+---
+
+## 6. Acoplamento Eletrotônico Miócito-Fibroblasto: Dinâmica Biofísica vs. Fronteiras Rígidas Isoladas
+
+* **Decisão Adotada:** Implementação do modelo biofísico de **MacCannell et al. (2007)** com acoplamento eletrotônico bidirecional contínuo via condutância de junção comunicante ($G_{gap} = \text{fibrose} \times 4.0\text{ nS}$):
+  $$I_{gap,myo} = \frac{G_{gap} \cdot (V_{myo} - V_{fib})}{C_{m,myo}}$$
+  $$I_{gap,fib} = \frac{G_{gap} \cdot (V_{fib} - V_{myo})}{C_{m,fib}}$$
+* **Alternativa Recusada:** Modelação de fibrose puramente como barreira não-condutora estática ou redução paramétrica arbitrária de $G_{Na}$ no miócito.
+* **Justificativa Técnica:**
+  - Fibroblastos e miofibroblastos cardíacos in vivo não são meros isolantes dielétricos; eles expressam conexinas (Cx43 e Cx45) e formam acoplamento elétrico direto com cardiomiócitos vizinhos.
+  - Como os fibroblastos possuem capacitância menor ($C_{m,fib} = 6.3\text{ pF}$) e potencial de repouso elevado ($-35\text{ a }-45\text{ mV}$), o acoplamento eletrotônico atua como um **dreno capacitivo** durante a fase rápida de despolarização (diminuindo $dV/dt_{\max}$) e como uma **fonte de corrente despolarizante diastólica** em repouso (elevando $V_{rest}$ do miócito para $-78\text{ mV}$).
+  - Essa despolarização parcial diastólica induz a inativação dependente de voltagem dos canais de sódio ($h_{\infty}$ e $j_{\infty}$ de ten Tusscher), explicando mecanisticamente a lentificação da condução intramiocárdica e o bloqueio unidirecional observados em miocárdios infartados e senescentes.
+  - O buffer linear de amostragem no WASM foi expandido de 9 para 10 canais contíguos (`[sa, av, atrium, purkinje, vent_endo, vent_epi, fibroblast, cai, force, ecg]`), preservando custo de memória zero-copy e permitindo inspecionar o potencial de ação do fibroblasto e a corrente de acoplamento em tempo real.

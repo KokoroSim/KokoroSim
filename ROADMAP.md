@@ -36,14 +36,15 @@ O desenvolvimento do **SimCardio** está organizado em grandes marcos arquitetur
 * [x] Modulação autonômica do atraso nodal: simpático encurta o PR (dromotropismo +); vagal alarga o PR (dromotropismo -).
 * [x] Sensibilidade a bloqueadores de cálcio (Verapamil) e isquemia, induzindo Bloqueios AV de 1º, 2º e 3º grau com escape terciário de Purkinje.
 
+### Fase 5: Fibroblastos Cardíacos e Acoplamento Eletrotônico (MacCannell et al., 2007) ✅ CONCLUÍDO
+* [x] Implementação do modelo biofísico do **Fibroblasto Cardíaco Humano** (MacCannell et al., 2007) com $C_f = 6.3\text{ pF}$, canais $I_{Kv}$, $I_{K1}$, $I_b$ e bomba eletrogênica $I_{NaK}$.
+* [x] Acoplamento eletrotônico miócito-fibroblasto via junções comunicantes ($I_{gap}$ bidirecional) com condutância $G_{gap} = \text{fibrose} \times 4.0\text{ nS}$.
+* [x] Simulação de dreno capacitivo, despolarização parcial diastólica do miócito (inativação de $I_{Na}$ em repouso) e lentificação da condução intramiocárdica proporcional à fibrose.
+* [x] Visualização no osciloscópio de Potencial de Ação com canal lilás (`#a29bfe`) e slider de controle de Fibrose Miocárdica (0% a 100%).
+
 ---
 
 ## 🔬 Próximos Passos (SimCardio v2.1+)
-
-### Fase 5: Fibroblastos Cardíacos e Miocárdio Fibrosado (MacCannell et al., 2007)
-* [ ] Implementação de células de fibroblasto cardíaco não-excitáveis.
-* [ ] Acoplamento eletrotônico miócito-fibroblasto via condutância de junção comunicante ($G_{gap}$).
-* [ ] Simulação de zonas cicatriciais pós-infarto do miocárdio, dispersão espacial da repolarização e arritmias ventriculares reentrantes.
 
 ### Fase 6: Acoplamento Eletromecânico e Hemodinâmica (Diagrama de Wiggers)
 * [ ] Acoplamento Excitação-Contração via modelo de ligantes de Cálcio na Troponina C (Niederer-Hunter-Smith).
