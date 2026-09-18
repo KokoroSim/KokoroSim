@@ -68,7 +68,9 @@ O desenvolvimento do **SimCardio** está organizado em grandes marcos arquitetur
 * [x] Implementação dos **5 modos de exibição temporal**: Fita Deslizante (Padrão), Varredura Contínua (Monitor UTI com barra apagadora), Paginação Sincronizada (Triggered Paged), Gatilho Automático (Auto-Trigger por batimento) e Gatilho Único (Single-Shot congelado).
 * [x] Detecção no motor e sincronização biofísica da varredura temporal pela **Fase 0 do Nó Sinoatrial** (marcapasso primário), preservando a sequência anatômica estrita (SA $\to$ P $\to$ PR $\to$ QRS $\to$ T).
 * [x] Botão `⚡ DISPARAR / ARMAR PRÓXIMO CICLO` para captura e congelamento de 1 batimento no modo Single-Shot.
-* [x] **Onda Fantasma por Snapshot em Memória (Custo Zero de CPU)**: congelamento do traçado basal de referência via botão `📸 Capturar` e renderização semitransparente em segundo plano para comparação com fármacos e distúrbios eletrolíticos.
+* [x] **Onda Fantasma Dinâmica e Pontilhada (Custo Zero de CPU)**: traçado basal renderizado com linha pontilhada (`line_dash: [4, 4]`) e sincronizado dinamicamente em *lockstep* com o sinal em tempo real na Fita Deslizante.
+* [x] **Higienização de Memória e Reset Limpo**: inicialização e apagamento de buffers com sentinelas `NaN` nos modos de varredura e gatilho automático, eliminando qualquer rastro residual de ciclos anteriores.
+* [x] **Controle de Pausa / Congelamento da Simulação**: botão `[ ⏸ CONGELAR ]` / `[ ▶ CONTINUAR ]` no cabeçalho da barra lateral, permitindo suspender o cálculo biológico e o áudio instantaneamente para inspeção estática.
 * [x] **Marcadores Visuais Acústicos Multicanal**: linhas verticais correspondentes desenhadas simultaneamente em todos os 4 canais (amarelo tracejado para Onda R/UTI, verde para B1 e coral para B2).
 
 ---

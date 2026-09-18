@@ -110,9 +110,14 @@ O quarto canal do osciloscópio exibe em tempo real o núcleo mecânico do **Dia
   3. *Paginação Sincronizada (Triggered Paged):* Sincronizada pelo início da Fase 0 do Nó SA ($X = 0$); desenha uma página completa (~1.5 a 2 ciclos), congela a imagem para estudo minucioso e recomeça a nova página no próximo marco sinusal.
   4. *Gatilho Automático (Auto-Trigger):* Redesenha automaticamente a cada batimento a partir do Nó SA com barra apagadora, sobrepondo os ciclos no mesmo eixo temporal.
   5. *Gatilho Único (Single-Shot / Congelado):* Traça exatamente 1 ciclo completo e congela indefinidamente, aguardando o comando `⚡ DISPARAR / ARMAR PRÓXIMO CICLO`.
-- **Onda Fantasma (Histórico Comparativo em Memória):**
+- **Controle de Execução e Congelamento:**
+  - Botão `[ ⏸ CONGELAR ]` / `[ ▶ CONTINUAR ]` no topo da barra de controles para suspender instantaneamente a simulação, congelar o traçado e silenciar o áudio para análise pedagógica detalhada.
+- **Onda Fantasma Dinâmica e Pontilhada (Histórico Comparativo em Memória):**
   - Permite congelar um snapshot do traçado basal via botão `📸 Capturar`.
-  - A curva de referência é renderizada em segundo plano com cor esmaecida (`rgba(..., 0.28)`), permitindo comparar visualmente os efeitos de fármacos antiarrítmicos, isquemia ou eletrólitos com **custo de CPU rigorosamente zero**.
+  - A curva de referência é desenhada pontilhada em segundo plano com cor semitransparente suave.
+  - No modo *Fita Deslizante*, a onda fantasma corre em sincronia temporal perfeita (*lockstep*) com a curva ativa, permitindo comparar dinâmica e duração ciclo a ciclo com **custo de CPU rigorosamente zero**.
+- **Reset Limpo de Memória nos Modos de Varredura e Gatilho:**
+  - Comutação entre modos com higienização instantânea de memória por sentinelas `NaN`, eliminando quaisquer rastros ou artefatos de ciclos anteriores.
 
 ---
 
