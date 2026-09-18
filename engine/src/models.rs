@@ -82,6 +82,7 @@ pub struct HeartSystem {
     acc_r_peak: bool,
     acc_b1: bool,
     acc_b2: bool,
+    acc_sa_fire: bool,
     time: f64,
     
     // Condução (Pingers & Estímulos Transitórios)
@@ -140,6 +141,7 @@ impl HeartSystem {
             acc_r_peak: false,
             acc_b1: false,
             acc_b2: false,
+            acc_sa_fire: false,
             time: 0.0,
             timer_atrium: -1.0,
             timer_av: -1.0,
@@ -283,6 +285,7 @@ impl HeartSystem {
             let delay_sa_atr = 15.0 / self.pharm.block_na.max(0.2);
             self.timer_atrium = self.time + delay_sa_atr;
             self.sa_fired = true;
+            self.acc_sa_fire = true;
         } else if self.sa_node.v < -40.0 {
             self.sa_fired = false;
         }
@@ -495,10 +498,12 @@ impl HeartSystem {
             if i % downsample == 0 {
                 let sound_code = (if self.acc_r_peak { 1.0 } else { 0.0 })
                     + (if self.acc_b1 { 2.0 } else { 0.0 })
-                    + (if self.acc_b2 { 4.0 } else { 0.0 });
+                    + (if self.acc_b2 { 4.0 } else { 0.0 })
+                    + (if self.acc_sa_fire { 8.0 } else { 0.0 });
                 self.acc_r_peak = false;
                 self.acc_b1 = false;
                 self.acc_b2 = false;
+                self.acc_sa_fire = false;
 
                 batch.push(self.sa_node.v);        // 0: SA
                 batch.push(self.av_node.v);        // 1: AV

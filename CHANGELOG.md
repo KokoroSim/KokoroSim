@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Features
+  - (engine) add SA node phase 0 depolarization trigger event to batch stream
   - (ui) calibrate heart sounds for mobile speakers and set 1x real-time step budget
   - (engine) optimize numerical integration with hybrid Rush-Larsen method for mobile and low-power hardware
   - (ui) add Web Audio synthesizer for ICU monitor beep and B1/B2 heart sounds, Wiggers hemodynamics chart, and compressed time window
