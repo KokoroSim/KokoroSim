@@ -32,6 +32,7 @@ fn App() -> Element {
     let mut symp = use_signal(|| 0.0);
     let mut parasymp = use_signal(|| 0.0);
     let mut isch = use_signal(|| 0.0);
+    let mut fibrosis = use_signal(|| 0.0);
     
     let show_sa = use_signal(|| true);
     let show_av = use_signal(|| true);
@@ -39,6 +40,7 @@ fn App() -> Element {
     let show_purkinje = use_signal(|| true);
     let show_endo = use_signal(|| true);
     let show_epi = use_signal(|| true);
+    let show_fibroblast = use_signal(|| false);
 
     // Dynamic HUD metrics state
     let mut bpm = use_signal(|| 75.0);
@@ -59,6 +61,7 @@ fn App() -> Element {
         let mut pa_plotter_purk = Plotter::new("canvas-pa", 300); // Laranja para Purkinje
         let mut pa_plotter_endo = Plotter::new("canvas-pa", 300); // Verde Clínico para Endocárdio
         let mut pa_plotter_epi = Plotter::new("canvas-pa", 300); // Verde Menta para Epicárdio
+        let mut pa_plotter_fib = Plotter::new("canvas-pa", 300); // Lilás para Fibroblasto
         let mut ecg_plotter = Plotter::new("canvas-ecg", 300); // Neon Cyan para ECG Dipolar
         let mut ch3_plotter = Plotter::new("canvas-ch3", 300); // Cálcio
         let mut ch4_plotter = Plotter::new("canvas-ch4", 300); // Força
@@ -74,11 +77,12 @@ fn App() -> Element {
             let s_symp = symp() / 100.0;
             let s_parasymp = parasymp() / 100.0;
             let s_isch = isch() / 100.0;
+            let s_fibrosis = fibrosis() / 100.0;
 
             system.write().update_params(
                 ko(), cao(), nao(), 
                 b_na, b_k, b_ca, b_nak, 
-                s_symp, s_parasymp, s_isch
+                s_symp, s_parasymp, s_isch, s_fibrosis
             );
             
             // 2. Step Engine
@@ -87,19 +91,20 @@ fn App() -> Element {
             let downsample = 3333; // Saves 1 point per 3.33ms, fitting 1000ms inside the 300-capacity buffer
             let batch = system.write().run_batch(dt, steps, downsample);
             
-            // Batch is flattened: [sa_v, av_v, atrium_v, purk_v, endo_v, epi_v, cai, force, ecg]
-            let chunk_size = 9;
+            // Batch is flattened: [sa_v, av_v, atrium_v, purk_v, endo_v, epi_v, fib_v, cai, force, ecg]
+            let chunk_size = 10;
             for chunk in batch.chunks(chunk_size) {
-                if chunk.len() == 9 {
+                if chunk.len() == 10 {
                     let sa = chunk[0];
                     let av = chunk[1];
                     let atrium = chunk[2];
                     let purk = chunk[3];
                     let endo = chunk[4];
                     let epi = chunk[5];
-                    let cai = chunk[6];
-                    let force = chunk[7];
-                    let ecg = chunk[8];
+                    let fib = chunk[6];
+                    let cai = chunk[7];
+                    let force = chunk[8];
+                    let ecg = chunk[9];
                     
                     pa_plotter_sa.push(sa);
                     pa_plotter_av.push(av);
@@ -107,6 +112,7 @@ fn App() -> Element {
                     pa_plotter_purk.push(purk);
                     pa_plotter_endo.push(endo);
                     pa_plotter_epi.push(epi);
+                    pa_plotter_fib.push(fib);
 
                     ecg_plotter.push(ecg);
                     
@@ -123,6 +129,7 @@ fn App() -> Element {
             let any_atrium = show_atrium();
             let any_av = show_av();
             let any_sa = show_sa();
+            let any_fib = show_fibroblast();
 
             // First drawn line clears the canvas, subsequent ones draw on top
             let mut cleared = false;
@@ -149,6 +156,10 @@ fn App() -> Element {
             }
             if any_epi {
                 pa_plotter_epi.draw(-90.0, 50.0, "#1abc9c", !cleared); // Epicárdio: Verde Menta (#1abc9c)
+                cleared = true;
+            }
+            if any_fib {
+                pa_plotter_fib.draw(-90.0, 50.0, "#a29bfe", !cleared); // Fibroblasto: Lilás (#a29bfe)
                 cleared = true;
             }
 
@@ -193,6 +204,7 @@ fn App() -> Element {
         symp.set(0.0);
         parasymp.set(0.0);
         isch.set(0.0);
+        fibrosis.set(0.0);
         system.set(HeartSystem::new());
     };
 
@@ -223,9 +235,10 @@ fn App() -> Element {
                                 li { b { "Nó Atrioventricular (AV): " }, "Inada et al. (2009) — Dromotropismo dinâmico dependente de taxa, tônus autonômico e canais de cálcio." }
                                 li { b { "Fibras de Purkinje (His): " }, "Stewart et al. (2009) — Rede de condução rápida e marcapasso terciário de escape." }
                                 li { b { "Heterogeneidade Transmural: " }, "ten Tusscher & Panfilov (2006) — Subtipos Endocárdio, Célula M e Epicárdio gerando ECG dipolar P-QRS-T real." }
+                                li { b { "Fibroblastos Cardíacos: " }, "MacCannell et al. (2007) — Acoplamento eletrotônico via gap junctions, dreno capacitivo e fibrose miocárdica." }
                             }
                             h4 { style: "color: var(--neon-cyan); margin-bottom: 6px;", "Modulação Farmacológica e Autonômica:" }
-                            p { "Permite intervenção direta nos eletrólitos extracelulares (K+, Ca2+, Na+), tônus autonômico (simpático e parassimpático), condições isquêmicas e quatro classes de fármacos antiarrítmicos (Lidocaína, Amiodarona, Verapamil e Digoxina)." }
+                            p { "Permite intervenção direta nos eletrólitos extracelulares (K+, Ca2+, Na+), tônus autonômico (simpático e parassimpático), condições isquêmicas, fibrose miocárdica e quatro classes de fármacos antiarrítmicos (Lidocaína, Amiodarona, Verapamil e Digoxina)." }
                         }
                     }
                 }
@@ -261,6 +274,7 @@ fn App() -> Element {
                     Checkbox { label: "Purkinje (Feixe de His)".to_string(), color: "#e67e22".to_string(), checked: show_purkinje }
                     Checkbox { label: "Endocárdio (Subendocárdico)".to_string(), color: "#2ecc71".to_string(), checked: show_endo }
                     Checkbox { label: "Epicárdio (Subepicárdico)".to_string(), color: "#1abc9c".to_string(), checked: show_epi }
+                    Checkbox { label: "Fibroblasto (Eletrotônico)".to_string(), color: "#a29bfe".to_string(), checked: show_fibroblast }
                 }
 
                 Accordion { label: "1. Íons e Eletrólitos".to_string(), open: false,
@@ -332,6 +346,12 @@ fn App() -> Element {
                         min: 0.0, max: 100.0, step: 1.0, default_val: 0.0, unit: "%".to_string(),
                         help: Some("Falta de ATP induz a abertura dos canais I_K,ATP. Aborta o platô precocemente e causa Supra de ST.".to_string()),
                         val: isch
+                    }
+                    Slider {
+                        label: "Fibrose Miocárdica".to_string(),
+                        min: 0.0, max: 100.0, step: 1.0, default_val: 0.0, unit: "%".to_string(),
+                        help: Some("Acoplamento a fibroblastos não-excitáveis (MacCannell 2007). Drena corrente da fase 0, despolariza repouso e causa bloqueios intramiocárdicos.".to_string()),
+                        val: fibrosis
                     }
                 }
             }
