@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Features
+  - (engine) implement electromechanical coupling, time-varying elastance, and 3-element Windkessel hemodynamics
   - (ui) add myocardial fibrosis control slider and fibroblast visualization
   - (engine) implement MacCannell et al. (2007) cardiac fibroblast model and electrotonic myocyte coupling
   - (ui) display transmural ventricular action potentials and dipolar ECG waveform

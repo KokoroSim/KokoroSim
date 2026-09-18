@@ -4,6 +4,7 @@ pub mod courtemanche;
 pub mod tentusscher;
 pub mod purkinje;
 pub mod fibroblast;
+pub mod hemodynamics;
 
 // Aqui ficará o gerenciador de estado global que orquestra as 4 células
 use wasm_bindgen::prelude::*;
@@ -77,6 +78,10 @@ pub struct HeartSystem {
     vent_m: tentusscher::VentricleCell,
     vent_epi: tentusscher::VentricleCell,
     fibroblast: fibroblast::FibroblastCell,
+    hemo: hemodynamics::HemodynamicsModel,
+    acc_r_peak: bool,
+    acc_b1: bool,
+    acc_b2: bool,
     time: f64,
     
     // Condução (Pingers & Estímulos Transitórios)
@@ -131,6 +136,10 @@ impl HeartSystem {
             vent_m: tentusscher::VentricleCell::new_with_type(tentusscher::VentricleCellType::Midmyocardial),
             vent_epi: tentusscher::VentricleCell::new_with_type(tentusscher::VentricleCellType::Epicardial),
             fibroblast: fibroblast::FibroblastCell::default(),
+            hemo: hemodynamics::HemodynamicsModel::new(),
+            acc_r_peak: false,
+            acc_b1: false,
+            acc_b2: false,
             time: 0.0,
             timer_atrium: -1.0,
             timer_av: -1.0,
@@ -454,6 +463,20 @@ impl HeartSystem {
             }
         }
 
+        // --- HEMODINÂMICA E ACOPLAMENTO ELETROMECÂNICO ---
+        self.hemo.step(
+            dt,
+            self.vent_endo.ca_i,
+            self.atrium.v,
+            self.vent_endo.v,
+            self.pharm.symp,
+            self.pharm.parasymp,
+        );
+
+        if self.hemo.event_r_peak { self.acc_r_peak = true; }
+        if self.hemo.event_b1 { self.acc_b1 = true; }
+        if self.hemo.event_b2 { self.acc_b2 = true; }
+
         // 5. Razão PR / RR
         if self.bpm > 0.0 {
             let est_rr = 60000.0 / self.bpm;
@@ -465,10 +488,18 @@ impl HeartSystem {
 
     // Roda um lote completo de cálculos no lado do Rust e retorna um array f64 achatado!
     pub fn run_batch(&mut self, dt: f64, steps: usize, downsample: usize) -> Vec<f64> {
-        let mut batch = Vec::with_capacity((steps / downsample) * 10);
+        let chunk_size = 12;
+        let mut batch = Vec::with_capacity((steps / downsample) * chunk_size);
         for i in 0..steps {
             self.step(dt);
             if i % downsample == 0 {
+                let sound_code = (if self.acc_r_peak { 1.0 } else { 0.0 })
+                    + (if self.acc_b1 { 2.0 } else { 0.0 })
+                    + (if self.acc_b2 { 4.0 } else { 0.0 });
+                self.acc_r_peak = false;
+                self.acc_b1 = false;
+                self.acc_b2 = false;
+
                 batch.push(self.sa_node.v);        // 0: SA
                 batch.push(self.av_node.v);        // 1: AV
                 batch.push(self.atrium.v);         // 2: Atrium
@@ -477,8 +508,10 @@ impl HeartSystem {
                 batch.push(self.vent_epi.v);       // 5: Epicárdio
                 batch.push(self.fibroblast.v);     // 6: Fibroblasto (MacCannell 2007)
                 batch.push(self.vent_endo.ca_i);   // 7: Transiente de Cálcio
-                batch.push(self.vent_endo.force);  // 8: Força de contração
-                batch.push(self.compute_ecg());    // 9: ECG Dipolar Transmural
+                batch.push(self.hemo.p_lv);        // 8: Pressão Ventricular Esquerda (LVP, mmHg)
+                batch.push(self.hemo.p_ao);        // 9: Pressão Aórtica (AoP, mmHg)
+                batch.push(self.compute_ecg());    // 10: ECG Dipolar Transmural
+                batch.push(sound_code);            // 11: Eventos Acústicos (Bitmask)
             }
         }
         batch
@@ -494,6 +527,9 @@ impl HeartSystem {
     pub fn get_vent_m_v(&self) -> f64 { self.vent_m.v }
     pub fn get_vent_epi_v(&self) -> f64 { self.vent_epi.v }
     pub fn get_fibroblast_v(&self) -> f64 { self.fibroblast.v }
+    pub fn get_lvp(&self) -> f64 { self.hemo.p_lv }
+    pub fn get_aop(&self) -> f64 { self.hemo.p_ao }
+    pub fn get_lvv(&self) -> f64 { self.hemo.v_lv }
     pub fn get_time(&self) -> f64 { self.time }
 
     pub fn compute_ecg(&self) -> f64 {
