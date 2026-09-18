@@ -1,48 +1,62 @@
-# Roadmap de Implementação
+# Roadmap de Implementação — SimCardio
 
-A construção do simulador está dividida em grandes ciclos de versão (Releases). A Versão 1.0 consolidou o modelo acoplado Zero-Dimensional (0D) no ecossistema JavaScript/TypeScript. A Versão 2.0 visa a transição para alta performance e simulação espacial.
-
-## SimCardio v2.0 (Próximos Passos)
-
-*   **Fase 1: Transição de Arquitetura (Rust + WebAssembly)**
-    *   Migrar todo o motor matemático (e integrador de Euler) de TypeScript puro para **Rust**.
-    *   Compilar o motor Rust para **WebAssembly (WASM)** a fim de obter ganhos exponenciais de performance, permitindo cálculos massivos.
-    *   Reescrever a interface de usuário (UI) utilizando **Dioxus** (Framework Rust para UI), substituindo o ecossistema atual (Vite/Vanilla TS).
-    *   *Nota estrutural:* Otimizar as pontes de memória (FFI) entre WASM e a thread principal para pintura no Canvas.
-
-*   **Fase 2: Expansão Espacial (De 0D para Bidomínio/Monodomínio 2D)**
-    *   Substituir a arquitetura simplificada de pingers (4 células isoladas) por uma malha espacial bi-dimensional real (ex: Matriz de 100x100 células = 10.000 miócitos).
-    *   Implementar equações de Monodomínio (ou Bidomínio) com coeficientes de difusão intercelular (Junções Comunicantes / *Gap Junctions*).
-    *   Simular frentes de onda, reentradas (espirais arritmogênicas) e bloqueios regionais visíveis topograficamente.
-
-*   **Fase 3: Módulo Eletromecânico e Hemodinâmico (Diagrama de Wiggers)**
-    *   Implementar modelo de Acoplamento Excitação-Contração (*Excitation-Contraction Coupling*) baseado em Niederer-Hunter-Smith, utilizando o transiente de Cálcio intracelular ($[Ca^{2+}]_i$) do modelo ten Tusscher para calcular a tensão ativa ($T_a$) dos miócitos ventriculares.
-    *   Modelar a mecânica da câmara ventricular através de Elastância Variável no Tempo (modelo *Suga-Sagawa*), convertendo a tensão ativa em Pressão Ventricular Esquerda (LVP).
-    *   Acoplar um modelo hidráulico base (*Windkessel* de 2 ou 3 elementos) para simular as válvulas cardíacas (mitral/aórtica) e calcular a Pressão Aórtica (AoP), gerando o clássico gráfico de pressão hemodinâmico.
+O desenvolvimento do **SimCardio** está organizado em grandes marcos arquiteturais e eletrofisiológicos. 
 
 ---
 
-## SimCardio v1.0 (Concluído)
+## 🚀 SimCardio v2.0 (Marco Eletrofisiológico em Rust + WASM)
 
-*   **Fase 1: Estrutura Visual (Mockup) ✅**
-    *   Implementar o layout estático em HTML/CSS (Cockpit, HUD de UTI e Sliders).
-    *   Testar a responsividade e o motor de renderização do Canvas com dados falsos.
-*   **Fase 2: Motor Matemático Base (Web Worker) ✅**
-    *   Criar o *Worker* isolado.
-    *   Implementar o integrador numérico (Método de Euler) com passo variável ($\Delta t = 0.05\text{ ms}$).
-*   **Fase 3: Transcrição dos Modelos Biofísicos ✅**
-    *   Traduzir o código C do Ten Tusscher (2004) para JavaScript no Worker.
-    *   Traduzir o código C do Severi (2012).
-    *   Traduzir o código C do Inada (2009).
-*   **Fase 4: Acoplamento e Condução ✅**
-    *   Estabelecer o repasse do impulso: SA $\rightarrow$ AV $\rightarrow$ Ventrículo.
-    *   Garantir a latência do Nó AV para formação do Intervalo PR.
-*   **Fase 5: Renderização e Modos de Tela ✅**
-    *   Sincronizar a saída do Worker com o Canvas.
-    *   Implementar os três modos de visualização (Varredura Contínua, Gatilho Único, Paginação Longa).
-    *   Implementar o carimbo dinâmico da "Onda Fantasma".
-*   **Fase 6: Interface de Farmacologia e Eletrólitos ✅**
-    *   Conectar os *sliders* da UI às variáveis basais do Worker via `postMessage`.
-    *   Aplicar o modelo de inibição fracional para os fármacos.
-*   **Fase 7: Áudio e UX Final ✅**
-    *   Sintetizar o *Bip* (Pico da Fase 0) e os sons B1/B2 (*Tum-Tá* nas Fases 2 e 3).
+### Fase 1: Transição Arquitetural (Rust + WASM + Dioxus) ✅ CONCLUÍDO
+* [x] Migração de todo o motor matemático de equações diferenciais para **Rust nativo**.
+* [x] Compilação do motor para **WebAssembly (WASM)** com otimizações de alto rendimento.
+* [x] Reescrever a interface de usuário reativa utilizando **Dioxus 0.6** e Signals.
+* [x] Pipeline de execução em lote (`run_batch`) com amostragem direta em memória compartilhada WASM.
+* [x] Ambiente de desenvolvimento local (`run_local.sh`) com monitoramento de arquivos, livereload, debounce e compilação concorrente assíncrona.
+
+### Fase 2: Condução Fisiológica por Corrente e Fibras de Purkinje ✅ CONCLUÍDO
+* [x] Eliminação da assincronia e marcapasso parasita ventricular (remoção do timer rígido de 1000 ms).
+* [x] Substituição de grampeamentos de voltagem por **injeção transitória de corrente despolarizante** ($I_{stim}$).
+* [x] Transposição do modelo biofísico de **Stewart et al. (2009)** para a célula de Purkinje humana (20 variáveis de estado, integração em ms, canais $I_f$, $I_{to}$, $I_{sus}$).
+* [x] Acoplamento da cadeia completa: Nó SA $\to$ Átrio $\to$ Nó AV $\to$ Purkinje / His $\to$ Ventrículo.
+* [x] Automatismo terciário de escape idioventricular (~30 BPM) em caso de bloqueio atrioventricular.
+
+### Fase 3: Heterogeneidade Transmural Ventricular e ECG Dipolar ✅ CONCLUÍDO
+* [x] Implementação dos 3 subtipos ventriculares de **ten Tusscher & Panfilov (2006)**:
+  - **Endocárdio (Subendocárdio):** $G_{to}$ baixo ($0.073$), platô arredondado, ativado primeiro via Purkinje.
+  - **Célula M (Mid-miocárdio):** $G_{Ks}$ reduzido ($0.098$), platô estendido, substrato para dispersão do QT.
+  - **Epicárdio (Subepicárdico):** $G_{to}$ robusto ($0.294$), entalhe proeminente na Fase 1, APD curto, repolariza primeiro.
+* [x] Condução transmural intramiocárdica com velocidade finita (Endo $\to$ M-cell em ~6ms $\to$ Epicárdio em ~12ms).
+* [x] Gênese biofísica do **Eletrocardiograma (ECG)** a partir do gradiente dipolar de campo distante:
+  $$\text{ECG}(t) = 0.15 \cdot V_{atrio} + 0.55 \cdot (V_{endo} - V_{epi}) + 0.25 \cdot (V_M - V_{epi})$$
+  gerando organicamente a **Onda P**, o **Complexo QRS escarpado** e a **Onda T POSITIVA e fisiológica**.
+
+### Fase 4: Dromotropismo Dinâmico e Condução Decremental no Nó AV ✅ CONCLUÍDO
+* [x] Eliminação de atrasos nodais estáticos.
+* [x] Implementação da **condução decremental frequência-dependente** (aumento do retardo sob taquicardia devido à cinética de recuperação do $I_{Ca,L}$).
+* [x] Modulação autonômica do atraso nodal: simpático encurta o PR (dromotropismo +); vagal alarga o PR (dromotropismo -).
+* [x] Sensibilidade a bloqueadores de cálcio (Verapamil) e isquemia, induzindo Bloqueios AV de 1º, 2º e 3º grau com escape terciário de Purkinje.
+
+---
+
+## 🔬 Próximos Passos (SimCardio v2.1+)
+
+### Fase 5: Fibroblastos Cardíacos e Miocárdio Fibrosado (MacCannell et al., 2007)
+* [ ] Implementação de células de fibroblasto cardíaco não-excitáveis.
+* [ ] Acoplamento eletrotônico miócito-fibroblasto via condutância de junção comunicante ($G_{gap}$).
+* [ ] Simulação de zonas cicatriciais pós-infarto do miocárdio, dispersão espacial da repolarização e arritmias ventriculares reentrantes.
+
+### Fase 6: Acoplamento Eletromecânico e Hemodinâmica (Diagrama de Wiggers)
+* [ ] Acoplamento Excitação-Contração via modelo de ligantes de Cálcio na Troponina C (Niederer-Hunter-Smith).
+* [ ] Conversão do transiente de Cálcio $[Ca^{2+}]_i$ em tensão isométrica e força ativa ventricular.
+* [ ] Modelo hemodinâmico de elastância variável no tempo (*Suga-Sagawa*) para calcular a Pressão Intraventricular Esquerda (LVP).
+* [ ] Acoplamento hidráulico com modelo arterial *Windkessel* de 3 elementos para calcular Pressão Aórtica (AoP), gerando o Diagrama de Wiggers completo em tempo real.
+
+### Fase 7: Expansão Espacial (Monodomínio 2D / 3D)
+* [ ] Substituição do modelo 0D acoplado por malha bidimensional de diferenças finitas (matriz de 100x100 a 200x200 miócitos).
+* [ ] Difusão tecidual contínua com tensor de condutividade anisotrópica.
+* [ ] Visualização topográfica de frentes de onda, espirais arritmogênicas (*rotor waves*), fibrilação ventricular e despolarizações fracionadas.
+
+---
+
+## 🏛️ SimCardio v1.0 (Histórico / Legado JS) ✅
+* Marco inicial com simulação zero-dimensional em Web Worker JavaScript, interface estática e 3 modelos celulares (concluído e posteriormente reescrito em Rust na versão 2.0).
