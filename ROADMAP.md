@@ -64,11 +64,18 @@ O desenvolvimento do **SimCardio** está organizado em grandes marcos arquitetur
 * [x] Recalibração acústica das bulhas B1 e B2 com *pitch sweeps* (140 $\to$ 85 Hz e 240 $\to$ 160 Hz) e ganho otimizado para microtransdutores de celulares e laptops.
 * [x] Formalização do requisito não-funcional de acessibilidade e computação inclusiva no `ARCHITECTURE.md`.
 
+### Fase 8: Modos de Exibição do Osciloscópio, Gatilho Biofísico e Onda Fantasma ✅ CONCLUÍDO
+* [x] Implementação dos **5 modos de exibição temporal**: Fita Deslizante (Padrão), Varredura Contínua (Monitor UTI com barra apagadora), Paginação Sincronizada (Triggered Paged), Gatilho Automático (Auto-Trigger por batimento) e Gatilho Único (Single-Shot congelado).
+* [x] Detecção no motor e sincronização biofísica da varredura temporal pela **Fase 0 do Nó Sinoatrial** (marcapasso primário), preservando a sequência anatômica estrita (SA $\to$ P $\to$ PR $\to$ QRS $\to$ T).
+* [x] Botão `⚡ DISPARAR / ARMAR PRÓXIMO CICLO` para captura e congelamento de 1 batimento no modo Single-Shot.
+* [x] **Onda Fantasma por Snapshot em Memória (Custo Zero de CPU)**: congelamento do traçado basal de referência via botão `📸 Capturar` e renderização semitransparente em segundo plano para comparação com fármacos e distúrbios eletrolíticos.
+* [x] **Marcadores Visuais Acústicos Multicanal**: linhas verticais correspondentes desenhadas simultaneamente em todos os 4 canais (amarelo tracejado para Onda R/UTI, verde para B1 e coral para B2).
+
 ---
 
-## 🔬 Próximos Passos (SimCardio v2.2+)
+## 🔬 Próximos Passos (SimCardio v2.3+)
 
-### Fase 8: Expansão Espacial (Monodomínio 2D / 3D)
+### Fase 9: Expansão Espacial (Monodomínio 2D / 3D)
 * [ ] Substituição do modelo 0D acoplado por malha bidimensional de diferenças finitas (matriz de 100x100 a 200x200 miócitos).
 * [ ] Difusão tecidual contínua com tensor de condutividade anisotrópica.
 * [ ] Visualização topográfica de frentes de onda, espirais arritmogênicas (*rotor waves*), fibrilação ventricular e despolarizações fracionadas.

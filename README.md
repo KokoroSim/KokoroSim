@@ -100,7 +100,19 @@ O quarto canal do osciloscópio exibe em tempo real o núcleo mecânico do **Dia
   - **🩺 Bulhas Cardíacas (Ausculta B1/B2):**
     - **B1 ("Tum" / *Lub*):** Disparada na contração isovolumétrica no fechamento da valva mitral ($LVP \ge LAP$), sintetizada com *pitch sweep* descendente (140 $\to$ 85 Hz), ressonância muscular calibrada e ganho reforçado para clara audibilidade em transdutores de smartphones e notebooks.
     - **B2 ("Tá" / *Dub*):** Disparada no relaxamento isovolumétrico no fechamento da valva aórtica ($LVP \le AoP$), sintetizada com estalido de alta frequência (240 $\to$ 160 Hz), filtro passa-banda e decaimento rápido.
-  - As duas opções vêm **desativadas por padrão** no Accordion "5. Monitorização & Áudio", sendo ativadas pelo clique do usuário em conformidade com as diretrizes de autoplay dos navegadores.
+  - **Marcadores Visuais Verticais Multicanal:** Quando as opções de áudio estão ativas, linhas verticais correspondentes são desenhadas simultaneamente em todos os 4 canais (amarelo tracejado para Onda R/UTI, verde esmeralda para B1 e coral para B2), estabelecendo correlação áudio-visual em tempo real.
+  - As duas opções de som vêm **desativadas por padrão** no Accordion "5. Monitorização & Áudio", sendo ativadas pelo clique do usuário em conformidade com as diretrizes de autoplay dos navegadores.
+
+### 📺 Modos de Visualização do Osciloscópio e Onda Fantasma
+- **5 Modos de Varredura Temporal:**
+  1. *Fita Deslizante (Rolling Strip-Chart — Padrão):* Fluxo contínuo da direita para a esquerda.
+  2. *Varredura Contínua (Continuous Sweep — Monitor UTI):* Varredura da esquerda para a direita com barra apagadora à frente da caneta e wrap-around.
+  3. *Paginação Sincronizada (Triggered Paged):* Sincronizada pelo início da Fase 0 do Nó SA ($X = 0$); desenha uma página completa (~1.5 a 2 ciclos), congela a imagem para estudo minucioso e recomeça a nova página no próximo marco sinusal.
+  4. *Gatilho Automático (Auto-Trigger):* Redesenha automaticamente a cada batimento a partir do Nó SA com barra apagadora, sobrepondo os ciclos no mesmo eixo temporal.
+  5. *Gatilho Único (Single-Shot / Congelado):* Traça exatamente 1 ciclo completo e congela indefinidamente, aguardando o comando `⚡ DISPARAR / ARMAR PRÓXIMO CICLO`.
+- **Onda Fantasma (Histórico Comparativo em Memória):**
+  - Permite congelar um snapshot do traçado basal via botão `📸 Capturar`.
+  - A curva de referência é renderizada em segundo plano com cor esmaecida (`rgba(..., 0.28)`), permitindo comparar visualmente os efeitos de fármacos antiarrítmicos, isquemia ou eletrólitos com **custo de CPU rigorosamente zero**.
 
 ---
 

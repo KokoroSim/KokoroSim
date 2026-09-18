@@ -111,3 +111,27 @@ Este documento detalha o "porquê" das decisões de engenharia, arquitetura de s
     3. No navegador, o uso médio de CPU despenca para **< 5-10%**, permitindo sessões prolongadas sem aquecimento térmico nem estrangulamento de bateria (*thermal throttling*) em dispositivos portáteis.
   - **Calibração Eletroacústica para Transdutores de Baixo Diâmetro:** Alto-falantes de celulares e laptops sofrem atenuação acústica acentuada abaixo de 120-150 Hz. Para evitar que as bulhas ficassem inaudíveis (como ocorria com a B1 em 65 Hz puro), foram introduzidos *pitch sweeps* descendentes (B1 de 140 para 85 Hz; B2 de 240 para 160 Hz) e filtros ressonantes ajustados com envelope percussivo, garantindo ausculta nítida e percussiva em qualquer dispositivo sem fone de ouvido.
 
+---
+
+## 10. Modos de Exibição do Osciloscópio, Sincronização Biofísica de Varredura e Onda Fantasma em Memória (Zero-Cost)
+
+* **Decisão Adotada:** Implementação de 5 modos de visualização temporal comutáveis no osciloscópio (`Rolling`, `Sweep`, `Paged`, `TriggeredAuto`, `TriggeredSingle`), sincronização biofísica da varredura temporal pela **Fase 0 do Nó Sinoatrial** (marcapasso primário), armazenamento em memória da **Onda Fantasma (Snapshot Buffer)** e projeção vertical simultânea dos eventos acústicos em todos os canais.
+* **Alternativa Recusada:** Execução de uma segunda instância paralela de simulação para gerar a curva fantasma e varredura temporal cega (sem alinhamento de fase cardíaca).
+* **Justificativa Técnica e Decisões de Design:**
+  - **Os 5 Modos de Visualização:**
+    1. *Fita Deslizante (Rolling Strip-Chart — Padrão):* Buffer FIFO contínuo onde os pontos mais antigos deslizam suavemente para a esquerda. Ideal para monitorização hemodinâmica e telemetria contínua.
+    2. *Varredura Contínua (Continuous Sweep / Monitor de UTI):* A caneta avança da esquerda para a direita com uma barra preta apagadora de 20 amostras à frente, mantendo o traço do ciclo anterior visível à direita até ser sobrescrito (estética clássica dos monitores hospitalares de leito).
+    3. *Paginação Sincronizada (Triggered Paged):* Cada página se inicia estritamente no início da **Fase 0 do Nó SA** ($X = 0$). O traçado avança até preencher a tela (~1.5 a 2 ciclos), congela a página estática para leitura minuciosa, e apenas quando o próximo marco do Nó SA dispara, a tela inteira é renovada.
+    4. *Gatilho Automático (Auto-Trigger):* A cada novo batimento (Nó SA), a caneta reseta para a margem esquerda com barra apagadora, sobrepondo os batimentos no mesmo eixo temporal (excelente para detectar alternância de onda T, extrassístoles e variações ciclo a ciclo).
+    5. *Gatilho Único (Single-Shot / Congelado):* Captura exatamente 1 ciclo cardíaco completo e congela indefinidamente, aguardando o clique do usuário no botão `⚡ DISPARAR / ARMAR PRÓXIMO CICLO`.
+  - **A Escolha da Fase 0 do Nó Sinoatrial como Marco de Sincronização:** O Nó SA é o ponto zero anatômico e temporal da despolarização cardíaca. Ao ancorar a margem esquerda ($X = 0$) na despolarização sinusal, a tela exibe a sequência cronológica real da anatomia cardíaca da esquerda para a direita:
+    $$\text{Margem Esquerda } (X=0) \to \text{Nó SA (Fase 0)} \to \text{Onda P (Átrio)} \to \text{Intervalo PR (Nó AV)} \to \text{Complexo QRS (Ventrículo)} \to \text{Onda T (Repolarização)}$$
+    Se a sincronização ocorresse na onda R ventricular, a onda P do mesmo batimento ficaria amputada à esquerda e a onda P visível pertenceria ao ciclo posterior.
+  - **Onda Fantasma por Snapshot em Memória (Zero CPU Overhead):** Em vez de instanciar e calcular um segundo modelo biológico em segundo plano (o que dobraria o consumo de CPU de 8% para 16% e drenaria baterias em celulares), o usuário clica em `📸 Capturar`. O sistema simplesmente clona o vetor de pontos atual (`ghost_buffer = Some(buffer.clone())`). Quando ativada a checkbox, o traçado basal anterior é renderizado em segundo plano com cor esmaecida (`rgba(..., 0.28)`), permitindo comparar instantaneamente o efeito de qualquer fármaco ou distúrbio eletrolítico com custo de CPU rigorosamente zero.
+  - **Marcadores Verticais Acústicos Multicanal:** Quando as opções de som estão ativadas, linhas verticais sutis cortam **todos os 4 osciloscópios simultaneamente** (Potenciais de Ação, ECG, Cálcio e Hemodinâmica):
+    - *Amarelo Dourado Tracejado:* instante do pico da **Onda R (Bip da UTI)**.
+    - *Verde Esmeralda Sólido:* instante do fechamento da valva mitral / início da sístole isovolumétrica **(Bulha B1 - "Tum")**.
+    - *Coral Sólido:* instante do fechamento da valva aórtica / incisura dicrótica **(Bulha B2 - "Tá")**.
+    Isso estabelece uma correlação áudio-visual em tempo real: o usuário vê a linha passar na tela no mesmo milissegundo em que escuta a bulha ou o bip.
+
+
