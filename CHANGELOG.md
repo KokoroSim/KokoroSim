@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Features
+  - (ui) implement simulation freeze control, synchronized rolling ghost wave with dashed line, and auto-trigger canvas reset
   - (ui) implement 5 oscilloscope display modes, ghost wave snapshot, and multi-channel sound markers
   - (engine) add SA node phase 0 depolarization trigger event to batch stream
   - (ui) calibrate heart sounds for mobile speakers and set 1x real-time step budget

@@ -223,39 +223,78 @@ canvas {
 /* Sidebar Top Actions */
 .top-buttons {
     display: flex;
-    gap: 1vw;
+    gap: 0.6vw;
     margin-bottom: 1.5vh;
 }
 
 .btn-reset-all {
-    flex: 2;
+    flex: 1.2;
     background: #e74c3c;
     color: #fff;
     border: none;
-    padding: 1.2vh 1vw;
+    padding: 1.2vh 0.6vw;
     font-weight: bold;
     cursor: pointer;
     border-radius: 0.5vh;
-    font-size: 1.6vh;
+    font-size: 1.4vh;
     transition: 0.2s;
     box-shadow: 0 0 10px rgba(231, 76, 60, 0.4);
+    white-space: nowrap;
 }
 
 .btn-reset-all:hover {
     background: #c0392b;
 }
 
-.btn-about {
-    flex: 1;
-    background: #3498db;
-    color: #fff;
-    border: none;
-    padding: 1.2vh 1vw;
+.btn-pause {
+    flex: 1.2;
+    background: #222;
+    color: var(--neon-cyan);
+    border: 1px solid var(--neon-cyan);
+    padding: 1.2vh 0.6vw;
     font-weight: bold;
     cursor: pointer;
     border-radius: 0.5vh;
-    font-size: 1.6vh;
+    font-size: 1.4vh;
     transition: 0.2s;
+    white-space: nowrap;
+}
+
+.btn-pause:hover {
+    background: rgba(0, 255, 255, 0.15);
+}
+
+.btn-resume {
+    flex: 1.2;
+    background: var(--neon-yellow);
+    color: #000;
+    border: 1px solid var(--neon-yellow);
+    padding: 1.2vh 0.6vw;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 0.5vh;
+    font-size: 1.4vh;
+    transition: 0.2s;
+    white-space: nowrap;
+    box-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+}
+
+.btn-resume:hover {
+    background: #f39c12;
+}
+
+.btn-about {
+    flex: 0.8;
+    background: #3498db;
+    color: #fff;
+    border: none;
+    padding: 1.2vh 0.6vw;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 0.5vh;
+    font-size: 1.4vh;
+    transition: 0.2s;
+    white-space: nowrap;
 }
 
 .btn-about:hover {

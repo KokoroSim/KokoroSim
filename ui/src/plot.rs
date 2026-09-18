@@ -69,8 +69,10 @@ impl Plotter {
             self.paged_frozen = false;
             self.single_state = SingleState::Armed;
             self.sound_markers.clear();
-            if self.buffer.len() < self.capacity {
-                self.buffer.resize(self.capacity, 0.0);
+            // Reset completo do buffer para eliminar rastros de outros modos
+            self.buffer.clear();
+            if mode != ViewMode::Rolling {
+                self.buffer.resize(self.capacity, f64::NAN);
             }
         }
     }
@@ -102,6 +104,14 @@ impl Plotter {
                 }
                 self.buffer.push(value);
 
+                // A onda fantasma corre em sincronia perfeita com o gráfico ativo
+                if let Some(ref mut ghost) = self.ghost_buffer {
+                    if !ghost.is_empty() {
+                        let val = ghost.remove(0);
+                        ghost.push(val); // Wrap circular
+                    }
+                }
+
                 // Desloca marcadores sonoros existentes 1 índice à esquerda
                 self.sound_markers.retain_mut(|(idx, _)| {
                     if *idx > 0 {
@@ -124,7 +134,7 @@ impl Plotter {
 
                 // Limpa marcadores sonoros na janela de apagamento à frente da caneta
                 let cur = self.head_idx;
-                let erase_samples = 20;
+                let erase_samples = 25;
                 let erase_end = (cur + erase_samples).min(self.capacity);
                 self.sound_markers.retain(|(idx, _)| *idx < cur || *idx >= erase_end);
 
@@ -160,19 +170,28 @@ impl Plotter {
 
             ViewMode::TriggeredAuto => {
                 if self.buffer.len() < self.capacity {
-                    self.buffer.resize(self.capacity, value);
+                    self.buffer.resize(self.capacity, f64::NAN);
                 }
 
                 if is_sa_fire {
-                    // Novo batimento: reseta caneta para a margem esquerda
+                    // Novo batimento: reseta caneta para X=0 e limpa rastro anterior
                     self.head_idx = 0;
+                    self.sound_markers.clear();
+                    let erase_samples = 25;
+                    let end = erase_samples.min(self.capacity);
+                    for i in 0..end {
+                        self.buffer[i] = f64::NAN;
+                    }
                 }
 
                 self.buffer[self.head_idx] = value;
                 let cur = self.head_idx;
-                let erase_samples = 20;
+                let erase_samples = 25;
                 let erase_end = (cur + erase_samples).min(self.capacity);
                 self.sound_markers.retain(|(idx, _)| *idx < cur || *idx >= erase_end);
+                for i in (cur + 1)..erase_end {
+                    self.buffer[i] = f64::NAN;
+                }
 
                 if sound_flags != 0 {
                     self.sound_markers.push((cur, sound_flags));
@@ -182,7 +201,7 @@ impl Plotter {
 
             ViewMode::TriggeredSingle => {
                 if self.buffer.len() < self.capacity {
-                    self.buffer.resize(self.capacity, value);
+                    self.buffer.resize(self.capacity, f64::NAN);
                 }
 
                 match self.single_state {
@@ -191,6 +210,9 @@ impl Plotter {
                             self.head_idx = 0;
                             self.single_state = SingleState::Recording;
                             self.sound_markers.clear();
+                            for i in 0..self.capacity {
+                                self.buffer[i] = f64::NAN;
+                            }
                         }
                     }
                     SingleState::Recording => {
@@ -294,25 +316,37 @@ impl Plotter {
                     let dx = width / (self.capacity as f64 - 1.0);
                     let range_y = max_y - min_y;
 
-                    // 1. Desenha Onda Fantasma (Snapshot prévio em memória com transparência)
+                    // 1. Desenha Onda Fantasma: PONTILHADA, semitransparente e sem sombra
                     if show_ghost {
                         if let Some(ref ghost) = self.ghost_buffer {
                             if !ghost.is_empty() {
+                                ctx.save();
                                 ctx.begin_path();
                                 ctx.set_stroke_style_str(&format_ghost_color(color));
                                 ctx.set_line_width(1.5);
                                 ctx.set_shadow_blur(0.0);
+                                let _ = ctx.set_line_dash(&js_sys::Array::of2(
+                                    &wasm_bindgen::JsValue::from(4),
+                                    &wasm_bindgen::JsValue::from(4),
+                                ));
 
+                                let mut first = true;
                                 for (i, &val) in ghost.iter().enumerate() {
-                                    let x = i as f64 * dx;
-                                    let y = height - ((val - min_y) / range_y) * height;
-                                    if i == 0 {
-                                        ctx.move_to(x, y);
+                                    if !val.is_nan() {
+                                        let x = i as f64 * dx;
+                                        let y = height - ((val - min_y) / range_y) * height;
+                                        if first {
+                                            ctx.move_to(x, y);
+                                            first = false;
+                                        } else {
+                                            ctx.line_to(x, y);
+                                        }
                                     } else {
-                                        ctx.line_to(x, y);
+                                        first = true;
                                     }
                                 }
                                 ctx.stroke();
+                                ctx.restore();
                             }
                         }
                     }
@@ -326,33 +360,46 @@ impl Plotter {
                     match self.mode {
                         ViewMode::Rolling => {
                             ctx.begin_path();
+                            let mut first = true;
                             for (i, &val) in self.buffer.iter().enumerate() {
-                                let x = i as f64 * dx;
-                                let y = height - ((val - min_y) / range_y) * height;
-                                if i == 0 {
-                                    ctx.move_to(x, y);
+                                if !val.is_nan() {
+                                    let x = i as f64 * dx;
+                                    let y = height - ((val - min_y) / range_y) * height;
+                                    if first {
+                                        ctx.move_to(x, y);
+                                        first = false;
+                                    } else {
+                                        ctx.line_to(x, y);
+                                    }
                                 } else {
-                                    ctx.line_to(x, y);
+                                    first = true;
                                 }
                             }
                             ctx.stroke();
                         }
 
                         ViewMode::Sweep | ViewMode::TriggeredAuto => {
-                            let erase_samples = 20;
+                            let erase_samples = 25;
                             let cur = self.head_idx;
                             let erase_end = (cur + erase_samples).min(self.capacity);
 
                             // Segmento A: da barra apagadora até o final (traço do ciclo anterior)
                             if erase_end < self.capacity {
                                 ctx.begin_path();
+                                let mut first = true;
                                 for i in erase_end..self.capacity {
-                                    let x = i as f64 * dx;
-                                    let y = height - ((self.buffer[i] - min_y) / range_y) * height;
-                                    if i == erase_end {
-                                        ctx.move_to(x, y);
+                                    let val = self.buffer[i];
+                                    if !val.is_nan() {
+                                        let x = i as f64 * dx;
+                                        let y = height - ((val - min_y) / range_y) * height;
+                                        if first {
+                                            ctx.move_to(x, y);
+                                            first = false;
+                                        } else {
+                                            ctx.line_to(x, y);
+                                        }
                                     } else {
-                                        ctx.line_to(x, y);
+                                        first = true;
                                     }
                                 }
                                 ctx.stroke();
@@ -361,13 +408,20 @@ impl Plotter {
                             // Segmento B: do início da tela até a caneta atual (traço do ciclo novo)
                             if cur > 0 {
                                 ctx.begin_path();
+                                let mut first = true;
                                 for i in 0..cur {
-                                    let x = i as f64 * dx;
-                                    let y = height - ((self.buffer[i] - min_y) / range_y) * height;
-                                    if i == 0 {
-                                        ctx.move_to(x, y);
+                                    let val = self.buffer[i];
+                                    if !val.is_nan() {
+                                        let x = i as f64 * dx;
+                                        let y = height - ((val - min_y) / range_y) * height;
+                                        if first {
+                                            ctx.move_to(x, y);
+                                            first = false;
+                                        } else {
+                                            ctx.line_to(x, y);
+                                        }
                                     } else {
-                                        ctx.line_to(x, y);
+                                        first = true;
                                     }
                                 }
                                 ctx.stroke();
@@ -376,7 +430,7 @@ impl Plotter {
                             // Barra apagadora preta à frente da caneta
                             if clear {
                                 let head_x = cur as f64 * dx;
-                                let bar_w = (erase_samples as f64 * dx).max(16.0);
+                                let bar_w = (erase_samples as f64 * dx).max(18.0);
                                 ctx.set_fill_style_str("#000000");
                                 ctx.fill_rect(head_x, 0.0, bar_w.min(width - head_x), height);
                                 if head_x + bar_w > width {
@@ -394,13 +448,20 @@ impl Plotter {
 
                             if end > 0 {
                                 ctx.begin_path();
+                                let mut first = true;
                                 for i in 0..end {
-                                    let x = i as f64 * dx;
-                                    let y = height - ((self.buffer[i] - min_y) / range_y) * height;
-                                    if i == 0 {
-                                        ctx.move_to(x, y);
+                                    let val = self.buffer[i];
+                                    if !val.is_nan() {
+                                        let x = i as f64 * dx;
+                                        let y = height - ((val - min_y) / range_y) * height;
+                                        if first {
+                                            ctx.move_to(x, y);
+                                            first = false;
+                                        } else {
+                                            ctx.line_to(x, y);
+                                        }
                                     } else {
-                                        ctx.line_to(x, y);
+                                        first = true;
                                     }
                                 }
                                 ctx.stroke();
@@ -416,13 +477,20 @@ impl Plotter {
 
                             if end > 0 {
                                 ctx.begin_path();
+                                let mut first = true;
                                 for i in 0..end {
-                                    let x = i as f64 * dx;
-                                    let y = height - ((self.buffer[i] - min_y) / range_y) * height;
-                                    if i == 0 {
-                                        ctx.move_to(x, y);
+                                    let val = self.buffer[i];
+                                    if !val.is_nan() {
+                                        let x = i as f64 * dx;
+                                        let y = height - ((val - min_y) / range_y) * height;
+                                        if first {
+                                            ctx.move_to(x, y);
+                                            first = false;
+                                        } else {
+                                            ctx.line_to(x, y);
+                                        }
                                     } else {
-                                        ctx.line_to(x, y);
+                                        first = true;
                                     }
                                 }
                                 ctx.stroke();
@@ -442,8 +510,8 @@ fn format_ghost_color(hex: &str) -> String {
             u8::from_str_radix(&hex[3..5], 16),
             u8::from_str_radix(&hex[5..7], 16),
         ) {
-            return format!("rgba({}, {}, {}, 0.28)", r, g, b);
+            return format!("rgba({}, {}, {}, 0.38)", r, g, b);
         }
     }
-    "rgba(150, 150, 150, 0.28)".to_string()
+    "rgba(180, 180, 180, 0.38)".to_string()
 }

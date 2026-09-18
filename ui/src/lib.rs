@@ -53,6 +53,7 @@ fn App() -> Element {
     let mut show_ghost = use_signal(|| false);
     let mut trigger_capture_ghost = use_signal(|| false);
     let mut trigger_arm_single = use_signal(|| false);
+    let mut is_paused = use_signal(|| false);
 
     // Dynamic HUD metrics state
     let mut bpm = use_signal(|| 75.0);
@@ -129,72 +130,74 @@ fn App() -> Element {
                 trigger_arm_single.set(false);
             }
             
-            // 1. Update Parameters from UI
-            let b_na = 1.0 - (block_na() / 100.0);
-            let b_k = 1.0 - (block_k() / 100.0);
-            let b_ca = 1.0 - (block_ca() / 100.0);
-            let b_nak = 1.0 - (block_nak() / 100.0);
-            let s_symp = symp() / 100.0;
-            let s_parasymp = parasymp() / 100.0;
-            let s_isch = isch() / 100.0;
-            let s_fibrosis = fibrosis() / 100.0;
+            if !is_paused() {
+                // 1. Update Parameters from UI
+                let b_na = 1.0 - (block_na() / 100.0);
+                let b_k = 1.0 - (block_k() / 100.0);
+                let b_ca = 1.0 - (block_ca() / 100.0);
+                let b_nak = 1.0 - (block_nak() / 100.0);
+                let s_symp = symp() / 100.0;
+                let s_parasymp = parasymp() / 100.0;
+                let s_isch = isch() / 100.0;
+                let s_fibrosis = fibrosis() / 100.0;
 
-            system.write().update_params(
-                ko(), cao(), nao(), 
-                b_na, b_k, b_ca, b_nak, 
-                s_symp, s_parasymp, s_isch, s_fibrosis
-            );
-            
-            // 2. Step Engine
-            // Amostragem compacta: 1 ponto a cada 5.0ms (downsample=500 com dt=0.01ms)
-            // Em 500 amostras temos 2500ms (2.5s) de traçado visível, comportando > 3 ciclos completos
-            // Com Rush-Larsen dt=0.01ms, 1600 passos simulam exatamente 16ms em 1x tempo real
-            // com consumo de CPU mínimo (<5-10%), viabilizando execução em celulares e computadores modestos.
-            let dt = 0.01; // dt de integração numérica (estável via Rush-Larsen)
-            let steps = 1600; // 16ms de simulação biológica por frame a 60 FPS (1x tempo real)
-            let downsample = 500; // 5ms por ponto amostrado (500 * 0.01ms = 5.0ms)
-            let batch = system.write().run_batch(dt, steps, downsample);
-            
-            // Batch achatado de 12 canais: [sa, av, atr, purk, endo, epi, fib, cai, lvp, aop, ecg, sound_events]
-            let chunk_size = 12;
-            for chunk in batch.chunks(chunk_size) {
-                if chunk.len() == 12 {
-                    let sa = chunk[0];
-                    let av = chunk[1];
-                    let atrium = chunk[2];
-                    let purk = chunk[3];
-                    let endo = chunk[4];
-                    let epi = chunk[5];
-                    let fib = chunk[6];
-                    let cai = chunk[7];
-                    let lvp = chunk[8];
-                    let aop = chunk[9];
-                    let ecg = chunk[10];
-                    let sound_code = chunk[11] as u32;
-                    let is_sa_fire = (sound_code & 8) != 0;
-                    
-                    pa_plotter_sa.push(sa, sound_code, is_sa_fire);
-                    pa_plotter_av.push(av, sound_code, is_sa_fire);
-                    pa_plotter_atrium.push(atrium, sound_code, is_sa_fire);
-                    pa_plotter_purk.push(purk, sound_code, is_sa_fire);
-                    pa_plotter_endo.push(endo, sound_code, is_sa_fire);
-                    pa_plotter_epi.push(epi, sound_code, is_sa_fire);
-                    pa_plotter_fib.push(fib, sound_code, is_sa_fire);
+                system.write().update_params(
+                    ko(), cao(), nao(), 
+                    b_na, b_k, b_ca, b_nak, 
+                    s_symp, s_parasymp, s_isch, s_fibrosis
+                );
+                
+                // 2. Step Engine
+                // Amostragem compacta: 1 ponto a cada 5.0ms (downsample=500 com dt=0.01ms)
+                // Em 500 amostras temos 2500ms (2.5s) de traçado visível, comportando > 3 ciclos completos
+                // Com Rush-Larsen dt=0.01ms, 1600 passos simulam exatamente 16ms em 1x tempo real
+                // com consumo de CPU mínimo (<5-10%), viabilizando execução em celulares e computadores modestos.
+                let dt = 0.01; // dt de integração numérica (estável via Rush-Larsen)
+                let steps = 1600; // 16ms de simulação biológica por frame a 60 FPS (1x tempo real)
+                let downsample = 500; // 5ms por ponto amostrado (500 * 0.01ms = 5.0ms)
+                let batch = system.write().run_batch(dt, steps, downsample);
+                
+                // Batch achatado de 12 canais: [sa, av, atr, purk, endo, epi, fib, cai, lvp, aop, ecg, sound_events]
+                let chunk_size = 12;
+                for chunk in batch.chunks(chunk_size) {
+                    if chunk.len() == 12 {
+                        let sa = chunk[0];
+                        let av = chunk[1];
+                        let atrium = chunk[2];
+                        let purk = chunk[3];
+                        let endo = chunk[4];
+                        let epi = chunk[5];
+                        let fib = chunk[6];
+                        let cai = chunk[7];
+                        let lvp = chunk[8];
+                        let aop = chunk[9];
+                        let ecg = chunk[10];
+                        let sound_code = chunk[11] as u32;
+                        let is_sa_fire = (sound_code & 8) != 0;
+                        
+                        pa_plotter_sa.push(sa, sound_code, is_sa_fire);
+                        pa_plotter_av.push(av, sound_code, is_sa_fire);
+                        pa_plotter_atrium.push(atrium, sound_code, is_sa_fire);
+                        pa_plotter_purk.push(purk, sound_code, is_sa_fire);
+                        pa_plotter_endo.push(endo, sound_code, is_sa_fire);
+                        pa_plotter_epi.push(epi, sound_code, is_sa_fire);
+                        pa_plotter_fib.push(fib, sound_code, is_sa_fire);
 
-                    ecg_plotter.push(ecg, sound_code, is_sa_fire);
-                    ch3_plotter.push(cai, sound_code, is_sa_fire);
-                    hemo_plotter_lvp.push(lvp, sound_code, is_sa_fire);
-                    hemo_plotter_aop.push(aop, sound_code, is_sa_fire);
+                        ecg_plotter.push(ecg, sound_code, is_sa_fire);
+                        ch3_plotter.push(cai, sound_code, is_sa_fire);
+                        hemo_plotter_lvp.push(lvp, sound_code, is_sa_fire);
+                        hemo_plotter_aop.push(aop, sound_code, is_sa_fire);
 
-                    // Disparo dos eventos acústicos de acordo com as checkboxes ativas
-                    if (sound_code & 1) != 0 && sound_uti() {
-                        audio.play_uti_beep();
-                    }
-                    if (sound_code & 2) != 0 && sound_bulhas() {
-                        audio.play_b1();
-                    }
-                    if (sound_code & 4) != 0 && sound_bulhas() {
-                        audio.play_b2();
+                        // Disparo dos eventos acústicos de acordo com as checkboxes ativas
+                        if (sound_code & 1) != 0 && sound_uti() {
+                            audio.play_uti_beep();
+                        }
+                        if (sound_code & 2) != 0 && sound_bulhas() {
+                            audio.play_b1();
+                        }
+                        if (sound_code & 4) != 0 && sound_bulhas() {
+                            audio.play_b2();
+                        }
                     }
                 }
             }
@@ -258,15 +261,17 @@ fn App() -> Element {
             hemo_plotter_aop.draw(0.0, 140.0, "#ff7675", false, ghost, uti_m, bulhas_m); // Coral (#ff7675) para Pressão Aórtica (AoP)
 
             // 4. Update HUD metrics at ~10 Hz (every 6 frames)
-            frame_count = frame_count.wrapping_add(1);
-            if frame_count % 6 == 0 {
-                let metrics = system.read().get_hud_metrics();
-                bpm.set(metrics.bpm);
-                pr.set(metrics.pr);
-                qrs.set(metrics.qrs);
-                qt.set(metrics.qt);
-                v_rest.set(metrics.v_rest);
-                pr_rr.set(metrics.pr_rr);
+            if !is_paused() {
+                frame_count = frame_count.wrapping_add(1);
+                if frame_count % 6 == 0 {
+                    let metrics = system.read().get_hud_metrics();
+                    bpm.set(metrics.bpm);
+                    pr.set(metrics.pr);
+                    qrs.set(metrics.qrs);
+                    qt.set(metrics.qt);
+                    v_rest.set(metrics.v_rest);
+                    pr_rr.set(metrics.pr_rr);
+                }
             }
         }
     });
@@ -296,6 +301,7 @@ fn App() -> Element {
         show_ghost.set(false);
         trigger_capture_ghost.set(false);
         trigger_arm_single.set(false);
+        is_paused.set(false);
         system.set(HeartSystem::new());
     };
 
@@ -350,7 +356,12 @@ fn App() -> Element {
                     button {
                         class: "btn-reset-all",
                         onclick: move |_| reset_all(),
-                        "☢ RESETAR SIMULAÇÃO ☢"
+                        "☢ RESETAR"
+                    }
+                    button {
+                        class: if is_paused() { "btn-resume" } else { "btn-pause" },
+                        onclick: move |_| is_paused.set(!is_paused()),
+                        if is_paused() { "▶ CONTINUAR" } else { "⏸ CONGELAR" }
                     }
                     button {
                         class: "btn-about",
