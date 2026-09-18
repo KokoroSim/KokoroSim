@@ -71,6 +71,7 @@ pub struct VentricleCell {
     pub ca_sr: f64,
     pub g: f64,
     pub i_stim: f64,
+    pub i_gap: f64,
 }
 
 impl Default for VentricleCell {
@@ -114,6 +115,7 @@ impl VentricleCell {
             ca_sr: 0.2,
             g: 1.0,
             i_stim: 0.0,
+            i_gap: 0.0,
         }
     }
 
@@ -192,8 +194,8 @@ impl VentricleCell {
         let i_stim = self.i_stim;
 
         // Calculate state derivatives
-        // dv/dt
-        let dv = -(i_k1 + i_to + i_kr + i_ks + i_cal + i_nak + i_na + i_b_na + i_naca + i_b_ca + i_p_k + i_p_ca + i_stim);
+        // dv/dt (inclui corrente de acoplamento eletrotônico aos fibroblastos i_gap)
+        let dv = -(i_k1 + i_to + i_kr + i_ks + i_cal + i_nak + i_na + i_b_na + i_naca + i_b_ca + i_p_k + i_p_ca + i_stim + self.i_gap);
 
         // Gates
         let xr1_inf = 1.0 / (1.0 + f64::exp((-26.0 - v) / 7.0));

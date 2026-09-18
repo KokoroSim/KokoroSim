@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Features
+  - (engine) implement MacCannell et al. (2007) cardiac fibroblast model and electrotonic myocyte coupling
   - (ui) display transmural ventricular action potentials and dipolar ECG waveform
   - (engine) implement dynamic AV conduction dromotropism and transmural ventricular heterogeneity (Epi, M-cell, Endo)
   - (engine,ui) integrate Stewart et al. (2009) human Purkinje cell model into conduction chain

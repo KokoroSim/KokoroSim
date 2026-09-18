@@ -3,6 +3,7 @@ pub mod inada;
 pub mod courtemanche;
 pub mod tentusscher;
 pub mod purkinje;
+pub mod fibroblast;
 
 // Aqui ficará o gerenciador de estado global que orquestra as 4 células
 use wasm_bindgen::prelude::*;
@@ -20,6 +21,7 @@ pub struct Pharmaco {
     pub symp: f64,
     pub parasymp: f64,
     pub isch: f64,
+    pub fibrosis: f64,
 }
 
 impl Pharmaco {
@@ -49,6 +51,7 @@ impl Default for Pharmaco {
             symp: 0.0,
             parasymp: 0.0,
             isch: 0.0,
+            fibrosis: 0.0,
         }
     }
 }
@@ -73,6 +76,7 @@ pub struct HeartSystem {
     vent_endo: tentusscher::VentricleCell,
     vent_m: tentusscher::VentricleCell,
     vent_epi: tentusscher::VentricleCell,
+    fibroblast: fibroblast::FibroblastCell,
     time: f64,
     
     // Condução (Pingers & Estímulos Transitórios)
@@ -126,6 +130,7 @@ impl HeartSystem {
             vent_endo: tentusscher::VentricleCell::new_with_type(tentusscher::VentricleCellType::Endocardial),
             vent_m: tentusscher::VentricleCell::new_with_type(tentusscher::VentricleCellType::Midmyocardial),
             vent_epi: tentusscher::VentricleCell::new_with_type(tentusscher::VentricleCellType::Epicardial),
+            fibroblast: fibroblast::FibroblastCell::default(),
             time: 0.0,
             timer_atrium: -1.0,
             timer_av: -1.0,
@@ -163,7 +168,7 @@ impl HeartSystem {
     pub fn update_params(&mut self, 
         ko: f64, cao: f64, nao: f64, 
         block_na: f64, block_k: f64, block_ca: f64, block_nak: f64,
-        symp: f64, parasymp: f64, isch: f64
+        symp: f64, parasymp: f64, isch: f64, fibrosis: f64
     ) {
         self.pharm.ko = ko;
         self.pharm.cao = cao;
@@ -175,11 +180,21 @@ impl HeartSystem {
         self.pharm.symp = symp;
         self.pharm.parasymp = parasymp;
         self.pharm.isch = isch;
+        self.pharm.fibrosis = fibrosis;
     }
 
     pub fn step(&mut self, dt: f64) {
         let prev_v_vent = self.vent_endo.v;
         let prev_v_atr = self.atrium.v;
+
+        // Acoplamento eletrotônico miócito-fibroblasto (MacCannell et al., 2007)
+        // Condutância juncional proporcional à fibrose (0.0 a 4.0 nS)
+        let g_gap = self.pharm.fibrosis * 4.0;
+        let i_gap_pa = self.fibroblast.step(dt, self.vent_epi.v, g_gap, &self.pharm);
+        let i_gap_norm = i_gap_pa / 185.0; // Capacitância do miócito CM = 185 pF -> pA/pF
+        self.vent_epi.i_gap = i_gap_norm;
+        self.vent_m.i_gap = i_gap_norm * 0.6;
+        self.vent_endo.i_gap = i_gap_norm * 0.2;
 
         // Gerenciamento dos pulsos transitórios de estímulo elétrico
         if self.stim_until_atrium > 0.0 {
@@ -450,19 +465,20 @@ impl HeartSystem {
 
     // Roda um lote completo de cálculos no lado do Rust e retorna um array f64 achatado!
     pub fn run_batch(&mut self, dt: f64, steps: usize, downsample: usize) -> Vec<f64> {
-        let mut batch = Vec::with_capacity((steps / downsample) * 9);
+        let mut batch = Vec::with_capacity((steps / downsample) * 10);
         for i in 0..steps {
             self.step(dt);
             if i % downsample == 0 {
-                batch.push(self.sa_node.v);
-                batch.push(self.av_node.v);
-                batch.push(self.atrium.v);
-                batch.push(self.purkinje.v);
-                batch.push(self.vent_endo.v);     // 4: Endocárdio
-                batch.push(self.vent_epi.v);      // 5: Epicárdio
-                batch.push(self.vent_endo.ca_i);  // 6: Transiente de Cálcio
-                batch.push(self.vent_endo.force); // 7: Força de contração
-                batch.push(self.compute_ecg());   // 8: ECG Dipolar Transmural
+                batch.push(self.sa_node.v);        // 0: SA
+                batch.push(self.av_node.v);        // 1: AV
+                batch.push(self.atrium.v);         // 2: Atrium
+                batch.push(self.purkinje.v);       // 3: Purkinje
+                batch.push(self.vent_endo.v);      // 4: Endocárdio
+                batch.push(self.vent_epi.v);       // 5: Epicárdio
+                batch.push(self.fibroblast.v);     // 6: Fibroblasto (MacCannell 2007)
+                batch.push(self.vent_endo.ca_i);   // 7: Transiente de Cálcio
+                batch.push(self.vent_endo.force);  // 8: Força de contração
+                batch.push(self.compute_ecg());    // 9: ECG Dipolar Transmural
             }
         }
         batch
@@ -477,6 +493,7 @@ impl HeartSystem {
     pub fn get_vent_endo_v(&self) -> f64 { self.vent_endo.v }
     pub fn get_vent_m_v(&self) -> f64 { self.vent_m.v }
     pub fn get_vent_epi_v(&self) -> f64 { self.vent_epi.v }
+    pub fn get_fibroblast_v(&self) -> f64 { self.fibroblast.v }
     pub fn get_time(&self) -> f64 { self.time }
 
     pub fn compute_ecg(&self) -> f64 {
