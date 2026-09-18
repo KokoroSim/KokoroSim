@@ -48,6 +48,12 @@ fn App() -> Element {
     let mut sound_uti = use_signal(|| false);
     let mut sound_bulhas = use_signal(|| false);
 
+    // Modos de exibição do osciloscópio e Onda Fantasma
+    let mut view_mode = use_signal(|| "rolling".to_string());
+    let mut show_ghost = use_signal(|| false);
+    let mut trigger_capture_ghost = use_signal(|| false);
+    let mut trigger_arm_single = use_signal(|| false);
+
     // Dynamic HUD metrics state
     let mut bpm = use_signal(|| 75.0);
     let mut pr = use_signal(|| 160.0);
@@ -78,6 +84,50 @@ fn App() -> Element {
 
         loop {
             gloo_timers::future::TimeoutFuture::new(16).await;
+
+            // 0. Sincronizar Modo de Visualização do Osciloscópio e Comandos
+            let current_mode = plot::ViewMode::from_str(&view_mode());
+            pa_plotter_sa.set_mode(current_mode);
+            pa_plotter_av.set_mode(current_mode);
+            pa_plotter_atrium.set_mode(current_mode);
+            pa_plotter_purk.set_mode(current_mode);
+            pa_plotter_endo.set_mode(current_mode);
+            pa_plotter_epi.set_mode(current_mode);
+            pa_plotter_fib.set_mode(current_mode);
+            ecg_plotter.set_mode(current_mode);
+            ch3_plotter.set_mode(current_mode);
+            hemo_plotter_lvp.set_mode(current_mode);
+            hemo_plotter_aop.set_mode(current_mode);
+
+            if trigger_capture_ghost() {
+                pa_plotter_sa.capture_ghost();
+                pa_plotter_av.capture_ghost();
+                pa_plotter_atrium.capture_ghost();
+                pa_plotter_purk.capture_ghost();
+                pa_plotter_endo.capture_ghost();
+                pa_plotter_epi.capture_ghost();
+                pa_plotter_fib.capture_ghost();
+                ecg_plotter.capture_ghost();
+                ch3_plotter.capture_ghost();
+                hemo_plotter_lvp.capture_ghost();
+                hemo_plotter_aop.capture_ghost();
+                trigger_capture_ghost.set(false);
+            }
+
+            if trigger_arm_single() {
+                pa_plotter_sa.arm_single();
+                pa_plotter_av.arm_single();
+                pa_plotter_atrium.arm_single();
+                pa_plotter_purk.arm_single();
+                pa_plotter_endo.arm_single();
+                pa_plotter_epi.arm_single();
+                pa_plotter_fib.arm_single();
+                ecg_plotter.arm_single();
+                ch3_plotter.arm_single();
+                hemo_plotter_lvp.arm_single();
+                hemo_plotter_aop.arm_single();
+                trigger_arm_single.set(false);
+            }
             
             // 1. Update Parameters from UI
             let b_na = 1.0 - (block_na() / 100.0);
@@ -121,19 +171,20 @@ fn App() -> Element {
                     let aop = chunk[9];
                     let ecg = chunk[10];
                     let sound_code = chunk[11] as u32;
+                    let is_sa_fire = (sound_code & 8) != 0;
                     
-                    pa_plotter_sa.push(sa);
-                    pa_plotter_av.push(av);
-                    pa_plotter_atrium.push(atrium);
-                    pa_plotter_purk.push(purk);
-                    pa_plotter_endo.push(endo);
-                    pa_plotter_epi.push(epi);
-                    pa_plotter_fib.push(fib);
+                    pa_plotter_sa.push(sa, sound_code, is_sa_fire);
+                    pa_plotter_av.push(av, sound_code, is_sa_fire);
+                    pa_plotter_atrium.push(atrium, sound_code, is_sa_fire);
+                    pa_plotter_purk.push(purk, sound_code, is_sa_fire);
+                    pa_plotter_endo.push(endo, sound_code, is_sa_fire);
+                    pa_plotter_epi.push(epi, sound_code, is_sa_fire);
+                    pa_plotter_fib.push(fib, sound_code, is_sa_fire);
 
-                    ecg_plotter.push(ecg);
-                    ch3_plotter.push(cai);
-                    hemo_plotter_lvp.push(lvp);
-                    hemo_plotter_aop.push(aop);
+                    ecg_plotter.push(ecg, sound_code, is_sa_fire);
+                    ch3_plotter.push(cai, sound_code, is_sa_fire);
+                    hemo_plotter_lvp.push(lvp, sound_code, is_sa_fire);
+                    hemo_plotter_aop.push(aop, sound_code, is_sa_fire);
 
                     // Disparo dos eventos acústicos de acordo com as checkboxes ativas
                     if (sound_code & 1) != 0 && sound_uti() {
@@ -149,7 +200,7 @@ fn App() -> Element {
             }
 
             // 3. Draw to Canvas
-            // Prepare drawing flags to determine which one clears the canvas
+            // Flags de visibilidade das camadas celulares
             let any_epi = show_epi();
             let any_endo = show_endo();
             let any_purk = show_purkinje();
@@ -158,49 +209,53 @@ fn App() -> Element {
             let any_sa = show_sa();
             let any_fib = show_fibroblast();
 
-            // First drawn line clears the canvas, subsequent ones draw on top
+            let ghost = show_ghost();
+            let uti_m = sound_uti();
+            let bulhas_m = sound_bulhas();
+
+            // O primeiro traçado a ser desenhado limpa o canvas e plota as linhas verticais de áudio
             let mut cleared = false;
 
             if any_sa {
-                pa_plotter_sa.draw(-90.0, 50.0, "#e74c3c", !cleared); // Nó SA: Vermelho (#e74c3c)
+                pa_plotter_sa.draw(-90.0, 50.0, "#e74c3c", !cleared, ghost, uti_m, bulhas_m); // Nó SA: Vermelho (#e74c3c)
                 cleared = true;
             }
             if any_atrium {
-                pa_plotter_atrium.draw(-90.0, 50.0, "#3498db", !cleared); // Átrio: Azul (#3498db)
+                pa_plotter_atrium.draw(-90.0, 50.0, "#3498db", !cleared, ghost, uti_m, bulhas_m); // Átrio: Azul (#3498db)
                 cleared = true;
             }
             if any_av {
-                pa_plotter_av.draw(-90.0, 50.0, "#f1c40f", !cleared); // Nó AV: Amarelo (#f1c40f)
+                pa_plotter_av.draw(-90.0, 50.0, "#f1c40f", !cleared, ghost, uti_m, bulhas_m); // Nó AV: Amarelo (#f1c40f)
                 cleared = true;
             }
             if any_purk {
-                pa_plotter_purk.draw(-90.0, 50.0, "#e67e22", !cleared); // Purkinje: Laranja (#e67e22)
+                pa_plotter_purk.draw(-90.0, 50.0, "#e67e22", !cleared, ghost, uti_m, bulhas_m); // Purkinje: Laranja (#e67e22)
                 cleared = true;
             }
             if any_endo {
-                pa_plotter_endo.draw(-90.0, 50.0, "#2ecc71", !cleared); // Endocárdio: Verde Clínico (#2ecc71)
+                pa_plotter_endo.draw(-90.0, 50.0, "#2ecc71", !cleared, ghost, uti_m, bulhas_m); // Endocárdio: Verde Clínico (#2ecc71)
                 cleared = true;
             }
             if any_epi {
-                pa_plotter_epi.draw(-90.0, 50.0, "#1abc9c", !cleared); // Epicárdio: Verde Menta (#1abc9c)
+                pa_plotter_epi.draw(-90.0, 50.0, "#1abc9c", !cleared, ghost, uti_m, bulhas_m); // Epicárdio: Verde Menta (#1abc9c)
                 cleared = true;
             }
             if any_fib {
-                pa_plotter_fib.draw(-90.0, 50.0, "#a29bfe", !cleared); // Fibroblasto: Lilás (#a29bfe)
+                pa_plotter_fib.draw(-90.0, 50.0, "#a29bfe", !cleared, ghost, uti_m, bulhas_m); // Fibroblasto: Lilás (#a29bfe)
                 cleared = true;
             }
 
-            // If nothing was drawn, clear it manually
+            // Se nenhuma camada estiver ativa, limpa a tela e plota os marcadores
             if !cleared {
-                pa_plotter_endo.draw(-90.0, 50.0, "#000000", true); // Dummy draw to clear
+                pa_plotter_endo.draw(-90.0, 50.0, "#000000", true, false, uti_m, bulhas_m);
             }
             
-            ecg_plotter.draw(-35.0, 120.0, "#00ffff", true); // Ciano (#00ffff) para DII (ECG Transmural)
-            ch3_plotter.draw(0.0, 0.002, "#9b59b6", true); // Roxo (#9b59b6) para Cálcio
+            ecg_plotter.draw(-35.0, 120.0, "#00ffff", true, ghost, uti_m, bulhas_m); // Ciano (#00ffff) para DII (ECG Transmural)
+            ch3_plotter.draw(0.0, 0.002, "#9b59b6", true, ghost, uti_m, bulhas_m); // Roxo (#9b59b6) para Cálcio
             
-            // Hemodinâmica: LVP e AoP sobrepostas (0 a 140 mmHg)
-            hemo_plotter_lvp.draw(0.0, 140.0, "#00cec9", true); // Ciano Claro (#00cec9) para LVP Ventricular
-            hemo_plotter_aop.draw(0.0, 140.0, "#ff7675", false); // Coral (#ff7675) para Pressão Aórtica (AoP)
+            // Hemodinâmica: LVP e AoP sobrepostas (0 a 140 mmHg) com marcadores verticais
+            hemo_plotter_lvp.draw(0.0, 140.0, "#00cec9", true, ghost, uti_m, bulhas_m); // Ciano Claro (#00cec9) para LVP Ventricular
+            hemo_plotter_aop.draw(0.0, 140.0, "#ff7675", false, ghost, uti_m, bulhas_m); // Coral (#ff7675) para Pressão Aórtica (AoP)
 
             // 4. Update HUD metrics at ~10 Hz (every 6 frames)
             frame_count = frame_count.wrapping_add(1);
@@ -237,6 +292,10 @@ fn App() -> Element {
         fibrosis.set(0.0);
         sound_uti.set(false);
         sound_bulhas.set(false);
+        view_mode.set("rolling".to_string());
+        show_ghost.set(false);
+        trigger_capture_ghost.set(false);
+        trigger_arm_single.set(false);
         system.set(HeartSystem::new());
     };
 
@@ -300,7 +359,52 @@ fn App() -> Element {
                     }
                 }
 
-                Accordion { label: "0. Visualização das Células".to_string(), open: true,
+                Accordion { label: "0. Visualização e Modos de Tela".to_string(), open: true,
+                    div { style: "margin-bottom: 12px;",
+                        div { class: "slider-header", style: "margin-bottom: 6px;",
+                            span { style: "color: var(--neon-cyan); font-weight: bold; font-size: 1.7vh;", "Modo do Osciloscópio:" }
+                        }
+                        select {
+                            style: "width: 100%; padding: 7px; border-radius: 4px; background: #161616; color: var(--text-main); border: 1px solid var(--neon-cyan); font-size: 1.5vh; cursor: pointer;",
+                            value: "{view_mode}",
+                            onchange: move |e| view_mode.set(e.value()),
+                            option { value: "rolling", "Fita Deslizante (Fluxo Contínuo) [Padrão]" }
+                            option { value: "sweep", "Varredura Contínua (Monitor UTI)" }
+                            option { value: "paged", "Paginação Sincronizada (Página por Ciclo)" }
+                            option { value: "triggered_auto", "Gatilho Automático (Auto a cada Batimento)" }
+                            option { value: "triggered_single", "Gatilho Único (Single-Shot / Congelado)" }
+                        }
+                    }
+
+                    if view_mode() == "triggered_single" {
+                        button {
+                            class: "icon-btn",
+                            style: "width: 100%; padding: 8px; margin-bottom: 12px; background: var(--neon-yellow); color: #000; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; font-size: 1.5vh; box-shadow: 0 0 8px rgba(241, 196, 15, 0.4);",
+                            onclick: move |_| trigger_arm_single.set(true),
+                            "⚡ DISPARAR / ARMAR PRÓXIMO CICLO"
+                        }
+                    }
+
+                    div { style: "display: flex; gap: 8px; align-items: center; margin-bottom: 14px; background: #111; padding: 6px 8px; border-radius: 4px; border: 1px solid #333;",
+                        div { style: "flex: 1;",
+                            Checkbox { label: "Onda Fantasma (Histórico)".to_string(), color: "#ffffff".to_string(), checked: show_ghost }
+                        }
+                        button {
+                            class: "icon-btn",
+                            style: "padding: 6px 10px; background: #222; color: var(--neon-cyan); border: 1px solid var(--neon-cyan); border-radius: 4px; cursor: pointer; font-size: 1.4vh; white-space: nowrap;",
+                            title: "Captura snapshot do traçado atual para comparação em segundo plano",
+                            onclick: move |_| {
+                                show_ghost.set(true);
+                                trigger_capture_ghost.set(true);
+                            },
+                            "📸 Capturar"
+                        }
+                    }
+
+                    div { class: "slider-header", style: "margin-bottom: 6px; margin-top: 4px;",
+                        span { style: "color: var(--neon-yellow); font-size: 1.6vh;", "Camadas / Células Ativas:" }
+                    }
+
                     Checkbox { label: "Nó SA (Gatilho)".to_string(), color: "#e74c3c".to_string(), checked: show_sa }
                     Checkbox { label: "Átrio (Contração)".to_string(), color: "#3498db".to_string(), checked: show_atrium }
                     Checkbox { label: "Nó AV (Condução)".to_string(), color: "#f1c40f".to_string(), checked: show_av }
