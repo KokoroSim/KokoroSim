@@ -46,11 +46,19 @@ O desenvolvimento do **SimCardio** está organizado em grandes marcos arquitetur
 
 ## 🔬 Próximos Passos (SimCardio v2.1+)
 
-### Fase 6: Acoplamento Eletromecânico e Hemodinâmica (Diagrama de Wiggers)
-* [ ] Acoplamento Excitação-Contração via modelo de ligantes de Cálcio na Troponina C (Niederer-Hunter-Smith).
-* [ ] Conversão do transiente de Cálcio $[Ca^{2+}]_i$ em tensão isométrica e força ativa ventricular.
-* [ ] Modelo hemodinâmico de elastância variável no tempo (*Suga-Sagawa*) para calcular a Pressão Intraventricular Esquerda (LVP).
-* [ ] Acoplamento hidráulico com modelo arterial *Windkessel* de 3 elementos para calcular Pressão Aórtica (AoP), gerando o Diagrama de Wiggers completo em tempo real.
+### Fase 6: Acoplamento Eletromecânico, Hemodinâmica e Áudio (Wiggers) ✅ CONCLUÍDO
+* [x] Acoplamento Excitação-Contração via cinemática cooperativa de ligação de Cálcio na Troponina C.
+* [x] Modelo de **Elastância Ventricular Variável no Tempo ($E(t)$)** de Suga & Sagawa para calcular a Pressão Ventricular Esquerda ($LVP$).
+* [x] Acoplamento hidráulico com modelo arterial **Windkessel de 3 elementos** para calcular a Pressão Aórtica ($AoP$) com incisura dicrótica.
+* [x] Dinâmica valvar das cúspides mitral e aórtica acionadas por gradientes pressóricos instantâneos.
+* [x] **Síntese de Áudio Biofísico via Web Audio API**:
+  - `🔊 Bip de Monitor (UTI)` acoplado à detecção de onda R (880 Hz).
+  - `🩺 Ausculta de Bulhas (B1 / B2)` acoplada ao fechamento das valvas mitral (B1 grave) e aórtica (B2 agudo).
+* [x] Compressão horizontal do traçado (janela de 2.5s com capacidade de 500 amostras, comportando > 3 ciclos completos).
+
+---
+
+## 🔬 Próximos Passos (SimCardio v2.1+)
 
 ### Fase 7: Expansão Espacial (Monodomínio 2D / 3D)
 * [ ] Substituição do modelo 0D acoplado por malha bidimensional de diferenças finitas (matriz de 100x100 a 200x200 miócitos).

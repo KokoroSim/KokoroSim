@@ -69,3 +69,24 @@ Este documento detalha o "porquê" das decisões de engenharia, arquitetura de s
   - Como os fibroblastos possuem capacitância menor ($C_{m,fib} = 6.3\text{ pF}$) e potencial de repouso elevado ($-35\text{ a }-45\text{ mV}$), o acoplamento eletrotônico atua como um **dreno capacitivo** durante a fase rápida de despolarização (diminuindo $dV/dt_{\max}$) e como uma **fonte de corrente despolarizante diastólica** em repouso (elevando $V_{rest}$ do miócito para $-78\text{ mV}$).
   - Essa despolarização parcial diastólica induz a inativação dependente de voltagem dos canais de sódio ($h_{\infty}$ e $j_{\infty}$ de ten Tusscher), explicando mecanisticamente a lentificação da condução intramiocárdica e o bloqueio unidirecional observados em miocárdios infartados e senescentes.
   - O buffer linear de amostragem no WASM foi expandido de 9 para 10 canais contíguos (`[sa, av, atrium, purkinje, vent_endo, vent_epi, fibroblast, cai, force, ecg]`), preservando custo de memória zero-copy e permitindo inspecionar o potencial de ação do fibroblasto e a corrente de acoplamento em tempo real.
+
+---
+
+## 7. Acoplamento Eletromecânico e Hemodinâmica: Elastância Variável e Windkessel vs. Curvas Paramétricas
+
+* **Decisão Adotada:** Cálculo da pressão ventricular esquerda ($LVP$) via **Elastância Variável no Tempo** de Suga & Sagawa ($P_{LV} = E(t) \cdot (V - V_0)$) modulada pelo transiente real de $[Ca^{2+}]_i$, e da pressão aórtica ($AoP$) via modelo arterial **Windkessel de 3 elementos** com dinâmica de abertura/fechamento valvar baseada em gradientes físicos de pressão.
+* **Alternativa Recusada:** Geração de curvas senoidais pré-gravadas ou interpolação spline puramente cosmética.
+* **Justificativa Técnica:**
+  - Em simuladores puramente visuais, curvas de pressão são geradas como animações decorativas desconectadas da célula. No SimCardio v2.0, se um fármaco (como Verapamil ou Digoxina) alterar o influxo de cálcio ou a frequência cardíaca, a força ativa e a curva de elastância $E(t)$ mudam organicamente.
+  - A abertura da valva aórtica ocorre estritamente quando $P_{LV} > P_{ao}$, e o fechamento abrupto ocorre quando $P_{LV} \le P_{ao}$, gerando de forma determinística a **incisura dicrótica** na curva aórtica sem nenhuma aproximação artificial.
+
+---
+
+## 8. Síntese Acústica em Tempo Real: Web Audio API Nativa vs. Arquivos de Áudio Estáticos
+
+* **Decisão Adotada:** Síntese aditiva/subtrativa puramente matemática em tempo real via **Web Audio API** (`OscillatorNode`, `GainNode`, `BiquadFilterNode`) acoplada aos nós de processamento do navegador.
+* **Alternativa Recusada:** Carregamento e reprodução de arquivos de som pré-gravados (`.mp3` ou `.wav`).
+* **Justificativa Técnica:**
+  - **Latência Zero e Confiabilidade Offline:** Arquivos externos dependem de requisições de rede, sofrem latência de decodificação e podem falhar em ambientes offline. A síntese Web Audio é instanciada diretamente pela memória do WebAssembly com latência inferior a 5 milissegundos.
+  - **Sincronia Hemodinâmica Perfeita:** As bulhas B1 e B2 são disparadas no exato nanossegundo em que o integrador numérico detecta a transição de estado da valva mitral e aórtica, enquanto o bip de UTI é sincronizado com o pico da onda R.
+  - **Autoplay Compliance:** O estado inicial desativado das duas opções respeita integralmente a política de autoplay de navegadores modernos (Chrome, Firefox, Safari), ativando o contexto de áudio unicamente sob gesto explícito do usuário.

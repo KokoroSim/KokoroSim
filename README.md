@@ -41,6 +41,10 @@ O simulador implementa 5 modelos eletrofisiológicos padrão-ouro validados pela
    - **Referência:** MacCannell KA, Bazzazi H, Chilton L, Shibukawa Y, Clark RB, Giles WR. *A mathematical model of electrotonic interactions between ventricular myocytes and fibroblasts.* Biophys J. 2007.
    - **Função:** Modela células não-excitáveis com potencial de repouso despolarizado ($-35\text{ a }-45\text{ mV}$) e correntes $I_{Kv}$, $I_{K1}$, $I_b$ e $I_{NaK}$. Acopla-se eletrotonicamente aos miócitos por junções comunicantes (*gap junctions*), atuando como dreno capacitivo, despolarizando o repouso do miócito e diminuindo a velocidade de condução intramiocárdica.
 
+7. **Acoplamento Eletromecânico e Hemodinâmica (Diagrama de Wiggers):**
+   - **Modelos:** Elastância Ventricular Variável no Tempo (Suga & Sagawa, 1974) e Circulação Arterial Windkessel de 3 elementos (Westerhof et al., 2009).
+   - **Função:** Converte o transiente real de $[Ca^{2+}]_i$ em desenvolvimento de força isométrica de troponina. Calcula em tempo real a Pressão Ventricular Esquerda ($LVP$, 0-140 mmHg), Pressão Aórtica ($AoP$, 80-120 mmHg) com incisura dicrótica, volume ventricular ($LVV$) e dinâmica valvar das cúspides mitral e aórtica.
+
 ---
 
 ## ⚡ Sistema de Condução e Dromotropismo Dinâmico
@@ -86,6 +90,20 @@ $$\text{ECG}(t) = 0.15 \cdot (V_{atrio}(t) + 80) + 0.55 \cdot (V_{endo}(t) - V_{
 
 ---
 
+## 💓 Hemodinâmica Ventricular, Diagrama de Wiggers e Síntese de Áudio
+
+O quarto canal do osciloscópio exibe em tempo real o núcleo mecânico do **Diagrama de Wiggers**:
+- **Pressão Ventricular Esquerda ($LVP$, ciano `#00cec9`):** Eleva-se de ~7 mmHg na diástole até ~120 mmHg na sístole, cruzando a curva aórtica nos pontos de abertura e fechamento valvar.
+- **Pressão Aórtica ($AoP$, coral `#ff7675`):** Decai exponencialmente na diástole até ~70-80 mmHg e atinge ~120 mmHg no pico da ejeção. O fechamento da valva aórtica gera a clássica **incisura dicrótica**.
+- **Síntese Acústica em Tempo Real (Web Audio API):**
+  - **🔊 Bip de Monitor (UTI - Onda R):** Disparado na despolarização ventricular rápida ($dV/dt > 0$), gerando uma onda senoidal pura de **880 Hz** com decaimento exponencial de 75 ms.
+  - **🩺 Bulhas Cardíacas (Ausculta B1/B2):**
+    - **B1 ("Tum" / *Lub*):** Disparada na contração isovolumétrica no fechamento da valva mitral ($LVP \ge LAP$), com frequência grave (65 Hz), ressonância muscular e filtro passa-baixa.
+    - **B2 ("Tá" / *Dub*):** Disparada no relaxamento isovolumétrico no fechamento da valva aórtica ($LVP \le AoP$), com frequência mais alta (130 Hz) e estalido seco.
+  - As duas opções vêm **desativadas por padrão** no Accordion "5. Monitorização & Áudio", sendo ativadas pelo clique do usuário em conformidade com as diretrizes de autoplay dos navegadores.
+
+---
+
 ## 🎛️ Modulação Farmacológica, Eletrolítica e Patológica
 
 - **Potássio $[K^+]_o$ (2.0 a 8.5 mEq/L):** Modula o potencial de repouso ($V_{rest}$) pela equação de Nernst. Hipocalemia causa hiperexcitabilidade e pós-despolarizações; hipercalemia severa causa inativação permanente dos canais de sódio e parada diastólica.
@@ -106,7 +124,8 @@ $$\text{ECG}(t) = 0.15 \cdot (V_{atrio}(t) + 80) + 0.55 \cdot (V_{endo}(t) - V_{
 - **Linguagem Principal:** Rust 2021 Edition.
 - **Compilação WebAssembly:** `wasm-bindgen` e `wasm-pack` com otimizações em release (`-O3`).
 - **Interface Gráfica:** [Dioxus](https://dioxuslabs.com/) 0.6 (declarativo e reativo nativo em Rust).
-- **Mecanismo de Renderização:** Pipeline `Canvas 2D` de alto desempenho com buffers circulares de 300 pontos e processamento em lote via `HeartSystem::run_batch()`.
+- **Mecanismo de Renderização:** Pipeline `Canvas 2D` de alto desempenho com buffers circulares de 500 pontos (janela horizontal de 2.5s, comportando > 3 ciclos cardíacos completos) e processamento em lote via `HeartSystem::run_batch()`.
+- **Módulo de Áudio:** Sintetizador biofísico nativo via Web Audio API (`AudioContext`, `OscillatorNode`, `GainNode`, `BiquadFilterNode`) sem dependência de assets de áudio externos.
 - **Ambiente de Desenvolvimento:** Script `./scripts/run_local.sh` com hot-reloading inteligente, fila concorrente assíncrona, debounce e injeção automática de versão e build-time no rodapé.
 
 ---
