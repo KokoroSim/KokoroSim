@@ -73,7 +73,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -b main
-          git add -A
+          git add -A -f
           git commit -m "deploy: publicar KokoroSim no GitHub Pages [skip ci]"
           GIT_SSH_COMMAND="ssh -i ~/.ssh/id_deploy -o StrictHostKeyChecking=no" git push --force git@github.com:KokoroSim/KokoroSim.github.io.git main
 
