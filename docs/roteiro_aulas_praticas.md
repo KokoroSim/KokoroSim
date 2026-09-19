@@ -115,4 +115,4 @@ O **KokoroSim** foi planejado para ser utilizado diretamente em computadores, ta
 Para submissão de relatórios práticos em disciplinas universitárias, recomenda-se:
 1. Incluir capturas de tela comparativas utilizando o botão **`[ ⏸ CONGELAR ]`** e a **Onda Fantasma**.
 2. Tabular os valores medidos no HUD superior (**BPM, PR, QRS, QT, V.Rep, PR/RR**) em cada etapa do experimento.
-3. Citar formalmente o software utilizando as referências do arquivo `CITATION.cff`.
+3. Citar formalmente o software utilizando as referências padronizadas da seção [Citação Acadêmica](index.html#citacao-academica).

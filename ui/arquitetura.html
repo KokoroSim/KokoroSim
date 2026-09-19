@@ -83,11 +83,17 @@
             color: #fff;
             text-decoration: none;
             letter-spacing: 0.05em;
+            white-space: nowrap;
+            flex-shrink: 0;
+            min-width: max-content;
         }
 
         .brand-logo {
             width: 28px;
             height: 28px;
+            min-width: 28px;
+            min-height: 28px;
+            flex-shrink: 0;
             object-fit: contain;
             filter: drop-shadow(0 0 8px var(--carmine-glow));
         }
@@ -329,6 +335,98 @@
             margin-bottom: 6px;
         }
 
+        .nav-toggle {
+            display: none;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-tech);
+            border-radius: 4px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            padding: 0;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 5px;
+            transition: all 0.25s ease;
+            z-index: 102;
+            flex-shrink: 0;
+        }
+
+        .nav-toggle:hover {
+            border-color: var(--neon-cyan);
+            background: rgba(0, 242, 254, 0.1);
+            box-shadow: 0 0 10px var(--cyan-glow);
+        }
+
+        .hamburger-bar {
+            width: 22px;
+            height: 2px;
+            background: var(--neon-cyan);
+            transition: all 0.25s ease-in-out;
+            box-shadow: 0 0 4px var(--cyan-glow);
+            border-radius: 1px;
+            display: block;
+        }
+
+        .nav-toggle.open .hamburger-bar:nth-child(1) {
+            transform: translateY(7px) rotate(45deg);
+        }
+
+        .nav-toggle.open .hamburger-bar:nth-child(2) {
+            opacity: 0;
+            transform: scaleX(0);
+        }
+
+        .nav-toggle.open .hamburger-bar:nth-child(3) {
+            transform: translateY(-7px) rotate(-45deg);
+        }
+
+        @media (max-width: 1024px) {
+            .nav-toggle {
+                display: flex;
+            }
+
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: rgba(9, 11, 18, 0.98);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                border-bottom: 2px solid var(--border-tech);
+                box-shadow: 0 16px 32px rgba(0, 0, 0, 0.85);
+                padding: 16px 24px 24px 24px;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+                max-height: calc(100vh - 65px);
+                overflow-y: auto;
+                z-index: 101;
+            }
+
+            .nav-links.open {
+                display: flex;
+            }
+
+            .nav-links a {
+                padding: 12px 16px;
+                font-size: 1rem;
+                clip-path: none;
+                border-radius: 4px;
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+            }
+
+            .nav-links a.btn-app {
+                clip-path: none;
+                border-radius: 4px;
+                margin-bottom: 4px;
+            }
+        }
+
         @media (max-width: 768px) {
             body {
                 font-size: 15px;
@@ -336,8 +434,11 @@
             h1 {
                 font-size: 1.8rem;
             }
-            .nav-links {
-                gap: 8px;
+            .top-nav {
+                padding: 10px 16px;
+            }
+            .brand {
+                font-size: 1.15rem;
             }
         }
     </style>
@@ -348,14 +449,15 @@
             <img src="assets/icon.png" alt="KokoroSim" class="brand-logo">
             <span>kokor<span class="brand-kanji">心</span><span class="brand-sim">sim</span></span>
         </a>
-        <div class="nav-links">
+        <button class="nav-toggle" id="navToggle" aria-label="Abrir menu de navegação" aria-expanded="false">
+            <span class="hamburger-bar"></span>
+            <span class="hamburger-bar"></span>
+            <span class="hamburger-bar"></span>
+        </button>
+        <div class="nav-links" id="navLinks">
             <a href="./app.html" class="btn-app">🚀 Simulador Web</a>
             <a href="./index.html" class="">📖 Sobre</a>
-            <a href="./modelos.html" class="">🧬 Modelos</a>
             <a href="./roteiro.html" class="">🎓 Roteiro Prático</a>
-            <a href="./identidade.html" class="">🎨 Identidade</a>
-            <a href="./roadmap.html" class="">🗺️ Roadmap</a>
-            <a href="./arquitetura.html" class="active">🏛️ Arquitetura</a>
             <a href="https://github.com/KokoroSim/KokoroSim" target="_blank">💻 GitHub</a>
         </div>
     </nav>
@@ -515,5 +617,31 @@ Isso estabelece uma correlação áudio-visual em tempo real: o usuário vê a l
         <p><b>kokor<span style="color: var(--neon-carmine); font-weight: 900;">心</span><span style="color: var(--neon-cyan); font-weight: bold;">sim</span></b> — Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real</p>
         <p style="font-size: 0.85rem; color: #7f8c8d; margin-top: 4px;">Desenvolvido com Rust, WebAssembly & Dioxus // Licença GPLv3</p>
     </footer>
+    <script>
+        const toggle = document.getElementById('navToggle');
+        const navLinks = document.getElementById('navLinks');
+        if (toggle && navLinks) {
+            toggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isOpen = navLinks.classList.toggle('open');
+                toggle.classList.toggle('open', isOpen);
+                toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            });
+            document.addEventListener('click', (e) => {
+                if (!navLinks.contains(e.target) && !toggle.contains(e.target)) {
+                    navLinks.classList.remove('open');
+                    toggle.classList.remove('open');
+                    toggle.setAttribute('aria-expanded', 'false');
+                }
+            });
+            navLinks.querySelectorAll('a').forEach(a => {
+                a.addEventListener('click', () => {
+                    navLinks.classList.remove('open');
+                    toggle.classList.remove('open');
+                    toggle.setAttribute('aria-expanded', 'false');
+                });
+            });
+        }
+    </script>
 </body>
 </html>

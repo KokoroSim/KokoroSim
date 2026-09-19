@@ -12,6 +12,16 @@
 </head>
 <body>
     <div id="main"></div>
+    <div id="mobile-orientation-banner" class="orientation-alert">
+        <div class="orientation-alert-content">
+            <span class="orientation-icon">📱</span>
+            <div class="orientation-text">
+                <strong>Console Otimizado em Modo Paisagem:</strong>
+                <span>Para operar o osciloscópio e os controles biofísicos com ergonomia e precisão, gire seu dispositivo ou utilize uma tela maior.</span>
+            </div>
+            <button class="btn-dismiss-alert" onclick="document.getElementById('mobile-orientation-banner').style.display='none'">✕ Fechar</button>
+        </div>
+    </div>
     <script type="module">
         import init from './pkg/ui.js';
         init();

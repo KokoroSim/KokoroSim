@@ -105,6 +105,14 @@ O desenvolvimento do **KokoroSim** está organizado em grandes marcos arquitetur
 * [ ] Implementação de novos fármacos e toxinas (ex.: digitalina, bloqueadores específicos de $I_{Kr}$, agentes parassimpaticomiméticos).
 * [ ] Painel interativo de casos clínicos e cenários patológicos pré-configurados para auxílio diagnóstico e ensino médico.
 
+### Fase 14: Arquitetura de Interface Mobile-First e Responsividade Nativa (Caminho 2)
+* [ ] **Layout Responsivo Adaptativo para Smartphones (Modo Retrato / Mobile UI)**:
+  - Divisão vertical da tela (*Split-Screen Mobile*): osciloscópio multicanal dinâmico no topo (40–45% da altura de visualização).
+  - Gaveta de controles inferior colapsável (*Bottom Sheet Drawer*) operável por gestos de deslize (*swipe up/down*).
+  - Sistema de abas horizontais de acesso rápido por domínio de controle: *1. Modos de Tela / 2. Eletrofisiologia Celular / 3. Farmacologia / 4. Hemodinâmica*.
+  - Otimização ergonômica de sliders, seletores e botões para zonas de alcance do polegar (*thumb-friendly hit targets* >= 48px).
+  - Detecção inteligente e transição fluida entre modo retrato (bottom sheet) e modo paisagem (painel de instrumentação estendido).
+
 ---
 
 ## 🏛️ KokoroSim v1.0 (Protótipo Legado em TypeScript/Vite) ✅ CONCLUÍDO

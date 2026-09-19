@@ -31,7 +31,7 @@ O **kokor<span style="color: #ff1754;">心</span><span style="color: #00cec9;">s
 * 🗺️ **[Roadmap de Desenvolvimento](ROADMAP.md)**: Fases concluídas da v2.0 e expansão espacial para a v2.1+.
 * 🏛️ **[Decisões de Arquitetura e Engenharia](ARCHITECTURE.md)**: Justificativas biofísicas, matemáticas e de engenharia de software.
 * 🎨 **[Identidade Visual e Conceito do Logotipo](docs/identidade_visual.md)**: O Rotor, o Magatama (勾玉) e a convergência biofísica.
-* 📜 **[Como Citar o KokoroSim](CITATION.cff)**: Normas ABNT, Vancouver, BibTeX e metadados formais.
+* 📜 **[Como Citar o KokoroSim](#citacao-academica)**: Normas ABNT, Vancouver, BibTeX e referências bibliográficas.
 
 ---
 
@@ -175,7 +175,7 @@ A silhueta baseia-se no **magatama** (勾玉) e no elemento dinâmico unitário 
 
 ## 📖 Citação Acadêmica
 
-Se você utilizar o KokoroSim em pesquisas científicas, aulas práticas, monografias, dissertações, teses ou publicações acadêmicas, por favor cite conforme os formatos abaixo ou utilize os metadados do arquivo [`CITATION.cff`](CITATION.cff):
+Se você utilizar o KokoroSim em pesquisas científicas, aulas práticas, monografias, dissertações, teses ou publicações acadêmicas, por favor cite conforme os formatos padronizados abaixo:
 
 ### Formato ABNT (NBR 6023:2018)
 > FREITAS, Lumen Muller Lohn. **KokoroSim: Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real**. Versão 2.0.0. Florianópolis: Universidade Federal de Santa Catarina (UFSC), 2026. Disponível em: <https://kokorosim.github.io/>. Acesso em: [data de acesso].
