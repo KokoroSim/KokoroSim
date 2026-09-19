@@ -2,7 +2,8 @@
 
 ## [Unreleased]
 
-- Routine maintenance, documentation updates, and operational improvements.
+### Bug Fixes
+  - (engine) equilibrar potencial de repouso de purkinje e adicionar testes biofisicos
 
 ## Previous Releases
 
