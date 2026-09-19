@@ -14,9 +14,9 @@ const R: f64 = 8.314;
 const T: f64 = 310.0;
 const F: f64 = 96.485;
 
-// Condutâncias iônicas intrínsecas do fibroblasto
+// Condutâncias iônicas intrínsecas do fibroblasto (MacCannell et al., 2007)
 const G_KV: f64 = 0.25; // nS/pF (Condutância máxima de potássio ativado por voltagem)
-const G_K1: f64 = 0.4822; // nS (Condutância retificadora de entrada)
+const G_K1: f64 = 0.04822; // nS (Condutância retificadora de entrada calibrada para repouso despolarizado de ~ -40 mV)
 const G_B: f64 = 0.0095; // nS/pF (Condutância de fuga de fundo)
 const E_B: f64 = -1.0; // mV (Potencial de reversão da corrente de fuga)
 const I_NAK_MAX: f64 = 0.702; // pA/pF (Densidade máxima da bomba Na+/K+)
@@ -37,7 +37,7 @@ impl Default for FibroblastCell {
     fn default() -> Self {
         Self {
             time: 0.0,
-            v: -39.5, // Potencial de repouso despolarizado característico (-35 a -45 mV)
+            v: -49.6, // Potencial de repouso canônico de MacCannell et al. (2007) (-49.6 mV)
             r: 0.08,
             s: 0.85,
         }

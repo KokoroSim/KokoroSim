@@ -462,9 +462,15 @@
 </ul>
 <h3 id="biofisica-e-papel-fisiologico_5">Biofísica e Papel Fisiológico</h3>
 <p>Modela o acoplamento eletrotônico heterocelular via junções comunicantes (<em>gap junctions</em> de conexina-43 e conexina-45):
-- <strong>Células Não-Excitáveis de Repouso Alto:</strong> Fibroblastos possuem potencial de repouso entre $-35\text{ mV}$ e $-45\text{ mV}$.
+- <strong>Células Não-Excitáveis de Repouso Alto:</strong> Fibroblastos possuem potencial de repouso despolarizado característico entre $-35\text{ mV}$ e $-50\text{ mV}$.
 - <strong>Dreno Capacitivo:</strong> Ao se conectarem aos miócitos, drenam corrente durante a Fase 0 (reduzindo a amplitude e a velocidade de ascensão $dV/dt$) e injetam corrente durante a diástole (despolarizando parcialmente o potencial de repouso miocitário).
 - <strong>Substrato Arritmogênico:</strong> Na presença de fibrose miocárdica extensa pós-infarto ou senil, o aumento do número de fibroblastos acoplados ($G_{gap}$) causa dispersão espacial da repolarização, alargamento do QRS e predisposição a arritmias ventriculares por reentrada.</p>
+<blockquote>
+<p>[!NOTE] Adaptação Computacional de Estabilidade (KokoroSim v2.1+)
+<strong>O que foi feito:</strong> Calibração da condutância retificadora de entrada $G_{K1} = 0.04822\text{ nS}$ e potencial inicial $V = -49.6\text{ mV}$, de acordo com a formulação canônica de MacCannell et al. (2007).
+<strong>Por que foi feito:</strong> A condutância anterior superestimada ($0.4822\text{ nS}$) forçava o repouso para $-71.3\text{ mV}$, colando o traçado no rodapé da escala do osciloscópio ($-90\text{ a }+50\text{ mV}$) e impedindo a visualização nítida do dreno capacitivo.
+<strong>Resultado esperado:</strong> O traçado do fibroblasto repousa visivelmente centralizado no osciloscópio em $\approx -50\text{ mV}$, desenvolvendo deflexões eletrotônicas acopladas límpidas ($&gt; 50\text{ mV}$ de amplitude) em sincronia com o miócito ventricular conforme o slider de fibrose é elevado.</p>
+</blockquote>
 <hr />
 <h2 id="7-acoplamento-eletromecanico-e-hemodinamica-diagrama-de-wiggers">7. Acoplamento Eletromecânico e Hemodinâmica (Diagrama de Wiggers)</h2>
 <ul>

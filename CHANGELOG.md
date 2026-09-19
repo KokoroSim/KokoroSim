@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Bug Fixes
+  - (engine) calibrar potencial de repouso despolarizado do fibroblasto maccannell
   - (engine) adaptar conducao e no sa para evitar travamento sob variacao de parametros
   - (engine) equilibrar potencial de repouso de purkinje e adicionar testes biofisicos
 

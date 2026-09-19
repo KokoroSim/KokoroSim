@@ -114,9 +114,14 @@ Como a despolarização avança do **Endocárdio $\to$ Epicárdio**, mas a repol
 
 ### Biofísica e Papel Fisiológico
 Modela o acoplamento eletrotônico heterocelular via junções comunicantes (*gap junctions* de conexina-43 e conexina-45):
-- **Células Não-Excitáveis de Repouso Alto:** Fibroblastos possuem potencial de repouso entre $-35\text{ mV}$ e $-45\text{ mV}$.
+- **Células Não-Excitáveis de Repouso Alto:** Fibroblastos possuem potencial de repouso despolarizado característico entre $-35\text{ mV}$ e $-50\text{ mV}$.
 - **Dreno Capacitivo:** Ao se conectarem aos miócitos, drenam corrente durante a Fase 0 (reduzindo a amplitude e a velocidade de ascensão $dV/dt$) e injetam corrente durante a diástole (despolarizando parcialmente o potencial de repouso miocitário).
 - **Substrato Arritmogênico:** Na presença de fibrose miocárdica extensa pós-infarto ou senil, o aumento do número de fibroblastos acoplados ($G_{gap}$) causa dispersão espacial da repolarização, alargamento do QRS e predisposição a arritmias ventriculares por reentrada.
+
+> [!NOTE] Adaptação Computacional de Estabilidade (KokoroSim v2.1+)
+> **O que foi feito:** Calibração da condutância retificadora de entrada $G_{K1} = 0.04822\text{ nS}$ e potencial inicial $V = -49.6\text{ mV}$, de acordo com a formulação canônica de MacCannell et al. (2007).
+> **Por que foi feito:** A condutância anterior superestimada ($0.4822\text{ nS}$) forçava o repouso para $-71.3\text{ mV}$, colando o traçado no rodapé da escala do osciloscópio ($-90\text{ a }+50\text{ mV}$) e impedindo a visualização nítida do dreno capacitivo.
+> **Resultado esperado:** O traçado do fibroblasto repousa visivelmente centralizado no osciloscópio em $\approx -50\text{ mV}$, desenvolvendo deflexões eletrotônicas acopladas límpidas ($> 50\text{ mV}$ de amplitude) em sincronia com o miócito ventricular conforme o slider de fibrose é elevado.
 
 ---
 

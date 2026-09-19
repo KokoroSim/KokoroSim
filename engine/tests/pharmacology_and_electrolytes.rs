@@ -72,18 +72,32 @@ fn test_fibrosis_electrotonic_loading() {
         0.0, 0.0, 0.0, 0.80
     );
 
+    let mut v_fib_max = -999.0;
+    let mut v_fib_min = 999.0;
+
     // Roda 3 segundos
     for _ in 0..300_000 {
         baseline.step(dt);
         fibrotic.step(dt);
+        let vf = fibrotic.get_fibroblast_v();
+        if vf > v_fib_max { v_fib_max = vf; }
+        if vf < v_fib_min { v_fib_min = vf; }
     }
     
-    // Fibroblastos despolarizam e drenam corrente capacitiva do miócito epicárdico
+    // 1. Fibroblasto basal desacoplado repousa no valor canônico de MacCannell (-49.6 mV nominal)
+    // muito acima do rodapé antigo do gráfico (-71 mV)
     let v_fibro_base = baseline.get_fibroblast_v();
-    let v_fibro_treated = fibrotic.get_fibroblast_v();
-    
     assert!(
-        v_fibro_treated != v_fibro_base,
-        "Fibrose não alterou a voltagem acoplada do fibroblasto"
+        v_fibro_base > -58.0 && v_fibro_base < -45.0,
+        "Potencial de repouso basal do fibroblasto ({:.1} mV) fora da faixa canônica de MacCannell (-45 a -58 mV)",
+        v_fibro_base
+    );
+    
+    // 2. Com fibrose, o fibroblasto apresenta ampla excursão oscilatória acoplada (> 50 mV)
+    let excursion = v_fib_max - v_fib_min;
+    assert!(
+        excursion > 50.0,
+        "Excursão oscilatória do fibroblasto acoplado insuficiente: {:.1} mV",
+        excursion
     );
 }
