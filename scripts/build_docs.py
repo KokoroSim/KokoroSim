@@ -14,6 +14,30 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>__PAGE_TITLE__</title>
+    <meta name="title" content="__PAGE_TITLE__">
+    <meta name="description" content="Simulador biofísico de eletrofisiologia celular cardíaca e hemodinâmica ventricular em tempo real diretamente no navegador web. Desenvolvido com Rust + WebAssembly.">
+    <meta name="theme-color" content="#ff1754">
+
+    <!-- Open Graph / Facebook / WhatsApp / Telegram / LinkedIn -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kokorosim.github.io/">
+    <meta property="og:site_name" content="KokoroSim">
+    <meta property="og:title" content="__PAGE_TITLE__">
+    <meta property="og:description" content="Simulador biofísico de eletrofisiologia celular cardíaca e hemodinâmica ventricular em tempo real diretamente no navegador web. Desenvolvido com Rust + WebAssembly.">
+    <meta property="og:image" content="https://kokorosim.github.io/assets/og_preview.png">
+    <meta property="og:image:secure_url" content="https://kokorosim.github.io/assets/og_preview.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="KokoroSim — Eletrofisiologia Cardíaca e Vórtice Hemodinâmico">
+
+    <!-- Twitter (X) Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://kokorosim.github.io/">
+    <meta name="twitter:title" content="__PAGE_TITLE__">
+    <meta name="twitter:description" content="Simulador biofísico de eletrofisiologia celular cardíaca e hemodinâmica ventricular em tempo real diretamente no navegador web. Desenvolvido com Rust + WebAssembly.">
+    <meta name="twitter:image" content="https://kokorosim.github.io/assets/og_preview.png">
+    <meta name="twitter:image:alt" content="KokoroSim — Eletrofisiologia Cardíaca e Vórtice Hemodinâmico">
     <link rel="icon" type="image/png" href="assets/icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
