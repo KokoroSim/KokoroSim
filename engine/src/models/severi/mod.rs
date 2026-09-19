@@ -346,10 +346,15 @@ impl SeveriCell {
         self.c[103] = if ach > 0.0 { (3.59880 - 0.0256410) / (1.0 + 1.21550e-06 / (ach.max(1e-12)).powf(1.69510)) + 0.0256410 } else { 0.0256410 };
 
         let effective_ko = p.effective_ko();
-        self.c[87] = self.c_base[85] * (effective_ko / self.c_base[15]).ln();
+        // Em modelos unicelulares isolados de nó SA (Severi 2012), a ausência de homeostase tecidual e acoplamento
+        // sincicial causa colapso por bifurcação de Hopf para Ko < 5.4 mM (concentração original do banho de Tyrode).
+        // Na clínica humana, o nó SA mantém ritmo sinusal normal em toda a faixa de normocalemia e hipocalemia (3.5 - 5.0 mM).
+        // Portanto, fixamos o piso eletrolítico do nó SA em 5.4 mM para manter o automatismo marcapasso contínuo.
+        let ko_sa = effective_ko.max(5.4);
+        self.c[87] = self.c_base[85] * (ko_sa / self.c_base[15]).ln();
 
         // 1. Eletrólitos
-        self.c[16] = effective_ko;
+        self.c[16] = ko_sa;
         self.c[17] = p.cao;
         self.c[14] = p.nao;
 

@@ -272,7 +272,10 @@ impl Default for InadaCell {
 
 impl InadaCell {
     pub fn step(&mut self, dt: f64, p: &crate::models::Pharmaco) {
-        let e_k = self.rtonf * (p.effective_ko() / self.ki).ln();
+        // Células nodais lentas (Inada 2009) foram calibradas estritamente para banho a 5.4 mM.
+        // O piso biofísico de 5.4 mM preserva a condutância e evita bloqueio de condução artificial em hipocalemia.
+        let ko_av = p.effective_ko().max(5.4);
+        let e_k = self.rtonf * (ko_av / self.ki).ln();
         let e_na = self.rtonf * (p.nao / self.nai).ln();
         let a_15 = 120.000/(1.00000+(- (self.v+50.0000)/15.0000).exp());
         let r_17 =  self.alpha_achf*(1.00000 - self.achf_gate) -  a_15*self.achf_gate;
@@ -351,14 +354,14 @@ impl InadaCell {
         };
         a_65 = a_65 * p.block_na * p.isch_block();
         let a_68 = ( self.g_ach_max*self.achf_gate*self.achs_gate*(self.ach).powf(1.50000))/((self.k_ach).powf(1.50000)+(self.ach).powf(1.50000));
-        let a_69 = ( (( a_68*p.effective_ko())/(10.0000+p.effective_ko()))*(self.v - e_k))/(1.00000+(((self.v - e_k) - 140.000)/( 2.50000*self.rtonf)).exp());
+        let a_69 = ( (( a_68*ko_av)/(10.0000+ko_av))*(self.v - e_k))/(1.00000+(((self.v - e_k) - 140.000)/( 2.50000*self.rtonf)).exp());
         let a_70 =   self.g_cal*self.d_gate*( 0.675000*self.f_gate+ 0.325000*self.f2)*(self.v - self.e_cal)*(1.00000 - (( a_69*self.ach)/(9.00000e-05+self.ach))/1.00000) * p.block_ca * p.isch_block() * p.ans_ca_modifier();
         let a_66 =   self.g_to*self.r_gate*( 0.450000*self.q_fast+ 0.550000*self.q_slow)*(self.v - e_k) * p.block_k;
         let a_34 =   self.g_kr*( 0.900000*self.paf_gate+ 0.100000*self.pas_gate)*self.pik_gate*(self.v - e_k) * p.block_k;
         let a_17 =  self.y_gate*self.g_f*(self.v - - 30.0000);
         let a_67 =  self.g_st*self.qa_gate*self.qi_gate*(self.v - self.e_st);
         let a_42 =  self.g_k1*(0.500000+0.500000/(1.00000+((self.v+30.0000)/5.00000).exp()));
-        let a_49 = ( a_42*(p.effective_ko()/(p.effective_ko()+0.590000)).powf(3.00000)*(self.v+81.9000))/(1.00000+(( 1.39300*(self.v+81.9000+3.60000))/self.rtonf).exp());
+        let a_49 = ( a_42*(ko_av/(ko_av+0.590000)).powf(3.00000)*(self.v+81.9000))/(1.00000+(( 1.39300*(self.v+81.9000+3.60000))/self.rtonf).exp());
         let a_57 = (( - self.qn*self.v)/( 2.00000*self.rtonf)).exp();
         let a_52 = 1.00000+ (p.cao/self.kco)*(1.00000+(( self.qco*self.v)/self.rtonf).exp())+p.nao/self.k1no+(p.nao).powf(2.00000)/( self.k1no*self.k2no)+(p.nao).powf(3.00000)/( self.k1no*self.k2no*self.k3no);
         let a_54 = ( ((p.nao).powf(2.00000)/( self.k1no*self.k2no)+(p.nao).powf(3.00000)/( self.k1no*self.k2no*self.k3no))*(( - self.qn*self.v)/( 2.00000*self.rtonf)).exp())/a_52;
@@ -372,7 +375,7 @@ impl InadaCell {
         let a_62 =  a_58*self.k43*(a_54+a_55)+ a_59*a_54*(self.k43+a_57);
         let a_63 =  a_54*self.k34*(a_58+a_59)+ a_58*a_55*(self.k34+a_53);
         let a_64 = ( self.knaca*( a_61*a_55 -  a_60*a_59))/(a_60+a_61+a_62+a_63);
-        let a_51 = ( self.i_p*(self.nai/(5.64000+self.nai)).powf(3.00000)*(p.effective_ko()/(0.621000+p.effective_ko())).powf(2.00000)*1.60000)/(1.50000+(- (self.v+60.0000)/40.0000).exp());
+        let a_51 = ( self.i_p*(self.nai/(5.64000+self.nai)).powf(3.00000)*(ko_av/(0.621000+ko_av)).powf(2.00000)*1.60000)/(1.50000+(- (self.v+60.0000)/40.0000).exp());
         let a_50 =  self.g_b*(self.v - self.e_b);
         let r_0 = - (a_65+a_70+a_66+a_34+a_17+a_67+a_49+a_64+a_51+a_50+a_69)/self.c;
         let a_72 = 5.00000/(1.00000+self.k_up/self.cai);

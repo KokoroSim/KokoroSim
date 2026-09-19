@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Bug Fixes
+  - (engine) adaptar conducao e no sa para evitar travamento sob variacao de parametros
   - (engine) equilibrar potencial de repouso de purkinje e adicionar testes biofisicos
 
 ## Previous Releases

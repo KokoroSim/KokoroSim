@@ -29,6 +29,11 @@ O nó sinoatrial gera o automatismo elétrico intrínseco (Fase 4 despolarizante
 - **Relógio de Cálcio (*Calcium Clock*):** Liberações diastólicas submembranares espontâneas de cálcio pelo retículo sarcoplasmático via receptores de rianodina (RyR), ativando o trocador eletrogênico sódio-cálcio ($I_{NCX}$) que acelera a despolarização até o limiar de disparo dos canais de cálcio do tipo T ($I_{Ca,T}$) e do tipo L ($I_{Ca,L}$).
 - **Modulação Autonômica:** Sensibilidade direta à estimulação de receptores adrenérgicos $\beta_1$ (aceleração cronotrópica) e colinérgicos muscarínicos $M_2$ via corrente de potássio dependente de acetilcolina ($I_{K,ACh}$).
 
+> [!NOTE] Adaptação Computacional de Estabilidade (KokoroSim v2.1+)
+> **O que foi feito:** Definição de piso fisiológico $[K^+]_o \ge 5.4\text{ mM}$ para a formulação nodal de Severi (2012).
+> **Por que foi feito:** O modelo original de Severi foi calibrado exclusivamente em banho experimental de Tyrode a $5.4\text{ mM}$. Em modelos unicelulares isolados sem sincício, reduções para $K^+ < 5.2\text{ mM}$ geram bifurcação matemática de Hopf e parada de oscilação artificial. Na fisiologia humana real *in vivo*, o nó SA não expressa $I_{K1}$ e mantém automatismo marcapasso contínuo mesmo em normocalemia baixa ($3.5 - 4.5\text{ mM}$).
+> **Resultado esperado:** Automatismo sinusal preservado em toda a faixa clínica de potássio ($2.0\text{ a }10.0\text{ mM}$) sem interrupção do ritmo cardíaco.
+
 ---
 
 ## 2. Músculo Atrial Humano
@@ -59,6 +64,11 @@ Atua como filtro de segurança hemodinâmica e retardo cronometrado:
 - **Retardo AV:** Permite que a sístole atrial preencha completamente os ventrículos antes da contração ventricular (intervalo PR do ECG).
 - **Condução Lenta de Resposta Lenta:** Ausência de canais rápidos de sódio funcionais; a subida de potencial depende exclusivamente de $I_{Ca,L}$, conferindo baixa velocidade de condução.
 - **Condução Decremental e Refratariedade:** Em frequências elevadas, os canais de cálcio não se recuperam completamente da inativação, provocando lentificação progressiva ou bloqueio de condução (proteção contra taquicardias supraventriculares com resposta ventricular descontrolada).
+
+> [!NOTE] Adaptação Computacional de Estabilidade (KokoroSim v2.1+)
+> **O que foi feito:** Aplicação de piso $[K^+]_o \ge 5.4\text{ mM}$ nas correntes nodais de Inada (2009) e transição dos limiares de refratariedade funcional nos pingers de condução de $-60\text{ mV}$ para $-45\text{ mV}$ (e disparo AV em $\ge -20\text{ mV}$).
+> **Por que foi feito:** Previne bloqueio artificial de condução por hiperpolarização em hipocalemia e impede o aprisionamento de refratariedade quando hipercalemia ou isquemia mantêm o repouso despolarizado em $-55\text{ mV}$.
+> **Resultado esperado:** Condução fisiológica atrioventricular íntegra e contínua sob qualquer intervenção farmacológica ou eletrolítica na interface.
 
 ---
 

@@ -291,7 +291,7 @@ impl HeartSystem {
         }
 
         if self.timer_atrium > 0.0 && self.time >= self.timer_atrium {
-            if self.atrium.v < -60.0 {
+            if self.atrium.v < -45.0 {
                 self.stim_until_atrium = self.time + 2.0; // Injeção de corrente despolarizante (2ms)
                 self.atrium.i_st = -2000.0;
             }
@@ -303,7 +303,7 @@ impl HeartSystem {
             let delay_atr_av = 50.0 * (1.0 + self.pharm.isch * 0.3) / self.pharm.block_na.max(0.2);
             self.timer_av = self.time + delay_atr_av;
             self.atrium_fired = true;
-        } else if self.atrium.v < -60.0 {
+        } else if self.atrium.v < -45.0 {
             self.atrium_fired = false;
         }
 
@@ -318,8 +318,8 @@ impl HeartSystem {
         // Dromotropismo fisiológico dinâmico:
         // - Condução decremental dependente de frequência (taquicardia aumenta o atraso)
         // - Tônus simpático encurta (dromotropismo +) e parassimpático alarga (dromotropismo -)
-        // - Bloqueadores de cálcio (Verapamil) e isquemia aumentam o atraso ou bloqueiam (BAVT)
-        if self.av_node.v >= -15.0 && !self.av_fired {
+        // Bloqueadores de cálcio (Verapamil) e isquemia aumentam o atraso ou bloqueiam (BAVT)
+        if self.av_node.v >= -20.0 && !self.av_fired {
             let rate_factor = if self.bpm > 60.0 {
                 1.0 + ((self.bpm - 60.0) / 120.0) * 0.30
             } else {
@@ -334,12 +334,12 @@ impl HeartSystem {
                 self.timer_purk = self.time + dynamic_his_delay;
             }
             self.av_fired = true;
-        } else if self.av_node.v < -45.0 {
+        } else if self.av_node.v < -40.0 {
             self.av_fired = false;
         }
 
         if self.timer_purk > 0.0 && self.time >= self.timer_purk {
-            if self.purkinje.v < -60.0 {
+            if self.purkinje.v < -45.0 {
                 self.stim_until_purk = self.time + 1.5; // Injeção de corrente despolarizante (1.5ms)
                 self.purkinje.i_stim = -40.0;
             }
@@ -351,12 +351,12 @@ impl HeartSystem {
             let latency_purk_endo = 12.0 / self.pharm.block_na.max(0.2);
             self.timer_endo = self.time + latency_purk_endo;
             self.purk_fired = true;
-        } else if self.purkinje.v < -60.0 {
+        } else if self.purkinje.v < -45.0 {
             self.purk_fired = false;
         }
 
         if self.timer_endo > 0.0 && self.time >= self.timer_endo {
-            if self.vent_endo.v < -60.0 {
+            if self.vent_endo.v < -45.0 {
                 self.stim_until_endo = self.time + 1.5;
                 self.vent_endo.i_stim = -52.0;
             }
@@ -370,12 +370,12 @@ impl HeartSystem {
             self.timer_m = self.time + delay_m;
             self.timer_epi = self.time + delay_epi;
             self.endo_fired = true;
-        } else if self.vent_endo.v < -60.0 {
+        } else if self.vent_endo.v < -45.0 {
             self.endo_fired = false;
         }
 
         if self.timer_m > 0.0 && self.time >= self.timer_m {
-            if self.vent_m.v < -60.0 {
+            if self.vent_m.v < -45.0 {
                 self.stim_until_m = self.time + 1.5;
                 self.vent_m.i_stim = -52.0;
             }
@@ -383,7 +383,7 @@ impl HeartSystem {
         }
 
         if self.timer_epi > 0.0 && self.time >= self.timer_epi {
-            if self.vent_epi.v < -60.0 {
+            if self.vent_epi.v < -45.0 {
                 self.stim_until_epi = self.time + 1.5;
                 self.vent_epi.i_stim = -52.0;
             }
