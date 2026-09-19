@@ -35,10 +35,14 @@ jobs:
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
-      - name: Build main (Wasm)
+      - name: Build main (Wasm and Assets to dist)
         run: |
+          mkdir -p main-repo/dist
           cd main-repo/ui
-          wasm-pack build --target web
+          wasm-pack build --target web --out-dir ../dist/pkg
+          cp -r assets ../dist/assets
+          cp app.html ../dist/app.html
+          cp simulador.html ../dist/simulador.html 2>/dev/null || true
 
       - name: Setup Bun (for v1)
         uses: oven-sh/setup-bun@v1
@@ -51,15 +55,15 @@ jobs:
           
       - name: Arrange files
         run: |
-          # Copy v1 dist into the main ui folder
-          cp -r v1-repo/dist main-repo/ui/v1
+          # Copy v1 dist into the main dist folder
+          cp -r v1-repo/dist main-repo/dist/v1
           # Garantir que o GitHub Pages não processe com Jekyll
-          touch main-repo/ui/.nojekyll
+          touch main-repo/dist/.nojekyll
 
-      - name: Build Documentation Pages (HTML)
+      - name: Build Documentation Pages (HTML to dist)
         run: |
           python3 -m pip install markdown
-          python3 main-repo/scripts/build_docs.py
+          python3 main-repo/scripts/build_docs.py main-repo/dist
 
       - name: Deploy to KokoroSim.github.io
         env:
@@ -68,7 +72,7 @@ jobs:
           mkdir -p ~/.ssh
           printf "%s\n" "$DEPLOY_KEY" > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
-          cd main-repo/ui
+          cd main-repo/dist
           git init
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

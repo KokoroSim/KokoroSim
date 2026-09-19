@@ -511,43 +511,43 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 DOCS_MAP = [
     {
         "src": "README.md",
-        "dest": "ui/index.html",
+        "dest": "index.html",
         "title": "KokoroSim — Simulador Eletrofisiológico Cardíaco em Tempo Real",
         "active": "sobre"
     },
     {
         "src": "README.md",
-        "dest": "ui/sobre.html",
+        "dest": "sobre.html",
         "title": "Sobre o Projeto — KokoroSim",
         "active": "sobre"
     },
     {
         "src": "docs/modelos.md",
-        "dest": "ui/modelos.html",
+        "dest": "modelos.html",
         "title": "Modelos Biofísicos e Referências Científicas",
         "active": "modelos"
     },
     {
         "src": "docs/identidade_visual.md",
-        "dest": "ui/identidade.html",
+        "dest": "identidade.html",
         "title": "Identidade Visual e Conceito do Logotipo",
         "active": "identidade"
     },
     {
         "src": "ROADMAP.md",
-        "dest": "ui/roadmap.html",
+        "dest": "roadmap.html",
         "title": "Roadmap de Desenvolvimento",
         "active": "roadmap"
     },
     {
         "src": "ARCHITECTURE.md",
-        "dest": "ui/arquitetura.html",
+        "dest": "arquitetura.html",
         "title": "Decisões de Arquitetura e Engenharia",
         "active": "arquitetura"
     },
     {
         "src": "docs/roteiro_aulas_praticas.md",
-        "dest": "ui/roteiro.html",
+        "dest": "roteiro.html",
         "title": "Guia Didático e Roteiro de Aulas Práticas",
         "active": "roteiro"
     }
@@ -556,6 +556,26 @@ DOCS_MAP = [
 def main():
     root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     os.chdir(root_dir)
+
+    target_dir_name = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("DOCS_OUT_DIR", "dist")
+    out_dir = target_dir_name if os.path.isabs(target_dir_name) else os.path.join(root_dir, target_dir_name)
+    os.makedirs(out_dir, exist_ok=True)
+
+    # Sincroniza assets para o diretório de destino
+    src_assets = os.path.join(root_dir, "ui", "assets")
+    dest_assets = os.path.join(out_dir, "assets")
+    if os.path.exists(src_assets):
+        import shutil
+        if os.path.exists(dest_assets):
+            shutil.rmtree(dest_assets)
+        shutil.copytree(src_assets, dest_assets)
+
+    # Copia templates HTML base se existirem
+    for html_name in ["app.html", "simulador.html"]:
+        src_html = os.path.join(root_dir, "ui", html_name)
+        if os.path.exists(src_html):
+            import shutil
+            shutil.copy2(src_html, os.path.join(out_dir, html_name))
 
     md = markdown.Markdown(extensions=[
         'tables',
@@ -567,7 +587,7 @@ def main():
 
     for doc in DOCS_MAP:
         src_path = os.path.join(root_dir, doc["src"])
-        dest_path = os.path.join(root_dir, doc["dest"])
+        dest_path = os.path.join(out_dir, doc["dest"])
 
         if not os.path.exists(src_path):
             print(f"⚠️ Aviso: Arquivo fonte não encontrado: {src_path}")
@@ -601,11 +621,10 @@ def main():
             .replace("__ACTIVE_ARQUITETURA__", "active" if doc["active"] == "arquitetura" else "")
         )
 
-        os.makedirs(os.path.dirname(dest_path), exist_ok=True)
         with open(dest_path, "w", encoding="utf-8") as f:
             f.write(page_html)
 
-        print(f"✅ Gerado: {doc['dest']} a partir de {doc['src']}")
+        print(f"✅ Gerado: {dest_path} a partir de {doc['src']}")
 
 if __name__ == "__main__":
     main()

@@ -5,7 +5,8 @@
 
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 UI_DIR="$PROJECT_ROOT/ui"
-BUILD_ID_FILE="$UI_DIR/.build_id"
+DIST_DIR="$PROJECT_ROOT/dist"
+BUILD_ID_FILE="$DIST_DIR/.build_id"
 PORT="${PORT:-8081}"
 
 # Verify required tools
@@ -50,14 +51,15 @@ build_wasm() {
     local timestamp
     timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
     echo "----------------------------------------------------------------------"
-    echo "🔨 [$(date '+%H:%M:%S')] Compilando projeto Wasm (Build Time: $timestamp)..."
+    echo "🔨 [$(date '+%H:%M:%S')] Compilando projeto Wasm e montando dist/ (Build Time: $timestamp)..."
     
+    mkdir -p "$DIST_DIR"
     export KOKOROSIM_BUILD_TIME="$timestamp"
-    if (cd "$UI_DIR" && wasm-pack build --target web); then
-        python3 "$PROJECT_ROOT/scripts/build_docs.py" >/dev/null 2>&1 || true
+    if (cd "$UI_DIR" && wasm-pack build --target web --out-dir "$DIST_DIR/pkg"); then
+        python3 "$PROJECT_ROOT/scripts/build_docs.py" "$DIST_DIR" >/dev/null 2>&1 || true
         # Gera novo token de build para acionar o LiveReload no navegador
         date +%s%N > "$BUILD_ID_FILE"
-        echo "✅ [$(date '+%H:%M:%S')] Build concluída com sucesso! Recarregando navegador..."
+        echo "✅ [$(date '+%H:%M:%S')] Build concluída com sucesso em dist/! Recarregando navegador..."
         return 0
     else
         echo "❌ [$(date '+%H:%M:%S')] Falha na compilação do Rust/Wasm!"
@@ -73,24 +75,29 @@ echo "======================================================================"
 # 1. Executa build inicial
 build_wasm || true
 
-# 2. Inicia o servidor Python com suporte a LiveReload em background
+# 2. Inicia o servidor Python com suporte a LiveReload em background servindo dist/
 echo "🚀 Iniciando servidor local na porta $PORT..."
-PORT="$PORT" python3 "$UI_DIR/server.py" &
+PORT="$PORT" python3 "$UI_DIR/server.py" "$DIST_DIR" &
 SERVER_PID=$!
 
 # Aguarda inicialização do servidor
 sleep 0.5
 echo "🌐 Acesso local disponível em: http://localhost:$PORT"
 
-# 3. Define diretórios e arquivos monitorados
+# 3. Define diretórios e arquivos monitorados (estritamente fontes, sem dist)
 WATCH_PATHS=(
     "$PROJECT_ROOT/engine/src"
     "$PROJECT_ROOT/engine/Cargo.toml"
     "$PROJECT_ROOT/ui/src"
     "$PROJECT_ROOT/ui/assets"
-    "$PROJECT_ROOT/ui/index.html"
+    "$PROJECT_ROOT/ui/app.html"
+    "$PROJECT_ROOT/ui/simulador.html"
     "$PROJECT_ROOT/ui/Cargo.toml"
     "$PROJECT_ROOT/ui/build.rs"
+    "$PROJECT_ROOT/README.md"
+    "$PROJECT_ROOT/ROADMAP.md"
+    "$PROJECT_ROOT/ARCHITECTURE.md"
+    "$PROJECT_ROOT/docs"
     "$PROJECT_ROOT/VERSION"
 )
 
@@ -107,7 +114,7 @@ echo "======================================================================"
 
 # 4. Inicia watcher em background enviando eventos para a FIFO
 inotifywait -m -r -q -e modify,create,delete,move \
-    --exclude '(\.git|target|pkg|\.build_id|\.swp|~)' \
+    --exclude '(\.git|target|pkg|dist|\.build_id|\.swp|~)' \
     "${EXISTING_WATCH_PATHS[@]}" > "$FIFO" 2>/dev/null &
 WATCHER_PID=$!
 
@@ -118,4 +125,8 @@ while read -r event; do
         :
     done
     build_wasm || true
+    # Drena qualquer eco gerado durante o processo de compilação
+    while read -t 0.1 -r _; do
+        :
+    done
 done < "$FIFO"

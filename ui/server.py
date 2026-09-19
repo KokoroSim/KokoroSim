@@ -4,8 +4,17 @@ import os
 import sys
 
 PORT = int(os.environ.get("PORT", 8081))
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-BUILD_ID_FILE = os.path.join(BASE_DIR, ".build_id")
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DIST_DIR = os.path.join(PROJECT_ROOT, "dist")
+
+if len(sys.argv) > 1 and os.path.isdir(sys.argv[1]):
+    SERVE_DIR = os.path.abspath(sys.argv[1])
+elif os.path.isdir(DIST_DIR):
+    SERVE_DIR = DIST_DIR
+else:
+    SERVE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+BUILD_ID_FILE = os.path.join(SERVE_DIR, ".build_id")
 
 LIVERELOAD_SNIPPET = b"""
     <!-- Injetado dinamicamente pelo KokoroSim Dev Server (apenas em dev local) -->
@@ -16,16 +25,18 @@ LIVERELOAD_SNIPPET = b"""
                 try {
                     const res = await fetch('/__livereload__?t=' + Date.now());
                     if (res.ok) {
-                        const id = await res.text();
-                        if (lastBuildId !== null && id !== lastBuildId) {
+                        const id = (await res.text()).trim();
+                        if (lastBuildId !== null && id && id !== '0' && id !== lastBuildId) {
                             console.log('[KokoroSim Dev] Nova build detectada (' + id + '). Recarregando...');
                             window.location.reload();
                             return;
                         }
-                        lastBuildId = id;
+                        if (id && id !== '0') {
+                            lastBuildId = id;
+                        }
                     }
                 } catch (_) {}
-                setTimeout(pollLiveReload, 800);
+                setTimeout(pollLiveReload, 1500);
             }
             pollLiveReload();
         })();
@@ -35,7 +46,7 @@ LIVERELOAD_SNIPPET = b"""
 
 class DevServerHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, directory=BASE_DIR, **kwargs)
+        super().__init__(*args, directory=SERVE_DIR, **kwargs)
 
     def do_GET(self):
         if self.path.startswith("/ui/"):
@@ -96,7 +107,7 @@ socketserver.TCPServer.allow_reuse_address = True
 if __name__ == "__main__":
     try:
         with socketserver.TCPServer(("", PORT), DevServerHandler) as httpd:
-            print(f"🚀 KokoroSim Dev Server rodando em http://localhost:{PORT} (LiveReload ativo)", flush=True)
+            print(f"🚀 KokoroSim Dev Server rodando em http://localhost:{PORT} (servindo {SERVE_DIR})", flush=True)
             httpd.serve_forever()
     except KeyboardInterrupt:
         print("\n🛑 Servidor finalizado com sucesso.", flush=True)
