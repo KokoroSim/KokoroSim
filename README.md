@@ -1,23 +1,36 @@
-# KokoroSim 🌸: Simulador Eletrofisiológico Cardíaco em Tempo Real
+<p align="center">
+  <img src="ui/assets/logo.png" width="220" alt="KokoroSim">
+</p>
 
-[![Deploy to GitHub Pages](https://github.com/KokoroSim/kokorosim/actions/workflows/deploy.yml/badge.svg)](https://kokorosim.github.io/)
-[![Licença: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Rust](https://img.shields.io/badge/Rust-2021_Edition-orange.svg?logo=rust)](https://www.rust-lang.org/)
-[![WebAssembly](https://img.shields.io/badge/WebAssembly-WASM-purple.svg?logo=webassembly)](https://webassembly.org/)
-[![Dioxus](https://img.shields.io/badge/UI-Dioxus_0.6-00cec9.svg)](https://dioxuslabs.com/)
-[![Mobile Optimized](https://img.shields.io/badge/Hardware-Mobile_%26_Low--Power-success.svg)](#-arquitetura-de-software)
-[![Acessibilidade](https://img.shields.io/badge/Acessibilidade-Neurodivergente--Friendly-brightgreen.svg)](#-modos-de-visualização-do-osciloscópio-e-onda-fantasma)
+<h1 align="center" style="font-size: 2.8rem; letter-spacing: 2px; margin-top: 4px; margin-bottom: 4px;">
+  kokor<span style="color: #ff1754;">心</span><span style="color: #00cec9;">sim</span>
+</h1>
 
-O **KokoroSim 🌸** é um projeto de código aberto dedicado à simulação biofísica da eletrofisiologia celular cardíaca e hemodinâmica ventricular em tempo real diretamente no navegador web. Desenvolvido inicialmente como projeto pessoal, evoluiu para uma ferramenta que pode auxiliar o ensino e a pesquisa no Brasil, sendo construído em **Rust** e compilado para **WebAssembly (WASM)** com interface declarativa reativa em **Dioxus**. O motor numérico resolve mais de 160 equações diferenciais ordinárias (EDOs) e variáveis de estado simultaneamente utilizando o método numérico híbrido de **Rush-Larsen** a $dt = 0.01\text{ ms}$ (1.600 passos por quadro de 16 ms a 60 FPS), assegurando execução em **1x tempo real** com baixíssimo consumo de CPU (**< 5-10%**) em smartphones, tablets, notebooks e computadores de laboratórios acadêmicos, sem depender de placas gráficas dedicadas.
+<p align="center" style="font-size: 1.25rem; font-weight: 500; color: #a4b0be; margin-top: 0; margin-bottom: 18px;">
+  Simulador Eletrofisiológico Cardíaco em Tempo Real
+</p>
+
+<p align="center">
+  <a href="https://kokorosim.github.io/"><img alt="Deploy to GitHub Pages" src="https://github.com/KokoroSim/KokoroSim/actions/workflows/deploy.yml/badge.svg"></a>
+  <a href="https://www.gnu.org/licenses/gpl-3.0"><img alt="Licença: GPL v3" src="https://img.shields.io/badge/License-GPLv3-blue.svg"></a>
+  <a href="https://www.rust-lang.org/"><img alt="Rust" src="https://img.shields.io/badge/Rust-2021_Edition-orange.svg?logo=rust"></a>
+  <a href="https://webassembly.org/"><img alt="WebAssembly" src="https://img.shields.io/badge/WebAssembly-WASM-purple.svg?logo=webassembly"></a>
+  <a href="https://dioxuslabs.com/"><img alt="Dioxus" src="https://img.shields.io/badge/UI-Dioxus_0.6-00cec9.svg"></a>
+  <a href="#-arquitetura-de-software"><img alt="Mobile Optimized" src="https://img.shields.io/badge/Hardware-Mobile_%26_Low--Power-success.svg"></a>
+  <a href="#-modos-de-visualização-do-osciloscópio-e-onda-fantasma"><img alt="Acessibilidade" src="https://img.shields.io/badge/Acessibilidade-Neurodivergente--Friendly-brightgreen.svg"></a>
+</p>
+
+O **kokor<span style="color: #ff1754;">心</span><span style="color: #00cec9;">sim</span>** é um projeto de código aberto dedicado à simulação biofísica da eletrofisiologia celular cardíaca e hemodinâmica ventricular em tempo real diretamente no navegador web. Desenvolvido inicialmente como projeto pessoal, evoluiu para uma ferramenta que pode auxiliar o ensino e a pesquisa no Brasil, sendo construído em **Rust** e compilado para **WebAssembly (WASM)** com interface declarativa reativa em **Dioxus**. O motor numérico resolve mais de 160 equações diferenciais ordinárias (EDOs) e variáveis de estado simultaneamente utilizando o método numérico híbrido de **Rush-Larsen** a $dt = 0.01\text{ ms}$ (1.600 passos por quadro de 16 ms a 60 FPS), assegurando execução em **1x tempo real** com baixíssimo consumo de CPU (**< 5-10%**) em smartphones, tablets, notebooks e computadores de laboratórios acadêmicos, sem depender de placas gráficas dedicadas.
 
 ---
 
 ## 🧭 Navegação e Documentação do Projeto
 * 🚀 **[Abrir Simulador Interativo (Web App)](app.html)**
+* 🧬 **[Modelos Biofísicos e Referências Científicas](docs/modelos.md)**: Equações completas, formulações de gating e modelos CellML validados.
 * 🎓 **[Roteiro de Aulas Práticas para Universidades](docs/roteiro_aulas_praticas.md)**: 4 experimentos completos para Fisiologia e Farmacologia.
-* 🗺️ **[Roadmap de Desenvolvimento (ROADMAP.md)](ROADMAP.md)**: Fases concluídas e planejamento de expansão 2D/3D.
-* 🏛️ **[Decisões de Arquitetura (ARCHITECTURE.md)](ARCHITECTURE.md)**: Justificativas biofísicas, matemáticas e de engenharia.
-* 📜 **[Como Citar o KokoroSim (CITATION.cff)](CITATION.cff)**: Metadados formais para TCCs, dissertações e artigos científicos.
+* 🗺️ **[Roadmap de Desenvolvimento](ROADMAP.md)**: Fases concluídas da v2.0 e expansão espacial para a v2.1+.
+* 🏛️ **[Decisões de Arquitetura e Engenharia](ARCHITECTURE.md)**: Justificativas biofísicas, matemáticas e de engenharia de software.
+* 📜 **[Como Citar o KokoroSim](CITATION.cff)**: Normas ABNT, Vancouver, BibTeX e metadados formais.
 
 ---
 
@@ -25,55 +38,15 @@ O **KokoroSim 🌸** é um projeto de código aberto dedicado à simulação bio
 
 O simulador implementa 7 modelos biofísicos padrão-ouro validados pela literatura científica internacional e pelo consórcio [Physiome Model Repository (CellML)](https://models.physiomeproject.org/):
 
-1. **Nó Sinoatrial (SA) — Marcapasso Primário:**
-   - **Modelo:** Severi et al. (2012)
-   - **Artigo:** *An updated computational model of rabbit sinoatrial action potential to investigate the mechanisms of heart rate modulation.* J Physiol. 2012;590(18):4483-4499.
-   - **Repositório CellML:** [PMR Model e/144](https://models.physiomeproject.org/e/144/)
-   - **Identificadores:** [PubMed 22711956](https://pubmed.ncbi.nlm.nih.gov/22711956/) | [DOI 10.1113/jphysiol.2012.234385](https://doi.org/10.1113/jphysiol.2012.234385)
-   - **Função:** Gera o automatismo elétrico biológico (Fase 4 despolarizante espontânea) impulsionado pelo "relógio de membrana" (corrente *funny* $I_f$) e "relógio de cálcio" intracelular ($I_{Ca,L}$, $I_{Ca,T}$ e NCX). Modulado por receptores autonômicos $\beta_1$ e $M_2$.
+1. **Nó Sinoatrial (SA) — Marcapasso Primário:** Severi et al. (2012) — Automatismo biológico acoplado aos relógios de membrana ($I_f$) e cálcio ($I_{Ca,L}$, $I_{Ca,T}$, $I_{NCX}$) com modulação autonômica cronotrópica ($\beta_1$ e $M_2$).
+2. **Músculo Atrial Humano:** Courtemanche, Ramirez, Nattel (1998) — Miócitos atriais de resposta rápida e repolarização dependente de $I_{Kur}$, gerando a **Onda P** do ECG.
+3. **Nó Atrioventricular (AV) — Filtro e Retardo:** Inada et al. (2009) — Retardo nodal fisiológico dependente de cálcio (intervalo PR) e condução decremental protetora.
+4. **Fibras de Purkinje e Feixe de His:** Stewart et al. (2009) — Condução hisiana ultrarrápida ($dV/dt > 400\text{ V/s}$) e automatismo terciário de escape idioventricular (~25–35 BPM).
+5. **Músculo Ventricular com Heterogeneidade Transmural:** ten Tusscher & Panfilov (2006) — Subtipos Endocárdio, Célula M e Epicárdio reproduzindo o complexo QRS e a **Onda T positiva concordante** do ECG.
+6. **Fibroblastos Cardíacos e Fibrose:** MacCannell et al. (2007) — Acoplamento eletrotônico miócito-fibroblasto via *gap junctions*, dreno capacitivo e lentificação na condução.
+7. **Acoplamento Eletromecânico e Hemodinâmica:** Elastância de Suga & Sagawa (1974) e Circulação Arterial Windkessel de Westerhof et al. (2009) — Curvas dinâmicas de pressão ventricular ($LVP$) e aórtica ($AoP$) com incisura dicrótica e bulhas cardíacas (B1/B2).
 
-2. **Músculo Atrial Humano:**
-   - **Modelo:** Courtemanche, Ramirez, Nattel (1998)
-   - **Artigo:** *Ionic mechanisms underlying human atrial action potential properties: insights from a mathematical model.* Am J Physiol. 1998;275(1):H301-H321.
-   - **Repositório CellML:** [PMR Model e/286](https://models.physiomeproject.org/e/286/courtemanche_ramirez_nattel_1998.cellml)
-   - **Identificadores:** [PubMed 9688927](https://pubmed.ncbi.nlm.nih.gov/9688927/) | [DOI 10.1152/ajpheart.1998.275.1.H301](https://doi.org/10.1152/ajpheart.1998.275.1.H301)
-   - **Função:** Miócitos atriais de resposta rápida, caracterizados por ascensão rápida via canais rápidos de sódio ($I_{Na}$), platô intermediário e repolarização dependente de canais ultrarrápidos de potássio ($I_{Kur}$). Gera a **Onda P** do ECG.
-
-3. **Nó Atrioventricular (AV) — Filtro e Retardo Fisiológico:**
-   - **Modelo:** Inada et al. (2009)
-   - **Artigo:** *One-dimensional mathematical model of the atrioventricular node including the atrioventricular ring and bundle of His.* Biophys J. 2009;97(8):2117-2127.
-   - **Repositório CellML:** [PMR Model e/55](https://models.physiomeproject.org/e/55/inada_hancox_zhang_boyett_2009.cellml)
-   - **Identificadores:** [PubMed 19843444](https://pubmed.ncbi.nlm.nih.gov/19843444/) | [DOI 10.1016/j.bpj.2009.06.056](https://doi.org/10.1016/j.bpj.2009.06.056)
-   - **Função:** Retardo nodal essencial para o enchimento ventricular diastólico (intervalo PR). Resposta lenta dependente de $I_{Ca,L}$ com condução decremental frequência-dependente.
-
-4. **Fibras de Purkinje e Feixe de His — Condução Rápida e Marcapasso Terciário:**
-   - **Modelo:** Stewart et al. (2009)
-   - **Artigo:** *Mathematical model of the electrical action potential of the human Purkinje cell.* Biophys J. 2009;96(9):3493-3507.
-   - **Repositório CellML:** [PMR Model e/7e](https://models.physiomeproject.org/e/7e/stewart_aslanidi_noble_noble_boyett_zhang_2009.cellml)
-   - **Identificadores:** [PubMed 19413956](https://pubmed.ncbi.nlm.nih.gov/19413956/) | [DOI 10.1016/j.bpj.2009.01.047](https://doi.org/10.1016/j.bpj.2009.01.047)
-   - **Função:** Condução ultrarrápida hisiana ($dV/dt > 400\text{ V/s}$), entalhe precoce acentuado ($I_{to}$, $I_{sus}$) e corrente marcapasso $I_f$ residual de escape idioventricular (~25–35 BPM).
-
-5. **Músculo Ventricular com Heterogeneidade Transmural:**
-   - **Modelo:** ten Tusscher & Panfilov (2006)
-   - **Artigo:** *Alternans and spiral breakup in a human ventricular tissue model.* Am J Physiol Heart Circ Physiol. 2006;291(3):H1088-H1100.
-   - **Repositório CellML:** [PMR Model e/210](https://models.physiomeproject.org/e/210/tentusscher_panfilov_2006_m.cellml)
-   - **Identificadores:** [PubMed 16565318](https://pubmed.ncbi.nlm.nih.gov/16565318/) | [DOI 10.1152/ajpheart.00109.2006](https://doi.org/10.1152/ajpheart.00109.2006)
-   - **Função:** Modela as três camadas da parede livre ventricular:
-     - **Endocárdio:** Densidade de $I_{to}$ baixa, ativado primeiro via Purkinje.
-     - **Célula M:** Densidade de $I_{Ks}$ reduzida e platô mais longo de todas as camadas.
-     - **Epicárdio:** Densidade de $I_{to}$ proeminente e **APD mais curto**. É o último a despolarizar e o **primeiro a repolarizar**, gerando a **Onda T positiva concordante** no ECG.
-
-6. **Fibroblastos Cardíacos e Miofibroblastos:**
-   - **Modelo:** MacCannell et al. (2007)
-   - **Artigo:** *A mathematical model of electrotonic interactions between ventricular myocytes and fibroblasts.* Biophys J. 2007;92(11):4121-4132.
-   - **Repositório CellML:** [PMR Model e/98](https://models.physiomeproject.org/e/98/maccannell_bazzazi_chilton_shibukawa_clark_giles_2007.cellml)
-   - **Identificadores:** [PubMed 17351008](https://pubmed.ncbi.nlm.nih.gov/17351008/) | [DOI 10.1529/biophysj.106.101410](https://doi.org/10.1529/biophysj.106.101410)
-   - **Função:** Células não-excitáveis com repouso alto ($-38\text{ mV}$) que se acoplam eletrotonicamente aos miócitos por conexinas ($G_{gap}$ até $4.0\text{ nS}$), exercendo efeito de dreno capacitivo e lentificação na condução proporcional à fibrose.
-
-7. **Acoplamento Eletromecânico e Hemodinâmica (Diagrama de Wiggers):**
-   - **Modelos:** Elastância Ventricular Variável no Tempo (Suga & Sagawa, 1974) e Circulação Arterial Windkessel de 3 elementos (Westerhof et al., 2009).
-   - **Identificadores:** [PubMed 4841253](https://pubmed.ncbi.nlm.nih.gov/4841253/) (Suga & Sagawa) | [PubMed 19194725](https://pubmed.ncbi.nlm.nih.gov/19194725/) (Westerhof)
-   - **Função:** Transiente de $[Ca^{2+}]_i$ acoplado à elastância ventricular para calcular a Pressão Ventricular Esquerda ($LVP$, 0-140 mmHg), Pressão Aórtica ($AoP$) com incisura dicrótica e dinâmica valvar das cúspides mitral e aórtica.
+> 🔬 **Documentação Científica Completa:** Para consultar as equações diferenciais detalhadas, formulações de correntes iônicas, links para o PubMed/DOI e repositórios computacionais CellML, acesse a página de **[Modelos Biofísicos e Referências Científicas](docs/modelos.md)**.
 
 ---
 
@@ -180,8 +153,15 @@ O quarto canal do osciloscópio exibe em tempo real o núcleo mecânico do **Dia
 
 ## 📖 Citação Acadêmica
 
-Se você utilizar o KokoroSim em pesquisas científicas, aulas práticas, monografias, dissertações, teses ou publicações acadêmicas, por favor cite conforme as diretrizes do arquivo [`CITATION.cff`](CITATION.cff):
+Se você utilizar o KokoroSim em pesquisas científicas, aulas práticas, monografias, dissertações, teses ou publicações acadêmicas, por favor cite conforme os formatos abaixo ou utilize os metadados do arquivo [`CITATION.cff`](CITATION.cff):
 
+### Formato ABNT (NBR 6023:2018)
+> FREITAS, Lumen Muller Lohn. **KokoroSim: Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real**. Versão 2.0.0. Florianópolis: Universidade Federal de Santa Catarina (UFSC), 2026. Disponível em: <https://kokorosim.github.io/>. Acesso em: [data de acesso].
+
+### Formato Vancouver
+> Freitas LML. KokoroSim: Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real [software na Internet]. Versão 2.0.0. Florianópolis: Universidade Federal de Santa Catarina; 2026 [citado em ano mês dia]. Disponível em: https://kokorosim.github.io/
+
+### Formato BibTeX
 ```bibtex
 @software{freitas2026kokorosim,
   author       = {Freitas, Lumen Muller Lohn},
@@ -189,7 +169,7 @@ Se você utilizar o KokoroSim em pesquisas científicas, aulas práticas, monogr
   year         = {2026},
   publisher    = {GitHub},
   journal      = {GitHub repository},
-  howpublished = {\url{https://github.com/KokoroSim/kokorosim}},
+  howpublished = {\url{https://github.com/KokoroSim/KokoroSim}},
   url          = {https://kokorosim.github.io/}
 }
 ```

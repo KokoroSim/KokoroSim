@@ -3,24 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sobre e Documentação — KokoroSim 🌸</title>
+    <title>KokoroSim — Simulador Eletrofisiológico Cardíaco em Tempo Real</title>
+    <link rel="icon" type="image/png" href="assets/icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            }
+        };
+    </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
         :root {
-            --bg-main: #0a0a0c;
-            --bg-card: #121216;
-            --border: #22222a;
+            --bg-main: #090a0f;
+            --bg-card: #10121a;
+            --border: #1c202d;
+            --border-tech: #2a3144;
             --text-main: #e2e8f0;
-            --text-muted: #94a3b8;
-            --neon-cyan: #00cec9;
-            --neon-yellow: #f1c40f;
-            --neon-coral: #ff7675;
-            --neon-green: #2ecc71;
-            --code-bg: #181820;
+            --text-muted: #8493a8;
+            --neon-carmine: #ff1754;
+            --carmine-glow: rgba(255, 23, 84, 0.45);
+            --neon-cyan: #00f2fe;
+            --cyan-glow: rgba(0, 242, 254, 0.4);
+            --neon-amber: #ffd32a;
+            --neon-green: #05c46b;
+            --code-bg: #141724;
         }
 
         * {
@@ -33,105 +49,163 @@
             background-color: var(--bg-main);
             color: var(--text-main);
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            line-height: 1.68;
+            line-height: 1.7;
             font-size: 16px;
             padding-bottom: 60px;
+            background-image: 
+                linear-gradient(rgba(28, 32, 45, 0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(28, 32, 45, 0.15) 1px, transparent 1px);
+            background-size: 32px 32px;
         }
 
         nav.top-nav {
             position: sticky;
             top: 0;
             z-index: 1000;
-            background: rgba(10, 10, 12, 0.88);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--border);
+            background: rgba(9, 10, 15, 0.94);
+            backdrop-filter: blur(12px);
+            border-bottom: 2px solid var(--border-tech);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 12px 24px;
+            padding: 10px 24px;
             max-width: 100%;
         }
 
         .brand {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 1.15rem;
+            gap: 10px;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 1.25rem;
             font-weight: 700;
             color: #fff;
             text-decoration: none;
+            letter-spacing: 0.05em;
         }
 
-        .brand span.pulse {
+        .brand-logo {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 8px var(--carmine-glow));
+        }
+
+        .brand-kanji {
+            color: var(--neon-carmine);
+            text-shadow: 0 0 10px var(--carmine-glow);
+            font-weight: 900;
+            margin: 0 1px;
+        }
+
+        .brand-sim {
             color: var(--neon-cyan);
+            text-shadow: 0 0 8px var(--cyan-glow);
+            font-weight: 700;
         }
 
         .nav-links {
             display: flex;
-            gap: 16px;
+            gap: 14px;
             align-items: center;
             flex-wrap: wrap;
+            font-family: 'Chakra Petch', sans-serif;
         }
 
         .nav-links a {
             color: var(--text-muted);
             text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: color 0.2s;
-            padding: 4px 8px;
-            border-radius: 4px;
+            font-size: 0.92rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            padding: 6px 12px;
+            border: 1px solid transparent;
+            clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
         }
 
         .nav-links a:hover, .nav-links a.active {
-            color: var(--neon-cyan);
-            background: rgba(0, 206, 201, 0.08);
+            color: #ffffff;
+            border-color: var(--neon-cyan);
+            background: rgba(0, 242, 254, 0.12);
+            box-shadow: 0 0 12px var(--cyan-glow);
+            text-shadow: 0 0 6px var(--cyan-glow);
         }
 
         .nav-links a.btn-app {
-            background: var(--neon-cyan);
-            color: #000;
+            background: linear-gradient(135deg, var(--neon-carmine), #d61346);
+            color: #ffffff;
             font-weight: 700;
-            padding: 6px 14px;
-            border-radius: 6px;
+            padding: 7px 18px;
+            border: 1px solid #ff4d79;
+            box-shadow: 0 0 15px var(--carmine-glow);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .nav-links a.btn-app:hover {
-            background: #81ecec;
-            color: #000;
+            background: linear-gradient(135deg, #ff4375, var(--neon-carmine));
+            box-shadow: 0 0 24px var(--neon-carmine);
+            transform: translateY(-1px);
         }
 
         main.doc-container {
-            max-width: 920px;
+            max-width: 960px;
             margin: 36px auto;
-            padding: 0 20px;
+            padding: 0 24px;
         }
 
         h1, h2, h3, h4, h5, h6 {
+            font-family: 'Chakra Petch', sans-serif;
             color: #ffffff;
             font-weight: 700;
             margin-top: 1.8em;
             margin-bottom: 0.6em;
-            letter-spacing: -0.02em;
+            letter-spacing: 0.02em;
         }
 
         h1 {
-            font-size: 2.2rem;
-            border-bottom: 1px solid var(--border);
+            font-size: 2.3rem;
+            border-bottom: 2px solid var(--border-tech);
             padding-bottom: 12px;
             margin-top: 0.5em;
-            color: var(--neon-cyan);
+            color: #ffffff;
+            text-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+
+        h1::after {
+            content: "";
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 80px;
+            height: 2px;
+            background: var(--neon-carmine);
+            box-shadow: 0 0 8px var(--neon-carmine);
+        }
+
+        h1[align="center"] {
+            border-bottom: none;
+            padding-bottom: 0;
+            text-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
+        }
+
+        h1[align="center"]::after {
+            display: none;
         }
 
         h2 {
-            font-size: 1.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 1.55rem;
+            border-bottom: 1px solid var(--border);
             padding-bottom: 8px;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 8px rgba(0, 242, 254, 0.25);
         }
 
         h3 {
             font-size: 1.25rem;
-            color: var(--neon-yellow);
+            color: var(--neon-amber);
         }
 
         p {
@@ -143,10 +217,13 @@
             color: var(--neon-cyan);
             text-decoration: none;
             transition: 0.2s;
+            border-bottom: 1px dotted rgba(0, 242, 254, 0.4);
         }
 
         a:hover {
-            text-decoration: underline;
+            color: #80fbff;
+            text-shadow: 0 0 8px var(--cyan-glow);
+            border-bottom-color: var(--neon-cyan);
         }
 
         ul, ol {
@@ -160,32 +237,37 @@
 
         hr {
             border: none;
-            border-top: 1px solid var(--border);
-            margin: 2em 0;
+            border-top: 1px solid var(--border-tech);
+            margin: 2.2em 0;
+            position: relative;
         }
 
         pre {
             background: var(--code-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
+            border: 1px solid var(--border-tech);
+            border-left: 3px solid var(--neon-cyan);
+            border-radius: 4px;
             padding: 16px;
             overflow-x: auto;
             margin-bottom: 1.4em;
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.88rem;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
         }
 
         code {
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.9em;
-            background: rgba(255, 255, 255, 0.07);
+            background: rgba(255, 255, 255, 0.08);
             padding: 2px 6px;
-            border-radius: 4px;
-            color: #ffd166;
+            border-radius: 3px;
+            color: #ffd32a;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         pre code {
             background: none;
+            border: none;
             padding: 0;
             color: inherit;
         }
@@ -193,47 +275,58 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 1.5em 0;
+            margin: 1.8em 0;
             background: var(--bg-card);
-            border-radius: 8px;
+            border-radius: 4px;
             overflow: hidden;
-            border: 1px solid var(--border);
+            border: 1px solid var(--border-tech);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
         }
 
         th, td {
-            padding: 10px 14px;
+            padding: 11px 16px;
             text-align: left;
             border-bottom: 1px solid var(--border);
             font-size: 0.92rem;
         }
 
         th {
-            background: rgba(255, 255, 255, 0.04);
+            font-family: 'Chakra Petch', sans-serif;
+            background: rgba(28, 32, 45, 0.6);
             color: var(--neon-cyan);
-            font-weight: 600;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            font-size: 0.85rem;
         }
 
         tr:hover {
-            background: rgba(255, 255, 255, 0.02);
+            background: rgba(0, 242, 254, 0.03);
         }
 
         blockquote {
-            border-left: 3px solid var(--neon-cyan);
-            background: rgba(0, 206, 201, 0.05);
-            padding: 12px 16px;
-            margin: 1.2em 0;
-            border-radius: 0 6px 6px 0;
-            color: var(--text-muted);
+            border-left: 3px solid var(--neon-carmine);
+            background: rgba(255, 23, 84, 0.06);
+            padding: 14px 18px;
+            margin: 1.4em 0;
+            border-radius: 0 4px 4px 0;
+            color: var(--text-main);
+            box-shadow: inset 0 0 12px rgba(255, 23, 84, 0.04);
         }
 
         footer {
-            max-width: 920px;
+            max-width: 960px;
             margin: 60px auto 0 auto;
-            padding-top: 20px;
-            border-top: 1px solid var(--border);
+            padding: 24px 20px 0 20px;
+            border-top: 1px solid var(--border-tech);
             text-align: center;
             font-size: 0.85rem;
             color: var(--text-muted);
+            font-family: 'Chakra Petch', sans-serif;
+        }
+
+        footer p {
+            margin-bottom: 6px;
         }
 
         @media (max-width: 768px) {
@@ -252,11 +345,13 @@
 <body>
     <nav class="top-nav">
         <a href="./index.html" class="brand">
-            🌸 <span class="pulse">KokoroSim</span>
+            <img src="assets/icon.png" alt="KokoroSim" class="brand-logo">
+            <span>kokor<span class="brand-kanji">心</span><span class="brand-sim">sim</span></span>
         </a>
         <div class="nav-links">
             <a href="./app.html" class="btn-app">🚀 Simulador Web</a>
             <a href="./index.html" class="active">📖 Sobre</a>
+            <a href="./modelos.html" class="">🧬 Modelos</a>
             <a href="./roteiro.html" class="">🎓 Roteiro Prático</a>
             <a href="./roadmap.html" class="">🗺️ Roadmap</a>
             <a href="./arquitetura.html" class="">🏛️ Arquitetura</a>
@@ -264,98 +359,54 @@
         </div>
     </nav>
     <main class="doc-container">
-        <h1 id="kokorosim-simulador-eletrofisiologico-cardiaco-em-tempo-real">KokoroSim 🌸: Simulador Eletrofisiológico Cardíaco em Tempo Real</h1>
-<p><a href="https://kokorosim.github.io/"><img alt="Deploy to GitHub Pages" src="https://github.com/KokoroSim/kokorosim/actions/workflows/deploy.yml/badge.svg" /></a>
-<a href="https://www.gnu.org/licenses/gpl-3.0"><img alt="Licença: GPL v3" src="https://img.shields.io/badge/License-GPLv3-blue.svg" /></a>
-<a href="https://www.rust-lang.org/"><img alt="Rust" src="https://img.shields.io/badge/Rust-2021_Edition-orange.svg?logo=rust" /></a>
-<a href="https://webassembly.org/"><img alt="WebAssembly" src="https://img.shields.io/badge/WebAssembly-WASM-purple.svg?logo=webassembly" /></a>
-<a href="https://dioxuslabs.com/"><img alt="Dioxus" src="https://img.shields.io/badge/UI-Dioxus_0.6-00cec9.svg" /></a>
-<a href="#-arquitetura-de-software"><img alt="Mobile Optimized" src="https://img.shields.io/badge/Hardware-Mobile_%26_Low--Power-success.svg" /></a>
-<a href="#-modos-de-visualização-do-osciloscópio-e-onda-fantasma"><img alt="Acessibilidade" src="https://img.shields.io/badge/Acessibilidade-Neurodivergente--Friendly-brightgreen.svg" /></a></p>
-<p>O <strong>KokoroSim 🌸</strong> é um projeto de código aberto dedicado à simulação biofísica da eletrofisiologia celular cardíaca e hemodinâmica ventricular em tempo real diretamente no navegador web. Desenvolvido inicialmente como projeto pessoal, evoluiu para uma ferramenta que pode auxiliar o ensino e a pesquisa no Brasil, sendo construído em <strong>Rust</strong> e compilado para <strong>WebAssembly (WASM)</strong> com interface declarativa reativa em <strong>Dioxus</strong>. O motor numérico resolve mais de 160 equações diferenciais ordinárias (EDOs) e variáveis de estado simultaneamente utilizando o método numérico híbrido de <strong>Rush-Larsen</strong> a $dt = 0.01\text{ ms}$ (1.600 passos por quadro de 16 ms a 60 FPS), assegurando execução em <strong>1x tempo real</strong> com baixíssimo consumo de CPU (<strong>&lt; 5-10%</strong>) em smartphones, tablets, notebooks e computadores de laboratórios acadêmicos, sem depender de placas gráficas dedicadas.</p>
+        <p align="center">
+  <img src="assets/logo.png" width="220" alt="KokoroSim">
+</p>
+
+<h1 align="center" style="font-size: 2.8rem; letter-spacing: 2px; margin-top: 4px; margin-bottom: 4px;">
+  kokor<span style="color: #ff1754;">心</span><span style="color: #00cec9;">sim</span>
+</h1>
+
+<p align="center" style="font-size: 1.25rem; font-weight: 500; color: #a4b0be; margin-top: 0; margin-bottom: 18px;">
+  Simulador Eletrofisiológico Cardíaco em Tempo Real
+</p>
+
+<p align="center">
+  <a href="https://kokorosim.github.io/"><img alt="Deploy to GitHub Pages" src="https://github.com/KokoroSim/KokoroSim/actions/workflows/deploy.yml/badge.svg"></a>
+  <a href="https://www.gnu.org/licenses/gpl-3.0"><img alt="Licença: GPL v3" src="https://img.shields.io/badge/License-GPLv3-blue.svg"></a>
+  <a href="https://www.rust-lang.org/"><img alt="Rust" src="https://img.shields.io/badge/Rust-2021_Edition-orange.svg?logo=rust"></a>
+  <a href="https://webassembly.org/"><img alt="WebAssembly" src="https://img.shields.io/badge/WebAssembly-WASM-purple.svg?logo=webassembly"></a>
+  <a href="https://dioxuslabs.com/"><img alt="Dioxus" src="https://img.shields.io/badge/UI-Dioxus_0.6-00cec9.svg"></a>
+  <a href="#-arquitetura-de-software"><img alt="Mobile Optimized" src="https://img.shields.io/badge/Hardware-Mobile_%26_Low--Power-success.svg"></a>
+  <a href="#-modos-de-visualização-do-osciloscópio-e-onda-fantasma"><img alt="Acessibilidade" src="https://img.shields.io/badge/Acessibilidade-Neurodivergente--Friendly-brightgreen.svg"></a>
+</p>
+
+<p>O <strong>kokor<span style="color: #ff1754;">心</span><span style="color: #00cec9;">sim</span></strong> é um projeto de código aberto dedicado à simulação biofísica da eletrofisiologia celular cardíaca e hemodinâmica ventricular em tempo real diretamente no navegador web. Desenvolvido inicialmente como projeto pessoal, evoluiu para uma ferramenta que pode auxiliar o ensino e a pesquisa no Brasil, sendo construído em <strong>Rust</strong> e compilado para <strong>WebAssembly (WASM)</strong> com interface declarativa reativa em <strong>Dioxus</strong>. O motor numérico resolve mais de 160 equações diferenciais ordinárias (EDOs) e variáveis de estado simultaneamente utilizando o método numérico híbrido de <strong>Rush-Larsen</strong> a $dt = 0.01\text{ ms}$ (1.600 passos por quadro de 16 ms a 60 FPS), assegurando execução em <strong>1x tempo real</strong> com baixíssimo consumo de CPU (<strong>&lt; 5-10%</strong>) em smartphones, tablets, notebooks e computadores de laboratórios acadêmicos, sem depender de placas gráficas dedicadas.</p>
 <hr />
 <h2 id="navegacao-e-documentacao-do-projeto">🧭 Navegação e Documentação do Projeto</h2>
 <ul>
 <li>🚀 <strong><a href="app.html">Abrir Simulador Interativo (Web App)</a></strong></li>
+<li>🧬 <strong><a href="./modelos.html">Modelos Biofísicos e Referências Científicas</a></strong>: Equações completas, formulações de gating e modelos CellML validados.</li>
 <li>🎓 <strong><a href="./roteiro.html">Roteiro de Aulas Práticas para Universidades</a></strong>: 4 experimentos completos para Fisiologia e Farmacologia.</li>
-<li>🗺️ <strong><a href="./roadmap.html">Roadmap de Desenvolvimento (./roadmap.html)</a></strong>: Fases concluídas e planejamento de expansão 2D/3D.</li>
-<li>🏛️ <strong><a href="./arquitetura.html">Decisões de Arquitetura (./arquitetura.html)</a></strong>: Justificativas biofísicas, matemáticas e de engenharia.</li>
-<li>📜 <strong><a href="CITATION.cff">Como Citar o KokoroSim (CITATION.cff)</a></strong>: Metadados formais para TCCs, dissertações e artigos científicos.</li>
+<li>🗺️ <strong><a href="./roadmap.html">Roadmap de Desenvolvimento</a></strong>: Fases concluídas da v2.0 e expansão espacial para a v2.1+.</li>
+<li>🏛️ <strong><a href="./arquitetura.html">Decisões de Arquitetura e Engenharia</a></strong>: Justificativas biofísicas, matemáticas e de engenharia de software.</li>
+<li>📜 <strong><a href="CITATION.cff">Como Citar o KokoroSim</a></strong>: Normas ABNT, Vancouver, BibTeX e metadados formais.</li>
 </ul>
 <hr />
 <h2 id="modelos-biofisicos-integrados">🧬 Modelos Biofísicos Integrados</h2>
 <p>O simulador implementa 7 modelos biofísicos padrão-ouro validados pela literatura científica internacional e pelo consórcio <a href="https://models.physiomeproject.org/">Physiome Model Repository (CellML)</a>:</p>
 <ol>
-<li><strong>Nó Sinoatrial (SA) — Marcapasso Primário:</strong></li>
-<li><strong>Modelo:</strong> Severi et al. (2012)</li>
-<li><strong>Artigo:</strong> <em>An updated computational model of rabbit sinoatrial action potential to investigate the mechanisms of heart rate modulation.</em> J Physiol. 2012;590(18):4483-4499.</li>
-<li><strong>Repositório CellML:</strong> <a href="https://models.physiomeproject.org/e/144/">PMR Model e/144</a></li>
-<li><strong>Identificadores:</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/22711956/">PubMed 22711956</a> | <a href="https://doi.org/10.1113/jphysiol.2012.234385">DOI 10.1113/jphysiol.2012.234385</a></li>
-<li>
-<p><strong>Função:</strong> Gera o automatismo elétrico biológico (Fase 4 despolarizante espontânea) impulsionado pelo "relógio de membrana" (corrente <em>funny</em> $I_f$) e "relógio de cálcio" intracelular ($I_{Ca,L}$, $I_{Ca,T}$ e NCX). Modulado por receptores autonômicos $\beta_1$ e $M_2$.</p>
-</li>
-<li>
-<p><strong>Músculo Atrial Humano:</strong></p>
-</li>
-<li><strong>Modelo:</strong> Courtemanche, Ramirez, Nattel (1998)</li>
-<li><strong>Artigo:</strong> <em>Ionic mechanisms underlying human atrial action potential properties: insights from a mathematical model.</em> Am J Physiol. 1998;275(1):H301-H321.</li>
-<li><strong>Repositório CellML:</strong> <a href="https://models.physiomeproject.org/e/286/courtemanche_ramirez_nattel_1998.cellml">PMR Model e/286</a></li>
-<li><strong>Identificadores:</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/9688927/">PubMed 9688927</a> | <a href="https://doi.org/10.1152/ajpheart.1998.275.1.H301">DOI 10.1152/ajpheart.1998.275.1.H301</a></li>
-<li>
-<p><strong>Função:</strong> Miócitos atriais de resposta rápida, caracterizados por ascensão rápida via canais rápidos de sódio ($I_{Na}$), platô intermediário e repolarização dependente de canais ultrarrápidos de potássio ($I_{Kur}$). Gera a <strong>Onda P</strong> do ECG.</p>
-</li>
-<li>
-<p><strong>Nó Atrioventricular (AV) — Filtro e Retardo Fisiológico:</strong></p>
-</li>
-<li><strong>Modelo:</strong> Inada et al. (2009)</li>
-<li><strong>Artigo:</strong> <em>One-dimensional mathematical model of the atrioventricular node including the atrioventricular ring and bundle of His.</em> Biophys J. 2009;97(8):2117-2127.</li>
-<li><strong>Repositório CellML:</strong> <a href="https://models.physiomeproject.org/e/55/inada_hancox_zhang_boyett_2009.cellml">PMR Model e/55</a></li>
-<li><strong>Identificadores:</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/19843444/">PubMed 19843444</a> | <a href="https://doi.org/10.1016/j.bpj.2009.06.056">DOI 10.1016/j.bpj.2009.06.056</a></li>
-<li>
-<p><strong>Função:</strong> Retardo nodal essencial para o enchimento ventricular diastólico (intervalo PR). Resposta lenta dependente de $I_{Ca,L}$ com condução decremental frequência-dependente.</p>
-</li>
-<li>
-<p><strong>Fibras de Purkinje e Feixe de His — Condução Rápida e Marcapasso Terciário:</strong></p>
-</li>
-<li><strong>Modelo:</strong> Stewart et al. (2009)</li>
-<li><strong>Artigo:</strong> <em>Mathematical model of the electrical action potential of the human Purkinje cell.</em> Biophys J. 2009;96(9):3493-3507.</li>
-<li><strong>Repositório CellML:</strong> <a href="https://models.physiomeproject.org/e/7e/stewart_aslanidi_noble_noble_boyett_zhang_2009.cellml">PMR Model e/7e</a></li>
-<li><strong>Identificadores:</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/19413956/">PubMed 19413956</a> | <a href="https://doi.org/10.1016/j.bpj.2009.01.047">DOI 10.1016/j.bpj.2009.01.047</a></li>
-<li>
-<p><strong>Função:</strong> Condução ultrarrápida hisiana ($dV/dt &gt; 400\text{ V/s}$), entalhe precoce acentuado ($I_{to}$, $I_{sus}$) e corrente marcapasso $I_f$ residual de escape idioventricular (~25–35 BPM).</p>
-</li>
-<li>
-<p><strong>Músculo Ventricular com Heterogeneidade Transmural:</strong></p>
-</li>
-<li><strong>Modelo:</strong> ten Tusscher &amp; Panfilov (2006)</li>
-<li><strong>Artigo:</strong> <em>Alternans and spiral breakup in a human ventricular tissue model.</em> Am J Physiol Heart Circ Physiol. 2006;291(3):H1088-H1100.</li>
-<li><strong>Repositório CellML:</strong> <a href="https://models.physiomeproject.org/e/210/tentusscher_panfilov_2006_m.cellml">PMR Model e/210</a></li>
-<li><strong>Identificadores:</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/16565318/">PubMed 16565318</a> | <a href="https://doi.org/10.1152/ajpheart.00109.2006">DOI 10.1152/ajpheart.00109.2006</a></li>
-<li>
-<p><strong>Função:</strong> Modela as três camadas da parede livre ventricular:</p>
-<ul>
-<li><strong>Endocárdio:</strong> Densidade de $I_{to}$ baixa, ativado primeiro via Purkinje.</li>
-<li><strong>Célula M:</strong> Densidade de $I_{Ks}$ reduzida e platô mais longo de todas as camadas.</li>
-<li><strong>Epicárdio:</strong> Densidade de $I_{to}$ proeminente e <strong>APD mais curto</strong>. É o último a despolarizar e o <strong>primeiro a repolarizar</strong>, gerando a <strong>Onda T positiva concordante</strong> no ECG.</li>
-</ul>
-</li>
-<li>
-<p><strong>Fibroblastos Cardíacos e Miofibroblastos:</strong></p>
-</li>
-<li><strong>Modelo:</strong> MacCannell et al. (2007)</li>
-<li><strong>Artigo:</strong> <em>A mathematical model of electrotonic interactions between ventricular myocytes and fibroblasts.</em> Biophys J. 2007;92(11):4121-4132.</li>
-<li><strong>Repositório CellML:</strong> <a href="https://models.physiomeproject.org/e/98/maccannell_bazzazi_chilton_shibukawa_clark_giles_2007.cellml">PMR Model e/98</a></li>
-<li><strong>Identificadores:</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/17351008/">PubMed 17351008</a> | <a href="https://doi.org/10.1529/biophysj.106.101410">DOI 10.1529/biophysj.106.101410</a></li>
-<li>
-<p><strong>Função:</strong> Células não-excitáveis com repouso alto ($-38\text{ mV}$) que se acoplam eletrotonicamente aos miócitos por conexinas ($G_{gap}$ até $4.0\text{ nS}$), exercendo efeito de dreno capacitivo e lentificação na condução proporcional à fibrose.</p>
-</li>
-<li>
-<p><strong>Acoplamento Eletromecânico e Hemodinâmica (Diagrama de Wiggers):</strong></p>
-</li>
-<li><strong>Modelos:</strong> Elastância Ventricular Variável no Tempo (Suga &amp; Sagawa, 1974) e Circulação Arterial Windkessel de 3 elementos (Westerhof et al., 2009).</li>
-<li><strong>Identificadores:</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/4841253/">PubMed 4841253</a> (Suga &amp; Sagawa) | <a href="https://pubmed.ncbi.nlm.nih.gov/19194725/">PubMed 19194725</a> (Westerhof)</li>
-<li><strong>Função:</strong> Transiente de $[Ca^{2+}]_i$ acoplado à elastância ventricular para calcular a Pressão Ventricular Esquerda ($LVP$, 0-140 mmHg), Pressão Aórtica ($AoP$) com incisura dicrótica e dinâmica valvar das cúspides mitral e aórtica.</li>
+<li><strong>Nó Sinoatrial (SA) — Marcapasso Primário:</strong> Severi et al. (2012) — Automatismo biológico acoplado aos relógios de membrana ($I_f$) e cálcio ($I_{Ca,L}$, $I_{Ca,T}$, $I_{NCX}$) com modulação autonômica cronotrópica ($\beta_1$ e $M_2$).</li>
+<li><strong>Músculo Atrial Humano:</strong> Courtemanche, Ramirez, Nattel (1998) — Miócitos atriais de resposta rápida e repolarização dependente de $I_{Kur}$, gerando a <strong>Onda P</strong> do ECG.</li>
+<li><strong>Nó Atrioventricular (AV) — Filtro e Retardo:</strong> Inada et al. (2009) — Retardo nodal fisiológico dependente de cálcio (intervalo PR) e condução decremental protetora.</li>
+<li><strong>Fibras de Purkinje e Feixe de His:</strong> Stewart et al. (2009) — Condução hisiana ultrarrápida ($dV/dt &gt; 400\text{ V/s}$) e automatismo terciário de escape idioventricular (~25–35 BPM).</li>
+<li><strong>Músculo Ventricular com Heterogeneidade Transmural:</strong> ten Tusscher &amp; Panfilov (2006) — Subtipos Endocárdio, Célula M e Epicárdio reproduzindo o complexo QRS e a <strong>Onda T positiva concordante</strong> do ECG.</li>
+<li><strong>Fibroblastos Cardíacos e Fibrose:</strong> MacCannell et al. (2007) — Acoplamento eletrotônico miócito-fibroblasto via <em>gap junctions</em>, dreno capacitivo e lentificação na condução.</li>
+<li><strong>Acoplamento Eletromecânico e Hemodinâmica:</strong> Elastância de Suga &amp; Sagawa (1974) e Circulação Arterial Windkessel de Westerhof et al. (2009) — Curvas dinâmicas de pressão ventricular ($LVP$) e aórtica ($AoP$) com incisura dicrótica e bulhas cardíacas (B1/B2).</li>
 </ol>
+<blockquote>
+<p>🔬 <strong>Documentação Científica Completa:</strong> Para consultar as equações diferenciais detalhadas, formulações de correntes iônicas, links para o PubMed/DOI e repositórios computacionais CellML, acesse a página de <strong><a href="./modelos.html">Modelos Biofísicos e Referências Científicas</a></strong>.</p>
+</blockquote>
 <hr />
 <h2 id="sistema-de-conducao-e-dromotropismo-dinamico">⚡ Sistema de Condução e Dromotropismo Dinâmico</h2>
 <p>Diferente de simuladores convencionais que utilizam grampeamentos de voltagem ou temporizadores arbitrários estáticos, o KokoroSim v2.0 implementa uma cadeia acoplada com <strong>estímulos de corrente fisiológica</strong> e <strong>latências dependentes de estado (dromotropismo dinâmico)</strong>:</p>
@@ -447,14 +498,23 @@
 </ul>
 <hr />
 <h2 id="citacao-academica">📖 Citação Acadêmica</h2>
-<p>Se você utilizar o KokoroSim em pesquisas científicas, aulas práticas, monografias, dissertações, teses ou publicações acadêmicas, por favor cite conforme as diretrizes do arquivo <a href="CITATION.cff"><code>CITATION.cff</code></a>:</p>
+<p>Se você utilizar o KokoroSim em pesquisas científicas, aulas práticas, monografias, dissertações, teses ou publicações acadêmicas, por favor cite conforme os formatos abaixo ou utilize os metadados do arquivo <a href="CITATION.cff"><code>CITATION.cff</code></a>:</p>
+<h3 id="formato-abnt-nbr-60232018">Formato ABNT (NBR 6023:2018)</h3>
+<blockquote>
+<p>FREITAS, Lumen Muller Lohn. <strong>KokoroSim: Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real</strong>. Versão 2.0.0. Florianópolis: Universidade Federal de Santa Catarina (UFSC), 2026. Disponível em: <a href="https://kokorosim.github.io/">https://kokorosim.github.io/</a>. Acesso em: [data de acesso].</p>
+</blockquote>
+<h3 id="formato-vancouver">Formato Vancouver</h3>
+<blockquote>
+<p>Freitas LML. KokoroSim: Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real [software na Internet]. Versão 2.0.0. Florianópolis: Universidade Federal de Santa Catarina; 2026 [citado em ano mês dia]. Disponível em: https://kokorosim.github.io/</p>
+</blockquote>
+<h3 id="formato-bibtex">Formato BibTeX</h3>
 <pre><code class="language-bibtex">@software{freitas2026kokorosim,
   author       = {Freitas, Lumen Muller Lohn},
   title        = {KokoroSim: Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real},
   year         = {2026},
   publisher    = {GitHub},
   journal      = {GitHub repository},
-  howpublished = {\url{https://github.com/KokoroSim/kokorosim}},
+  howpublished = {\url{https://github.com/KokoroSim/KokoroSim}},
   url          = {https://kokorosim.github.io/}
 }
 </code></pre>
@@ -477,8 +537,8 @@
 <p>Distribuído sob a licença <strong>GNU General Public License v3.0 (GPLv3)</strong>. Consulte o arquivo <code>LICENSE</code> para mais detalhes.</p>
     </main>
     <footer>
-        <p><b>KokoroSim 🌸</b> — Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real</p>
-        <p>Software Livre distribuído sob a licença GNU GPLv3. Desenvolvido para universidades e centros de pesquisa.</p>
+        <p><b>kokor<span style="color: var(--neon-carmine); font-weight: 900;">心</span><span style="color: var(--neon-cyan); font-weight: bold;">sim</span></b> — Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real</p>
+        <p>Software Livre sob licença GNU GPLv3. Desenvolvido para universidades e centros de pesquisa.</p>
     </footer>
 </body>
 </html>
