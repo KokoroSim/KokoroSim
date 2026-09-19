@@ -1,0 +1,13 @@
+{
+  "name": "kokorosim",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.0"
+  }
+}

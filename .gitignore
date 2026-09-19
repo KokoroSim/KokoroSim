@@ -25,3 +25,9 @@ venv/
 dist/
 build/
 .build_id
+
+# Node / Playwright
+node_modules/
+test-results/
+playwright-report/
+.playwright/
