@@ -403,6 +403,17 @@ Isso estabelece uma correlação áudio-visual em tempo real: o usuário vê a l
 </ul>
 </li>
 </ul>
+<hr />
+<h2 id="11-governanca-do-repositorio-hooks-git-e-versionamento-semantico-com-cccpsh">11. Governança do Repositório, Hooks Git e Versionamento Semântico com <code>cccp.sh</code></h2>
+<ul>
+<li><strong>Decisão Adotada:</strong> Integração do <a href="https://github.com/lumenpink/cccp.sh"><strong><code>cccp.sh</code> (Conventional Commits Compliance Program)</strong></a> como guardião nativo de fluxo de trabalho Git no repositório.</li>
+<li><strong>Mecanismos e Hooks Ativos:</strong></li>
+<li><strong><code>commit-msg</code>:</strong> Valida rigorosamente todas as mensagens de commit conforme o padrão Conventional Commits em Português-BR (<code>feat</code>, <code>docs</code>, <code>fix</code>, <code>chore</code>, <code>refactor</code>, <code>style</code>, <code>ci</code>, etc.).</li>
+<li><strong><code>post-commit</code>:</strong> Sincroniza automaticamente a versão de desenvolvimento SemVer no arquivo <code>VERSION</code> a cada commit (<code>X.Y.Z-dev.N+data.hash</code>).</li>
+<li><strong><code>reference-transaction</code> &amp; <code>pre-push</code> (Gosplan Quality Bureau):</strong> Interceptam a criação de tags locais (<code>git tag</code>) e o envio de branches/tags para o repositório remoto (<code>git push</code>). O sistema bloqueia sumariamente tags apontando para commits que não possuam o arquivo <code>VERSION</code> devidamente registrado ou versões com sufixo de desenvolvimento (<code>-dev</code>), forçando o uso do comando <code>cccp tag</code> para geração oficial e sincronizada de releases com o <code>CHANGELOG.md</code>.</li>
+<li><strong>Diretriz para Manutenção de Baixo Nível e Histórico:</strong></li>
+<li>Em rotinas excepcionais de reescrita histórica profunda (ex.: <code>git-filter-repo</code> ou <code>git filter-branch</code>), comandos internos como <code>git fast-import</code> acionam os hooks de transação do Git. Nesses cenários específicos de expurgo ou retrocompatibilidade pré-<code>VERSION</code>, os hooks locais em <code>.git/hooks</code> devem ser contornados temporariamente durante o processamento em lote da ferramenta de filtro e prontamente reativados ao término, garantindo que o histórico legado possa ser saneado sem falsos-positivos das regras de release em vigor.</li>
+</ul>
     </main>
     <footer>
         <p><b>SimCardio</b> — Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real</p>

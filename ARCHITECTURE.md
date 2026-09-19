@@ -141,5 +141,14 @@ Este documento detalha o "porquê" das decisões de engenharia, arquitetura de s
     - *Coral Sólido:* instante do fechamento da valva aórtica / incisura dicrótica **(Bulha B2 - "Tá")**.
     Isso estabelece uma correlação áudio-visual em tempo real: o usuário vê a linha passar na tela no mesmo milissegundo em que escuta a bulha ou o bip.
 
+---
 
+## 11. Governança do Repositório, Hooks Git e Versionamento Semântico com `cccp.sh`
 
+* **Decisão Adotada:** Integração do [**`cccp.sh` (Conventional Commits Compliance Program)**](https://github.com/lumenpink/cccp.sh) como guardião nativo de fluxo de trabalho Git no repositório.
+* **Mecanismos e Hooks Ativos:**
+  - **`commit-msg`:** Valida rigorosamente todas as mensagens de commit conforme o padrão Conventional Commits em Português-BR (`feat`, `docs`, `fix`, `chore`, `refactor`, `style`, `ci`, etc.).
+  - **`post-commit`:** Sincroniza automaticamente a versão de desenvolvimento SemVer no arquivo `VERSION` a cada commit (`X.Y.Z-dev.N+data.hash`).
+  - **`reference-transaction` & `pre-push` (Gosplan Quality Bureau):** Interceptam a criação de tags locais (`git tag`) e o envio de branches/tags para o repositório remoto (`git push`). O sistema bloqueia sumariamente tags apontando para commits que não possuam o arquivo `VERSION` devidamente registrado ou versões com sufixo de desenvolvimento (`-dev`), forçando o uso do comando `cccp tag` para geração oficial e sincronizada de releases com o `CHANGELOG.md`.
+* **Diretriz para Manutenção de Baixo Nível e Histórico:**
+  - Em rotinas excepcionais de reescrita histórica profunda (ex.: `git-filter-repo` ou `git filter-branch`), comandos internos como `git fast-import` acionam os hooks de transação do Git. Nesses cenários específicos de expurgo ou retrocompatibilidade pré-`VERSION`, os hooks locais em `.git/hooks` devem ser contornados temporariamente durante o processamento em lote da ferramenta de filtro e prontamente reativados ao término, garantindo que o histórico legado possa ser saneado sem falsos-positivos das regras de release em vigor.

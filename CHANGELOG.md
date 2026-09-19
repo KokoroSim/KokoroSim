@@ -18,7 +18,6 @@
   - (engine) implementar dromotropismo dinâmico na condução AV e heterogeneidade ventricular transmural (Epi, M-cell, Endo)
   - (engine,ui) integrar modelo de células de Purkinje humanas de Stewart et al. (2009) à cadeia de condução
   - (dev) adicionar monitoramento de arquivos, livereload e rodapé de versão no ambiente local
-  - (ui,engine) adicionar painel inicial de eletrofisiologia e motor de simulação
   - (ui/engine) adiciona sistema de plotagem em tempo real e modelo de força mecânica
 
 ### Bug Fixes
@@ -43,7 +42,6 @@
   - (hud) adiciona calculo de metricas cardiacas e atualizacao do HUD
   - (worker) otimizar calculo de parametros e adicionar suporte a SNA, farmacos e isquemia
   - (ui) adicionar suporte para exibição do átrio no canvas e configurações
-  - (scripts) adiciona scripts de conversao, parsing e transpilar modelos CellML
   - (engine) aplicar tuning fisiologico e acoplamento eletrotonico nos nos cardiacos
   - (worker) integrar modelos cardíacos Inada e Ten Tusscher no engine
   - (engine) integrar modelo eletrofisiologico de Severi (2012) e atualizar renderizacao do canvas
