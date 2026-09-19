@@ -73,12 +73,35 @@ O desenvolvimento do **KokoroSim** está organizado em grandes marcos arquitetur
 
 ## 🔬 Próximos Passos (KokoroSim v2.1+)
 
-### Fase 9: Expansão Espacial (Monodomínio 2D / 3D)
+### Fase 9: Modernização de Infraestrutura e Qualidade de Software (Rust 2024 & Dioxus 0.7)
+* [ ] **Migração para Rust Edition 2024**: Adoção das novas convenções de compilação, closures assíncronas otimizadas e lifetimes estritos para WebAssembly.
+* [ ] **Atualização para Dioxus 0.7**: Transição para o novo reconciliador de Virtual DOM e reatividade avançada de Signals, reduzindo o overhead de renderização do osciloscópio.
+* [ ] **Harness de Testes Automatizados E2E e Wasm**:
+  - Testes unitários do motor numérico via `wasm-bindgen-test` em ambiente headless (validação de invariantes matemáticas, estabilidade de $V_m$ e imunidade a `NaN`).
+  - Suíte de testes de interface end-to-end com Playwright automatizando cenários críticos: reset, congelamento, disparos da onda fantasma e interações táteis nos sliders.
+  - Testes de regressão biofísica: verificação programática de efeitos farmacológicos (ex.: alargamento dinâmico de PR com Verapamil, prolongamento de QT com hipocalcemia).
+
+### Fase 10: Hemodinâmica Avançada, Ciclo de Wiggers e Alça Pressão-Volume
+* [ ] **Diagrama de Wiggers Completo e Alça Pressão-Volume ($P \times V$)**:
+  - Cálculo contínuo de volumes ventriculares: Volume Diastólico Final (VDF), Volume Sistólico Final (VSF), Volume Sistólico e Fração de Ejeção ($FE = VS / VDF$).
+  - Novo traçado ou painel gráfico bidimensional exibindo a alça $P \times V$ dinâmica em tempo real (resposta direta à contratilidade e pré/pós-carga).
+* [ ] **Mecânica e Pressão Atrial**: Ondas *a* (contração atrial ativa), *c* (protrusão valvar) e *v* (enchimento passivo ventricular).
+* [ ] **Patologias Valvares e Desafios Hemodinâmicos**:
+  - Modelagem de Estenose Aórtica (gradiente transvalvar patológico e sobrecarga pressórica).
+  - Insuficiência Aórtica (regurgitação diastólica, colapso de pressão de pulso e ausência de incisura dicrótica).
+  - Estenose e Insuficiência Mitral com repercussão volumétrica retrógrada.
+
+### Fase 11: Acoplamento Cardiorrespiratório e Mecânica Torácica
+* [ ] **Dinâmica da Pressão Intrapleural ($P_{pl}$)**: Oscilações cíclicas respiratórias ($-5\text{ cmH}_2\text{O}$ a $-8\text{ cmH}_2\text{O}$) acopladas ao retorno venoso e à pré-carga das câmaras direitas.
+* [ ] **Arritmia Sinusal Respiratória (RSA)**: Modulação autonômica cronotrópica do Nó Sinoatrial vinculada ao ciclo respiratório (aumento fisiológico de FC na inspiração e desaceleração vagal na expiração).
+* [ ] **Desdobramento Fisiológico da Segunda Bulha ($B_2$)**: Separação acústica temporal entre o fechamento da valva aórtica ($A_2$) e pulmonar ($P_2$) durante a inspiração profunda.
+
+### Fase 12: Expansão Espacial (Monodomínio 2D / 3D)
 * [ ] Substituição do modelo 0D acoplado por malha bidimensional de diferenças finitas (matriz de 100x100 a 200x200 miócitos).
 * [ ] Difusão tecidual contínua com tensor de condutividade anisotrópica.
 * [ ] Visualização topográfica de frentes de onda, espirais arritmogênicas (*rotor waves*), fibrilação ventricular e despolarizações fracionadas.
 
-### Fase 10: Modelação Farmacológica Avançada e Novos Protocolos Clínicos
+### Fase 13: Modelação Farmacológica Avançada e Novos Protocolos Clínicos
 * [ ] Implementação de novos fármacos e toxinas (ex.: digitalina, bloqueadores específicos de $I_{Kr}$, agentes parassimpaticomiméticos).
 * [ ] Painel interativo de casos clínicos e cenários patológicos pré-configurados para auxílio diagnóstico e ensino médico.
 
