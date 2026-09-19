@@ -1,7 +1,7 @@
-# 🎓 SimCardio: Guia Didático e Roteiro de Aulas Práticas
+# 🎓 KokoroSim 🌸: Guia Didático e Roteiro de Aulas Práticas
 ### Manual de Experimentos Virtuais para Cursos de Medicina, Biomedicina e Ciências da Saúde
 
-O **SimCardio** foi planejado para ser utilizado diretamente em computadores, tablets ou smartphones em laboratórios de ensino e salas de aula das universidades brasileiras. Este guia apresenta **4 experimentos práticos completos**, estruturados com objetivos de aprendizagem, fundamentação teórica, passo a passo procedural no simulador e questões norteadoras para discussão em grupo ou elaboração de relatório.
+O **KokoroSim 🌸** foi planejado para ser utilizado diretamente em computadores, tablets ou smartphones em laboratórios de ensino e salas de aula das universidades brasileiras. Este guia apresenta **4 experimentos práticos completos**, estruturados com objetivos de aprendizagem, fundamentação teórica, passo a passo procedural no simulador e questões norteadoras para discussão em grupo ou elaboração de relatório.
 
 ---
 

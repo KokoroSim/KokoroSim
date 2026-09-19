@@ -42,7 +42,7 @@ socketserver.TCPServer.allow_reuse_address = True
 if __name__ == "__main__":
     try:
         with socketserver.TCPServer(("", PORT), DevServerHandler) as httpd:
-            print(f"🚀 SimCardio Dev Server rodando em http://localhost:{PORT} (LiveReload ativo)", flush=True)
+            print(f"🚀 KokoroSim Dev Server rodando em http://localhost:{PORT} (LiveReload ativo)", flush=True)
             httpd.serve_forever()
     except KeyboardInterrupt:
         print("\n🛑 Servidor finalizado com sucesso.", flush=True)

@@ -3,36 +3,482 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KokoroSim 🌸 — Simulador Eletrofisiológico e Hemodinâmico</title>
-    <link rel="stylesheet" href="assets/style.css">
+    <title>Sobre e Documentação — KokoroSim 🌸</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --bg-main: #0a0a0c;
+            --bg-card: #121216;
+            --border: #22222a;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --neon-cyan: #00cec9;
+            --neon-yellow: #f1c40f;
+            --neon-coral: #ff7675;
+            --neon-green: #2ecc71;
+            --code-bg: #181820;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.68;
+            font-size: 16px;
+            padding-bottom: 60px;
+        }
+
+        nav.top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(10, 10, 12, 0.88);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            max-width: 100%;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .brand span.pulse {
+            color: var(--neon-cyan);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--neon-cyan);
+            background: rgba(0, 206, 201, 0.08);
+        }
+
+        .nav-links a.btn-app {
+            background: var(--neon-cyan);
+            color: #000;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 6px;
+        }
+
+        .nav-links a.btn-app:hover {
+            background: #81ecec;
+            color: #000;
+        }
+
+        main.doc-container {
+            max-width: 920px;
+            margin: 36px auto;
+            padding: 0 20px;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: #ffffff;
+            font-weight: 700;
+            margin-top: 1.8em;
+            margin-bottom: 0.6em;
+            letter-spacing: -0.02em;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+            margin-top: 0.5em;
+            color: var(--neon-cyan);
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 8px;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            color: var(--neon-yellow);
+        }
+
+        p {
+            margin-bottom: 1.1em;
+            color: var(--text-main);
+        }
+
+        a {
+            color: var(--neon-cyan);
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        ul, ol {
+            margin-bottom: 1.2em;
+            padding-left: 28px;
+        }
+
+        li {
+            margin-bottom: 0.4em;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 2em 0;
+        }
+
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            overflow-x: auto;
+            margin-bottom: 1.4em;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+            background: rgba(255, 255, 255, 0.07);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #ffd166;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5em 0;
+            background: var(--bg-card);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        th, td {
+            padding: 10px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.92rem;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--neon-cyan);
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        blockquote {
+            border-left: 3px solid var(--neon-cyan);
+            background: rgba(0, 206, 201, 0.05);
+            padding: 12px 16px;
+            margin: 1.2em 0;
+            border-radius: 0 6px 6px 0;
+            color: var(--text-muted);
+        }
+
+        footer {
+            max-width: 920px;
+            margin: 60px auto 0 auto;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                font-size: 15px;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            .nav-links {
+                gap: 8px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div id="main"></div>
-    <script type="module">
-        import init from './pkg/ui.js';
-        init();
-    </script>
-    <script>
-        // SimCardio LiveReload Client (desenvolvimento local)
-        (function() {
-            let lastBuildId = null;
-            async function pollLiveReload() {
-                try {
-                    const res = await fetch('/__livereload__?t=' + Date.now());
-                    if (res.ok) {
-                        const id = await res.text();
-                        if (lastBuildId !== null && id !== lastBuildId) {
-                            console.log('[SimCardio LiveReload] Nova build detectada (' + id + '). Recarregando...');
-                            window.location.reload();
-                            return;
-                        }
-                        lastBuildId = id;
-                    }
-                } catch (_) {}
-                setTimeout(pollLiveReload, 800);
-            }
-            pollLiveReload();
-        })();
-    </script>
+    <nav class="top-nav">
+        <a href="./index.html" class="brand">
+            🌸 <span class="pulse">KokoroSim</span>
+        </a>
+        <div class="nav-links">
+            <a href="./app.html" class="btn-app">🚀 Simulador Web</a>
+            <a href="./index.html" class="active">📖 Sobre</a>
+            <a href="./roteiro.html" class="">🎓 Roteiro Prático</a>
+            <a href="./roadmap.html" class="">🗺️ Roadmap</a>
+            <a href="./arquitetura.html" class="">🏛️ Arquitetura</a>
+            <a href="https://github.com/KokoroSim/KokoroSim" target="_blank">💻 GitHub</a>
+        </div>
+    </nav>
+    <main class="doc-container">
+        <h1 id="kokorosim-simulador-eletrofisiologico-cardiaco-em-tempo-real">KokoroSim 🌸: Simulador Eletrofisiológico Cardíaco em Tempo Real</h1>
+<p><a href="https://kokorosim.github.io/"><img alt="Deploy to GitHub Pages" src="https://github.com/KokoroSim/kokorosim/actions/workflows/deploy.yml/badge.svg" /></a>
+<a href="https://www.gnu.org/licenses/gpl-3.0"><img alt="Licença: GPL v3" src="https://img.shields.io/badge/License-GPLv3-blue.svg" /></a>
+<a href="https://www.rust-lang.org/"><img alt="Rust" src="https://img.shields.io/badge/Rust-2021_Edition-orange.svg?logo=rust" /></a>
+<a href="https://webassembly.org/"><img alt="WebAssembly" src="https://img.shields.io/badge/WebAssembly-WASM-purple.svg?logo=webassembly" /></a>
+<a href="https://dioxuslabs.com/"><img alt="Dioxus" src="https://img.shields.io/badge/UI-Dioxus_0.6-00cec9.svg" /></a>
+<a href="#-arquitetura-de-software"><img alt="Mobile Optimized" src="https://img.shields.io/badge/Hardware-Mobile_%26_Low--Power-success.svg" /></a>
+<a href="#-modos-de-visualização-do-osciloscópio-e-onda-fantasma"><img alt="Acessibilidade" src="https://img.shields.io/badge/Acessibilidade-Neurodivergente--Friendly-brightgreen.svg" /></a></p>
+<p>O <strong>KokoroSim 🌸</strong> é um projeto de código aberto dedicado à simulação biofísica da eletrofisiologia celular cardíaca e hemodinâmica ventricular em tempo real diretamente no navegador web. Desenvolvido inicialmente como projeto pessoal, evoluiu para uma ferramenta que pode auxiliar o ensino e a pesquisa no Brasil, sendo construído em <strong>Rust</strong> e compilado para <strong>WebAssembly (WASM)</strong> com interface declarativa reativa em <strong>Dioxus</strong>. O motor numérico resolve mais de 160 equações diferenciais ordinárias (EDOs) e variáveis de estado simultaneamente utilizando o método numérico híbrido de <strong>Rush-Larsen</strong> a $dt = 0.01\text{ ms}$ (1.600 passos por quadro de 16 ms a 60 FPS), assegurando execução em <strong>1x tempo real</strong> com baixíssimo consumo de CPU (<strong>&lt; 5-10%</strong>) em smartphones, tablets, notebooks e computadores de laboratórios acadêmicos, sem depender de placas gráficas dedicadas.</p>
+<hr />
+<h2 id="navegacao-e-documentacao-do-projeto">🧭 Navegação e Documentação do Projeto</h2>
+<ul>
+<li>🚀 <strong><a href="app.html">Abrir Simulador Interativo (Web App)</a></strong></li>
+<li>🎓 <strong><a href="./roteiro.html">Roteiro de Aulas Práticas para Universidades</a></strong>: 4 experimentos completos para Fisiologia e Farmacologia.</li>
+<li>🗺️ <strong><a href="./roadmap.html">Roadmap de Desenvolvimento (./roadmap.html)</a></strong>: Fases concluídas e planejamento de expansão 2D/3D.</li>
+<li>🏛️ <strong><a href="./arquitetura.html">Decisões de Arquitetura (./arquitetura.html)</a></strong>: Justificativas biofísicas, matemáticas e de engenharia.</li>
+<li>📜 <strong><a href="CITATION.cff">Como Citar o KokoroSim (CITATION.cff)</a></strong>: Metadados formais para TCCs, dissertações e artigos científicos.</li>
+</ul>
+<hr />
+<h2 id="modelos-biofisicos-integrados">🧬 Modelos Biofísicos Integrados</h2>
+<p>O simulador implementa 7 modelos biofísicos padrão-ouro validados pela literatura científica internacional e pelo consórcio <a href="https://models.physiomeproject.org/">Physiome Model Repository (CellML)</a>:</p>
+<ol>
+<li><strong>Nó Sinoatrial (SA) — Marcapasso Primário:</strong></li>
+<li><strong>Modelo:</strong> Severi et al. (2012)</li>
+<li><strong>Artigo:</strong> <em>An updated computational model of rabbit sinoatrial action potential to investigate the mechanisms of heart rate modulation.</em> J Physiol. 2012;590(18):4483-4499.</li>
+<li><strong>Repositório CellML:</strong> <a href="https://models.physiomeproject.org/e/144/">PMR Model e/144</a></li>
+<li><strong>Identificadores:</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/22711956/">PubMed 22711956</a> | <a href="https://doi.org/10.1113/jphysiol.2012.234385">DOI 10.1113/jphysiol.2012.234385</a></li>
+<li>
+<p><strong>Função:</strong> Gera o automatismo elétrico biológico (Fase 4 despolarizante espontânea) impulsionado pelo "relógio de membrana" (corrente <em>funny</em> $I_f$) e "relógio de cálcio" intracelular ($I_{Ca,L}$, $I_{Ca,T}$ e NCX). Modulado por receptores autonômicos $\beta_1$ e $M_2$.</p>
+</li>
+<li>
+<p><strong>Músculo Atrial Humano:</strong></p>
+</li>
+<li><strong>Modelo:</strong> Courtemanche, Ramirez, Nattel (1998)</li>
+<li><strong>Artigo:</strong> <em>Ionic mechanisms underlying human atrial action potential properties: insights from a mathematical model.</em> Am J Physiol. 1998;275(1):H301-H321.</li>
+<li><strong>Repositório CellML:</strong> <a href="https://models.physiomeproject.org/e/286/courtemanche_ramirez_nattel_1998.cellml">PMR Model e/286</a></li>
+<li><strong>Identificadores:</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/9688927/">PubMed 9688927</a> | <a href="https://doi.org/10.1152/ajpheart.1998.275.1.H301">DOI 10.1152/ajpheart.1998.275.1.H301</a></li>
+<li>
+<p><strong>Função:</strong> Miócitos atriais de resposta rápida, caracterizados por ascensão rápida via canais rápidos de sódio ($I_{Na}$), platô intermediário e repolarização dependente de canais ultrarrápidos de potássio ($I_{Kur}$). Gera a <strong>Onda P</strong> do ECG.</p>
+</li>
+<li>
+<p><strong>Nó Atrioventricular (AV) — Filtro e Retardo Fisiológico:</strong></p>
+</li>
+<li><strong>Modelo:</strong> Inada et al. (2009)</li>
+<li><strong>Artigo:</strong> <em>One-dimensional mathematical model of the atrioventricular node including the atrioventricular ring and bundle of His.</em> Biophys J. 2009;97(8):2117-2127.</li>
+<li><strong>Repositório CellML:</strong> <a href="https://models.physiomeproject.org/e/55/inada_hancox_zhang_boyett_2009.cellml">PMR Model e/55</a></li>
+<li><strong>Identificadores:</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/19843444/">PubMed 19843444</a> | <a href="https://doi.org/10.1016/j.bpj.2009.06.056">DOI 10.1016/j.bpj.2009.06.056</a></li>
+<li>
+<p><strong>Função:</strong> Retardo nodal essencial para o enchimento ventricular diastólico (intervalo PR). Resposta lenta dependente de $I_{Ca,L}$ com condução decremental frequência-dependente.</p>
+</li>
+<li>
+<p><strong>Fibras de Purkinje e Feixe de His — Condução Rápida e Marcapasso Terciário:</strong></p>
+</li>
+<li><strong>Modelo:</strong> Stewart et al. (2009)</li>
+<li><strong>Artigo:</strong> <em>Mathematical model of the electrical action potential of the human Purkinje cell.</em> Biophys J. 2009;96(9):3493-3507.</li>
+<li><strong>Repositório CellML:</strong> <a href="https://models.physiomeproject.org/e/7e/stewart_aslanidi_noble_noble_boyett_zhang_2009.cellml">PMR Model e/7e</a></li>
+<li><strong>Identificadores:</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/19413956/">PubMed 19413956</a> | <a href="https://doi.org/10.1016/j.bpj.2009.01.047">DOI 10.1016/j.bpj.2009.01.047</a></li>
+<li>
+<p><strong>Função:</strong> Condução ultrarrápida hisiana ($dV/dt &gt; 400\text{ V/s}$), entalhe precoce acentuado ($I_{to}$, $I_{sus}$) e corrente marcapasso $I_f$ residual de escape idioventricular (~25–35 BPM).</p>
+</li>
+<li>
+<p><strong>Músculo Ventricular com Heterogeneidade Transmural:</strong></p>
+</li>
+<li><strong>Modelo:</strong> ten Tusscher &amp; Panfilov (2006)</li>
+<li><strong>Artigo:</strong> <em>Alternans and spiral breakup in a human ventricular tissue model.</em> Am J Physiol Heart Circ Physiol. 2006;291(3):H1088-H1100.</li>
+<li><strong>Repositório CellML:</strong> <a href="https://models.physiomeproject.org/e/210/tentusscher_panfilov_2006_m.cellml">PMR Model e/210</a></li>
+<li><strong>Identificadores:</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/16565318/">PubMed 16565318</a> | <a href="https://doi.org/10.1152/ajpheart.00109.2006">DOI 10.1152/ajpheart.00109.2006</a></li>
+<li>
+<p><strong>Função:</strong> Modela as três camadas da parede livre ventricular:</p>
+<ul>
+<li><strong>Endocárdio:</strong> Densidade de $I_{to}$ baixa, ativado primeiro via Purkinje.</li>
+<li><strong>Célula M:</strong> Densidade de $I_{Ks}$ reduzida e platô mais longo de todas as camadas.</li>
+<li><strong>Epicárdio:</strong> Densidade de $I_{to}$ proeminente e <strong>APD mais curto</strong>. É o último a despolarizar e o <strong>primeiro a repolarizar</strong>, gerando a <strong>Onda T positiva concordante</strong> no ECG.</li>
+</ul>
+</li>
+<li>
+<p><strong>Fibroblastos Cardíacos e Miofibroblastos:</strong></p>
+</li>
+<li><strong>Modelo:</strong> MacCannell et al. (2007)</li>
+<li><strong>Artigo:</strong> <em>A mathematical model of electrotonic interactions between ventricular myocytes and fibroblasts.</em> Biophys J. 2007;92(11):4121-4132.</li>
+<li><strong>Repositório CellML:</strong> <a href="https://models.physiomeproject.org/e/98/maccannell_bazzazi_chilton_shibukawa_clark_giles_2007.cellml">PMR Model e/98</a></li>
+<li><strong>Identificadores:</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/17351008/">PubMed 17351008</a> | <a href="https://doi.org/10.1529/biophysj.106.101410">DOI 10.1529/biophysj.106.101410</a></li>
+<li>
+<p><strong>Função:</strong> Células não-excitáveis com repouso alto ($-38\text{ mV}$) que se acoplam eletrotonicamente aos miócitos por conexinas ($G_{gap}$ até $4.0\text{ nS}$), exercendo efeito de dreno capacitivo e lentificação na condução proporcional à fibrose.</p>
+</li>
+<li>
+<p><strong>Acoplamento Eletromecânico e Hemodinâmica (Diagrama de Wiggers):</strong></p>
+</li>
+<li><strong>Modelos:</strong> Elastância Ventricular Variável no Tempo (Suga &amp; Sagawa, 1974) e Circulação Arterial Windkessel de 3 elementos (Westerhof et al., 2009).</li>
+<li><strong>Identificadores:</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/4841253/">PubMed 4841253</a> (Suga &amp; Sagawa) | <a href="https://pubmed.ncbi.nlm.nih.gov/19194725/">PubMed 19194725</a> (Westerhof)</li>
+<li><strong>Função:</strong> Transiente de $[Ca^{2+}]_i$ acoplado à elastância ventricular para calcular a Pressão Ventricular Esquerda ($LVP$, 0-140 mmHg), Pressão Aórtica ($AoP$) com incisura dicrótica e dinâmica valvar das cúspides mitral e aórtica.</li>
+</ol>
+<hr />
+<h2 id="sistema-de-conducao-e-dromotropismo-dinamico">⚡ Sistema de Condução e Dromotropismo Dinâmico</h2>
+<p>Diferente de simuladores convencionais que utilizam grampeamentos de voltagem ou temporizadores arbitrários estáticos, o KokoroSim v2.0 implementa uma cadeia acoplada com <strong>estímulos de corrente fisiológica</strong> e <strong>latências dependentes de estado (dromotropismo dinâmico)</strong>:</p>
+<h3 id="1-cadeia-de-propagacao-fisiologica">1. Cadeia de Propagação Fisiológica</h3>
+<p>$$\text{Nó SA} \xrightarrow{\Delta t_{SA \to Atr}} \text{Átrio} \xrightarrow{\Delta t_{Atr \to AV}} \text{Nó AV} \xrightarrow{\Delta t_{AV \to His}} \text{Purkinje} \xrightarrow{\Delta t_{Purk \to Endo}} \text{Endocárdio} \xrightarrow{\Delta t_{trans}} \text{Célula M} \to \text{Epicárdio}$$</p>
+<ul>
+<li>Cada transição despolariza o tecido subsequente através de um <strong>pulso transitório de injeção de corrente</strong> ($I_{stim}$ ou $I_{st}$ por 1.5 a 2.0 ms), respeitando o limiar elétrico da membrana e o período refratário natural dos canais de sódio e cálcio.</li>
+</ul>
+<h3 id="2-dromotropismo-dinamico-e-conducao-decremental-no-no-av">2. Dromotropismo Dinâmico e Condução Decremental no Nó AV</h3>
+<p>O Nó Atrioventricular não possui um atraso fixo; sua velocidade de condução varia continuamente em resposta a fatores cronotrópicos e farmacológicos:
+- <strong>Condução Decremental Frequência-Dependente:</strong> Conforme a frequência cardíaca se eleva (taquicardia sinusal ou batimentos ectópicos), os canais de cálcio $I_{Ca,L}$ do nó AV têm menos tempo para se recuperar da inativação. Como consequência, o atraso nodal alarga progressivamente (simulando a curva de recuperação do nó AV e o fenômeno de Wenckebach).
+- <strong>Tônus Autonômico:</strong>
+  - <em>Estimulação Simpática ($\beta_1$):</em> Aumenta a corrente $I_{Ca,L}$, acelerando a condução AV (dromotropismo positivo) e encurtando o intervalo PR.
+  - <em>Estimulação Vagal / Parassimpática ($M_2$):</em> Ativa a corrente hiperpolarizante de potássio $I_{K,ACh}$, desacelerando a condução AV (dromotropismo negativo) e alargando o PR.
+- <strong>Verapamil e Bloqueadores de Cálcio:</strong> Como o nó AV depende do cálcio para a Fase 0, a inibição de $I_{Ca,L}$ induz alargamento acentuado da condução (BAV de 1º grau) ou bloqueio completo (BAV de 2º e 3º grau), momento no qual as fibras de Purkinje assumem o marcapasso por automatismo terciário.
+- <strong>Isquemia Tecidual:</strong> Lentifica a condução nodal e prolonga o intervalo PR.</p>
+<h3 id="3-acoplamento-eletrotonico-miocito-fibroblasto-e-fibrose-miocardica">3. Acoplamento Eletrotônico Miócito-Fibroblasto e Fibrose Miocárdica</h3>
+<p>A fibrose cardíaca pós-isquêmica ou senescente é simulada através da proliferação e acoplamento de fibroblastos não-excitáveis aos miócitos ventriculares via junções comunicantes de conexina-43/45:
+- <strong>Efeito Dreno Capacitivo:</strong> Como os fibroblastos repousam a potenciais menos negativos ($-35\text{ a }-45\text{ mV}$), o acoplamento eletrotônico drena corrente dos miócitos vizinhos durante a despolarização e injeta corrente durante o repouso.
+- <strong>Despolarização Parcial Diastólica:</strong> O potencial de repouso ventricular é elevado de $-86\text{ mV}$ para até $-76\text{ mV}$, promovendo inativação em estado estacionário dos canais rápidos de sódio $I_{Na}$.
+- <strong>Retardo Conducional e Bloqueios:</strong> O $dV/dt_{\max}$ da Fase 0 ventricular é atenuado e a condução transmural sofre lentificação progressiva, criando o substrato clássico de arritmias por reentrada e dispersão tecidual.</p>
+<hr />
+<h2 id="eletrocardiograma-ecg-baseado-em-dipolo-transmural">📈 Eletrocardiograma (ECG) Baseado em Dipolo Transmural</h2>
+<p>O KokoroSim calcula a derivação eletrocardiográfica (equivalente a DII / precordiais) a partir de primeiros princípios biofísicos, resolvendo o gradiente elétrico do campo distante dipolar gerado pela despolarização e repolarização da parede cardíaca:</p>
+<p>$$\text{ECG}(t) = 0.15 \cdot (V_{atrio}(t) + 80) + 0.55 \cdot (V_{endo}(t) - V_{epi}(t)) + 0.25 \cdot (V_M(t) - V_{epi}(t))$$</p>
+<h3 id="como-a-morfologia-p-qrs-t-real-emerge">Como a Morfologia P-QRS-T Real Emerge:</h3>
+<ol>
+<li><strong>Onda P:</strong> Gerada pela despolarização inicial do tecido atrial ($V_{atrio}$).</li>
+<li><strong>Intervalo PR:</strong> Reflete o tempo de trânsito através do átrio e retardo nodal AV até o feixe de His.</li>
+<li><strong>Complexo QRS (Onda R escarpada):</strong> A despolarização chega primeiro ao subendocárdio via Purkinje ($t = 0\text{ ms}$), enquanto o epicárdio permanece em repouso ($-86\text{ mV}$). O gradiente $V_{endo} - V_{epi} \approx +25 - (-86) = +111\text{ mV}$ projeta uma deflexão positiva rápida e estreita.</li>
+<li><strong>Segmento ST:</strong> Durante a fase de platô, todas as camadas ventriculares estão simultaneamente despolarizadas ($V_{endo} \approx V_M \approx V_{epi} \approx +15\text{ a }+25\text{ mV}$), anulando a diferença de potencial e mantendo o traçado na linha isoelétrica.</li>
+<li><strong>Onda T Positiva e Fisiológica:</strong> O epicárdio possui densidade superior de canais de potássio de efluxo rápido e APD mais curto, repolarizando para $-86\text{ mV}$ <strong>antes</strong> do endocárdio e da célula M. Durante a repolarização:
+   $$V_{endo}(t) - V_{epi}(t) \approx (-30\text{ mV}) - (-86\text{ mV}) = +56\text{ mV} &gt; 0$$
+   Esse gradiente elétrico positivo gera a clássica <strong>Onda T positiva e concordante com o QRS</strong>, resolvendo o paradoxo histórico dos modelos unicelulares!</li>
+</ol>
+<hr />
+<h2 id="hemodinamica-ventricular-diagrama-de-wiggers-e-sintese-de-audio">💓 Hemodinâmica Ventricular, Diagrama de Wiggers e Síntese de Áudio</h2>
+<p>O quarto canal do osciloscópio exibe em tempo real o núcleo mecânico do <strong>Diagrama de Wiggers</strong>:
+- <strong>Pressão Ventricular Esquerda ($LVP$, ciano <code>#00cec9</code>):</strong> Eleva-se de ~7 mmHg na diástole até ~120 mmHg na sístole, cruzando a curva aórtica nos pontos de abertura e fechamento valvar.
+- <strong>Pressão Aórtica ($AoP$, coral <code>#ff7675</code>):</strong> Decai exponencialmente na diástole até ~70-80 mmHg e atinge ~120 mmHg no pico da ejeção. O fechamento da valva aórtica gera a clássica <strong>incisura dicrótica</strong>.
+- <strong>Síntese Acústica em Tempo Real (Web Audio API):</strong>
+  - <strong>🔊 Bip de Monitor (UTI - Onda R):</strong> Disparado na despolarização ventricular rápida ($dV/dt &gt; 0$), gerando uma onda senoidal pura de <strong>880 Hz</strong> com decaimento exponencial de 75 ms.
+  - <strong>🩺 Bulhas Cardíacas (Ausculta B1/B2):</strong>
+    - <strong>B1 ("Tum" / <em>Lub</em>):</strong> Disparada na contração isovolumétrica no fechamento da valva mitral ($LVP \ge LAP$), sintetizada com <em>pitch sweep</em> descendente (140 $\to$ 85 Hz), ressonância muscular calibrada e ganho reforçado para clara audibilidade em transdutores de smartphones e notebooks.
+    - <strong>B2 ("Tá" / <em>Dub</em>):</strong> Disparada no relaxamento isovolumétrico no fechamento da valva aórtica ($LVP \le AoP$), sintetizada com estalido de alta frequência (240 $\to$ 160 Hz), filtro passa-banda e decaimento rápido.
+  - <strong>Marcadores Visuais Verticais Multicanal:</strong> Quando as opções de áudio estão ativas, linhas verticais correspondentes são desenhadas simultaneamente em todos os 4 canais (amarelo tracejado para Onda R/UTI, verde esmeralda para B1 e coral para B2), estabelecendo correlação áudio-visual em tempo real.
+  - As duas opções de som vêm <strong>desativadas por padrão</strong> no Accordion "5. Monitorização &amp; Áudio", sendo ativadas pelo clique do usuário em conformidade com as diretrizes de autoplay dos navegadores.</p>
+<h3 id="modos-de-visualizacao-do-osciloscopio-e-onda-fantasma">📺 Modos de Visualização do Osciloscópio e Onda Fantasma</h3>
+<ul>
+<li><strong>5 Modos de Varredura Temporal:</strong></li>
+<li><em>Fita Deslizante (Rolling Strip-Chart — Padrão):</em> Fluxo contínuo da direita para a esquerda.</li>
+<li><em>Varredura Contínua (Continuous Sweep — Monitor UTI):</em> Varredura da esquerda para a direita com barra apagadora à frente da caneta e wrap-around.</li>
+<li><em>Paginação Sincronizada (Triggered Paged):</em> Sincronizada pelo início da Fase 0 do Nó SA ($X = 0$); desenha uma página completa (~1.5 a 2 ciclos), congela a imagem para estudo minucioso e recomeça a nova página no próximo marco sinusal.</li>
+<li><em>Gatilho Automático (Auto-Trigger):</em> Redesenha automaticamente a cada batimento a partir do Nó SA com barra apagadora, sobrepondo os ciclos no mesmo eixo temporal.</li>
+<li><em>Gatilho Único (Single-Shot / Congelado):</em> Traça exatamente 1 ciclo completo e congela indefinidamente, aguardando o comando <code>⚡ DISPARAR / ARMAR PRÓXIMO CICLO</code>.</li>
+<li><strong>Controle de Execução e Congelamento:</strong></li>
+<li>Botão <code>[ ⏸ CONGELAR ]</code> / <code>[ ▶ CONTINUAR ]</code> no topo da barra de controles para suspender instantaneamente a simulação, congelar o traçado e silenciar o áudio para análise pedagógica detalhada.</li>
+<li><strong>Onda Fantasma Bio-Sincronizada (Referência Basal em Memória):</strong></li>
+<li>Gravação bio-disparada na <strong>Fase 0 do Nó SA</strong>: ao clicar em <code>📸 Capturar</code>, o sistema aguarda o marcapasso sinusal e grava com precisão 1 ciclo $RR$ completo fechado ($t_0 \to t_{RR}$).</li>
+<li><strong>Dinâmica de Espaçamento e Encurtamento:</strong> Em bradicardia, repousa no potencial basal ($V_{rest}$) destacando o atraso; em taquicardia, reinicia sincronizada a cada novo batimento.</li>
+<li><strong>Acessibilidade Sensorial (Zero Formiguinhas):</strong> Renderizada como linha sólida contínua translúcida e suave (<code>rgba(..., 0.35)</code>, espessura 1.2px), sem cintilações ou vibrações visuais, propiciando conforto máximo a usuários neurodivergentes.</li>
+<li><strong>Custo de CPU Zero:</strong> Armazenada em vetor estático sem exigir instâncias secundárias da simulação.</li>
+<li><strong>Reset Limpo de Memória nos Modos de Varredura e Gatilho:</strong></li>
+<li>Comutação entre modos com higienização instantânea de memória por sentinelas <code>NaN</code>, eliminando quaisquer rastros ou artefatos de ciclos anteriores.</li>
+</ul>
+<hr />
+<h2 id="modulacao-farmacologica-eletrolitica-e-patologica">🎛️ Modulação Farmacológica, Eletrolítica e Patológica</h2>
+<ul>
+<li><strong>Potássio $[K^+]_o$ (2.0 a 8.5 mEq/L):</strong> Modula o potencial de repouso ($V_{rest}$) pela equação de Nernst. Hipocalemia causa hiperexcitabilidade e pós-despolarizações; hipercalemia severa causa inativação permanente dos canais de sódio e parada diastólica.</li>
+<li><strong>Cálcio $[Ca^{2+}]_o$ (1.0 a 3.5 mmol/L):</strong> Regula a corrente $I_{Ca,L}$, modulando a duração do platô ventricular e o intervalo QT.</li>
+<li><strong>Sódio $[Na^+]_o$ (125 a 155 mEq/L):</strong> Determina a amplitude e velocidade da Fase 0 nas células rápidas (Átrio, Purkinje e Ventrículo).</li>
+<li><strong>Fibrose Miocárdica (0% a 100%):</strong> Aumenta a densidade e o acoplamento de junções comunicantes miócito-fibroblasto ($G_{gap}$ até $4.0\text{ nS}$), deprimindo $dV/dt$, prolongando a condução e gerando dispersão da repolarização.</li>
+<li><strong>Antiarrítmicos (Classes I a IV de Vaughan Williams):</strong></li>
+<li><em>Classe I (Lidocaína):</em> Bloqueio fracionário de canais de $Na^+$, alargando o complexo QRS e reduzindo a velocidade de condução transmural.</li>
+<li><em>Classe III (Amiodarona):</em> Bloqueio de canais de $K^+$ ($I_{Kr}$, $I_{Ks}$), prolongando o platô e o intervalo QT.</li>
+<li><em>Classe IV (Verapamil):</em> Inibição seletiva de $I_{Ca,L}$, deprimindo a rampa nodal AV e simulando bloqueios atrioventriculares.</li>
+<li><em>Glicosídeo Cardíaco (Digoxina):</em> Inibição da bomba $Na^+/K^+$ ATPase, elevando o cálcio intracelular e a força de contração ativa.</li>
+<li><strong>Isquemia Miocárdica:</strong> Ativação de canais $K_{ATP}$, encurtando precocemente o potencial de ação e provocando alterações morfológicas do segmento ST e da onda T.</li>
+</ul>
+<hr />
+<h2 id="arquitetura-de-software">💻 Arquitetura de Software</h2>
+<ul>
+<li><strong>Linguagem Principal:</strong> Rust 2021 Edition.</li>
+<li><strong>Compilação WebAssembly:</strong> <code>wasm-bindgen</code> e <code>wasm-pack</code> com otimizações em release (<code>-O3</code>).</li>
+<li><strong>Interface Gráfica:</strong> <a href="https://dioxuslabs.com/">Dioxus</a> 0.6 (declarativo e reativo nativo em Rust).</li>
+<li><strong>Mecanismo de Renderização:</strong> Pipeline <code>Canvas 2D</code> de alto desempenho com buffers circulares de 500 pontos (janela horizontal de 2.5s, comportando &gt; 3 ciclos cardíacos completos) e processamento em lote via <code>HeartSystem::run_batch()</code>.</li>
+<li><strong>Módulo de Áudio:</strong> Sintetizador biofísico nativo via Web Audio API (<code>AudioContext</code>, <code>OscillatorNode</code>, <code>GainNode</code>, <code>BiquadFilterNode</code>) sem dependência de assets de áudio externos.</li>
+<li><strong>Ambiente de Desenvolvimento:</strong> Script <code>./scripts/run_local.sh</code> com hot-reloading inteligente, fila concorrente assíncrona, debounce e injeção automática de versão e build-time no rodapé.</li>
+</ul>
+<hr />
+<h2 id="citacao-academica">📖 Citação Acadêmica</h2>
+<p>Se você utilizar o KokoroSim em pesquisas científicas, aulas práticas, monografias, dissertações, teses ou publicações acadêmicas, por favor cite conforme as diretrizes do arquivo <a href="CITATION.cff"><code>CITATION.cff</code></a>:</p>
+<pre><code class="language-bibtex">@software{freitas2026kokorosim,
+  author       = {Freitas, Lumen Muller Lohn},
+  title        = {KokoroSim: Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real},
+  year         = {2026},
+  publisher    = {GitHub},
+  journal      = {GitHub repository},
+  howpublished = {\url{https://github.com/KokoroSim/kokorosim}},
+  url          = {https://kokorosim.github.io/}
+}
+</code></pre>
+<hr />
+<h2 id="versao-historica-10-prototipo-legado-em-typescriptvite">🕰️ Versão Histórica 1.0 (Protótipo Legado em TypeScript/Vite)</h2>
+<p>Para fins históricos, didáticos e de comparação de desempenho e evolução da engenharia de software, a primeira versão do simulador permanece disponível online:</p>
+<ul>
+<li>🌐 <strong><a href="https://kokorosim.github.io/v1/">Acessar KokoroSim v1.0 (Protótipo Legado)</a></strong></li>
+</ul>
+<h3 id="como-foi-concebida-e-construida-a-v10">Como foi concebida e construída a v1.0</h3>
+<p>A versão 1.0 foi o protótipo inicial do projeto, desenvolvida em Vanilla TypeScript, empacotada com Vite e executada em um Web Worker que integrava as equações diferenciais pelo método explícito de <em>Forward Euler</em> em JavaScript puro para os modelos atrioventriculares iniciais, desenhando os traçados em um elemento Canvas 2D.</p>
+<h3 id="por-que-o-projeto-foi-completamente-reescrito-na-v20-rust-webassembly-dioxus">Por que o projeto foi completamente reescrito na v2.0 (Rust + WebAssembly + Dioxus)?</h3>
+<ol>
+<li><strong>Rigidez Numérica (<em>Stiffness</em>) e a Transição de Forward Euler para Rush-Larsen:</strong> À medida que a simulação incorporou novos modelos acoplados (Purkinje, as 3 camadas ventriculares transmurais e fibroblastos), a rigidez matemática dos canais rápidos de sódio ($\tau_m \approx 0.0008\text{ ms}$) impôs passos microscópicos de integração ($dt = 0.001\text{ ms}$). O navegador precisava processar mais de 8 milhões de avaliações de EDOs por segundo, saturando CPUs modestas e tornando a execução lenta e inviável em celulares. Na v2.0, a reescrita em Rust e a adoção do método de integração exponencial de <strong>Rush-Larsen (1978)</strong> permitiram multiplicar o passo em 10x ($dt = 0.01\text{ ms}$), reduzindo o consumo de CPU para <strong>&lt; 5-10%</strong> com estabilidade numérica incondicional.</li>
+<li><strong>Eliminação de <em>Stuttering</em> por Garbage Collection:</strong> O motor V8 do JavaScript sofria com pausas intermitentes de desalocação de memória (<em>Garbage Collection</em>) e desotimizações JIT causadas pelo volume constante de arrays transitórios, provocando micro-travamentos no osciloscópio. O WebAssembly em Rust roda com determinismo estrito, latência zero de GC e taxa contínua de 60 FPS.</li>
+<li><strong>Memória Linear Compartilhada (<em>Zero-Copy</em>):</strong> Na arquitetura antiga, os buffers de pontos precisavam ser serializados e copiados via mensagens entre o Web Worker e a thread principal de renderização. Na v2.0, a interface reativa em Dioxus e o motor biofísico operam no mesmo espaço de memória linear contígua do Wasm sem nenhuma cópia de dados.</li>
+</ol>
+<hr />
+<h2 id="licenca">📜 Licença</h2>
+<p>Distribuído sob a licença <strong>GNU General Public License v3.0 (GPLv3)</strong>. Consulte o arquivo <code>LICENSE</code> para mais detalhes.</p>
+    </main>
+    <footer>
+        <p><b>KokoroSim 🌸</b> — Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real</p>
+        <p>Software Livre distribuído sob a licença GNU GPLv3. Desenvolvido para universidades e centros de pesquisa.</p>
+    </footer>
 </body>
 </html>

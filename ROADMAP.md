@@ -1,10 +1,10 @@
-# Roadmap de Implementação — SimCardio
+# Roadmap de Implementação — KokoroSim 🌸
 
-O desenvolvimento do **SimCardio** está organizado em grandes marcos arquiteturais e eletrofisiológicos. 
+O desenvolvimento do **KokoroSim** está organizado em grandes marcos arquiteturais e eletrofisiológicos. 
 
 ---
 
-## 🚀 SimCardio v2.0 (Marco Eletrofisiológico em Rust + WASM)
+## 🚀 KokoroSim v2.0 (Marco Eletrofisiológico e Hemodinâmico em Rust + WASM) ✅ CONCLUÍDO
 
 ### Fase 1: Transição Arquitetural (Rust + WASM + Dioxus) ✅ CONCLUÍDO
 * [x] Migração de todo o motor matemático de equações diferenciais para **Rust nativo**.
@@ -42,10 +42,6 @@ O desenvolvimento do **SimCardio** está organizado em grandes marcos arquitetur
 * [x] Simulação de dreno capacitivo, despolarização parcial diastólica do miócito (inativação de $I_{Na}$ em repouso) e lentificação da condução intramiocárdica proporcional à fibrose.
 * [x] Visualização no osciloscópio de Potencial de Ação com canal lilás (`#a29bfe`) e slider de controle de Fibrose Miocárdica (0% a 100%).
 
----
-
-## 🔬 Próximos Passos (SimCardio v2.1+)
-
 ### Fase 6: Acoplamento Eletromecânico, Hemodinâmica e Áudio (Wiggers) ✅ CONCLUÍDO
 * [x] Acoplamento Excitação-Contração via cinemática cooperativa de ligação de Cálcio na Troponina C.
 * [x] Modelo de **Elastância Ventricular Variável no Tempo ($E(t)$)** de Suga & Sagawa para calcular a Pressão Ventricular Esquerda ($LVP$).
@@ -75,14 +71,18 @@ O desenvolvimento do **SimCardio** está organizado em grandes marcos arquitetur
 
 ---
 
-## 🔬 Próximos Passos (SimCardio v2.3+)
+## 🔬 Próximos Passos (KokoroSim v2.1+)
 
 ### Fase 9: Expansão Espacial (Monodomínio 2D / 3D)
 * [ ] Substituição do modelo 0D acoplado por malha bidimensional de diferenças finitas (matriz de 100x100 a 200x200 miócitos).
 * [ ] Difusão tecidual contínua com tensor de condutividade anisotrópica.
 * [ ] Visualização topográfica de frentes de onda, espirais arritmogênicas (*rotor waves*), fibrilação ventricular e despolarizações fracionadas.
 
+### Fase 10: Modelação Farmacológica Avançada e Novos Protocolos Clínicos
+* [ ] Implementação de novos fármacos e toxinas (ex.: digitalina, bloqueadores específicos de $I_{Kr}$, agentes parassimpaticomiméticos).
+* [ ] Painel interativo de casos clínicos e cenários patológicos pré-configurados para auxílio diagnóstico e ensino médico.
+
 ---
 
-## 🏛️ SimCardio v1.0 (Histórico / Legado JS) ✅
-* Marco inicial com simulação zero-dimensional em Web Worker JavaScript, interface estática e 3 modelos celulares (concluído e posteriormente reescrito em Rust na versão 2.0).
+## 🏛️ KokoroSim v1.0 (Protótipo Legado em TypeScript/Vite) ✅ CONCLUÍDO
+* Marco inicial com simulação zero-dimensional em Web Worker JavaScript, interface estática e modelos celulares iniciais (disponível online em [kokorosim.github.io/v1](https://kokorosim.github.io/v1/)).

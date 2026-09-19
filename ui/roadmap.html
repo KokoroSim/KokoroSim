@@ -255,19 +255,19 @@
             🌸 <span class="pulse">KokoroSim</span>
         </a>
         <div class="nav-links">
-            <a href="./index.html" class="btn-app">▶ Simulador Web</a>
-            <a href="./sobre.html" class="">📖 Sobre</a>
+            <a href="./app.html" class="btn-app">🚀 Simulador Web</a>
+            <a href="./index.html" class="">📖 Sobre</a>
             <a href="./roteiro.html" class="">🎓 Roteiro Prático</a>
             <a href="./roadmap.html" class="active">🗺️ Roadmap</a>
             <a href="./arquitetura.html" class="">🏛️ Arquitetura</a>
-            <a href="https://github.com/KokoroSim/kokorosim" target="_blank">💻 GitHub</a>
+            <a href="https://github.com/KokoroSim/KokoroSim" target="_blank">💻 GitHub</a>
         </div>
     </nav>
     <main class="doc-container">
-        <h1 id="roadmap-de-implementacao-simcardio">Roadmap de Implementação — SimCardio</h1>
-<p>O desenvolvimento do <strong>SimCardio</strong> está organizado em grandes marcos arquiteturais e eletrofisiológicos. </p>
+        <h1 id="roadmap-de-implementacao-kokorosim">Roadmap de Implementação — KokoroSim 🌸</h1>
+<p>O desenvolvimento do <strong>KokoroSim</strong> está organizado em grandes marcos arquiteturais e eletrofisiológicos. </p>
 <hr />
-<h2 id="simcardio-v20-marco-eletrofisiologico-em-rust-wasm">🚀 SimCardio v2.0 (Marco Eletrofisiológico em Rust + WASM)</h2>
+<h2 id="kokorosim-v20-marco-eletrofisiologico-e-hemodinamico-em-rust-wasm-concluido">🚀 KokoroSim v2.0 (Marco Eletrofisiológico e Hemodinâmico em Rust + WASM) ✅ CONCLUÍDO</h2>
 <h3 id="fase-1-transicao-arquitetural-rust-wasm-dioxus-concluido">Fase 1: Transição Arquitetural (Rust + WASM + Dioxus) ✅ CONCLUÍDO</h3>
 <ul>
 <li>[x] Migração de todo o motor matemático de equações diferenciais para <strong>Rust nativo</strong>.</li>
@@ -309,8 +309,6 @@
 <li>[x] Simulação de dreno capacitivo, despolarização parcial diastólica do miócito (inativação de $I_{Na}$ em repouso) e lentificação da condução intramiocárdica proporcional à fibrose.</li>
 <li>[x] Visualização no osciloscópio de Potencial de Ação com canal lilás (<code>#a29bfe</code>) e slider de controle de Fibrose Miocárdica (0% a 100%).</li>
 </ul>
-<hr />
-<h2 id="proximos-passos-simcardio-v21">🔬 Próximos Passos (SimCardio v2.1+)</h2>
 <h3 id="fase-6-acoplamento-eletromecanico-hemodinamica-e-audio-wiggers-concluido">Fase 6: Acoplamento Eletromecânico, Hemodinâmica e Áudio (Wiggers) ✅ CONCLUÍDO</h3>
 <ul>
 <li>[x] Acoplamento Excitação-Contração via cinemática cooperativa de ligação de Cálcio na Troponina C.</li>
@@ -329,7 +327,7 @@
 <li>[x] Elevação do passo de integração para $dt = 0.01\text{ ms}$ com 100% de estabilidade e redução de 10x no orçamento de cálculo (1.600 passos por quadro de 16 ms a 60 FPS).</li>
 <li>[x] Execução em <strong>1x tempo real garantida</strong> com consumo de CPU mínimo (<strong>&lt; 5-10%</strong>) em smartphones, tablets, Chromebooks e computadores de baixo custo.</li>
 <li>[x] Recalibração acústica das bulhas B1 e B2 com <em>pitch sweeps</em> (140 $\to$ 85 Hz e 240 $\to$ 160 Hz) e ganho otimizado para microtransdutores de celulares e laptops.</li>
-<li>[x] Formalização do requisito não-funcional de acessibilidade e computação inclusiva no <code>ARCHITECTURE.md</code>.</li>
+<li>[x] Formalização do requisito não-funcional de acessibilidade e computação inclusiva no <code>./arquitetura.html</code>.</li>
 </ul>
 <h3 id="fase-8-modos-de-exibicao-do-osciloscopio-gatilho-biofisico-e-onda-fantasma-concluido">Fase 8: Modos de Exibição do Osciloscópio, Gatilho Biofísico e Onda Fantasma ✅ CONCLUÍDO</h3>
 <ul>
@@ -342,17 +340,22 @@
 <li>[x] <strong>Marcadores Visuais Acústicos Multicanal</strong>: linhas verticais correspondentes desenhadas simultaneamente em todos os 4 canais (amarelo tracejado para Onda R/UTI, verde para B1 e coral para B2).</li>
 </ul>
 <hr />
-<h2 id="proximos-passos-simcardio-v23">🔬 Próximos Passos (SimCardio v2.3+)</h2>
+<h2 id="proximos-passos-kokorosim-v21">🔬 Próximos Passos (KokoroSim v2.1+)</h2>
 <h3 id="fase-9-expansao-espacial-monodominio-2d-3d">Fase 9: Expansão Espacial (Monodomínio 2D / 3D)</h3>
 <ul>
 <li>[ ] Substituição do modelo 0D acoplado por malha bidimensional de diferenças finitas (matriz de 100x100 a 200x200 miócitos).</li>
 <li>[ ] Difusão tecidual contínua com tensor de condutividade anisotrópica.</li>
 <li>[ ] Visualização topográfica de frentes de onda, espirais arritmogênicas (<em>rotor waves</em>), fibrilação ventricular e despolarizações fracionadas.</li>
 </ul>
-<hr />
-<h2 id="simcardio-v10-historico-legado-js">🏛️ SimCardio v1.0 (Histórico / Legado JS) ✅</h2>
+<h3 id="fase-10-modelacao-farmacologica-avancada-e-novos-protocolos-clinicos">Fase 10: Modelação Farmacológica Avançada e Novos Protocolos Clínicos</h3>
 <ul>
-<li>Marco inicial com simulação zero-dimensional em Web Worker JavaScript, interface estática e 3 modelos celulares (concluído e posteriormente reescrito em Rust na versão 2.0).</li>
+<li>[ ] Implementação de novos fármacos e toxinas (ex.: digitalina, bloqueadores específicos de $I_{Kr}$, agentes parassimpaticomiméticos).</li>
+<li>[ ] Painel interativo de casos clínicos e cenários patológicos pré-configurados para auxílio diagnóstico e ensino médico.</li>
+</ul>
+<hr />
+<h2 id="kokorosim-v10-prototipo-legado-em-typescriptvite-concluido">🏛️ KokoroSim v1.0 (Protótipo Legado em TypeScript/Vite) ✅ CONCLUÍDO</h2>
+<ul>
+<li>Marco inicial com simulação zero-dimensional em Web Worker JavaScript, interface estática e modelos celulares iniciais (disponível online em <a href="https://kokorosim.github.io/v1/">kokorosim.github.io/v1</a>).</li>
 </ul>
     </main>
     <footer>

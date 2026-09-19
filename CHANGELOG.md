@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Features
+  - (ui,docs) reestruturar navegacao com home em sobre, mover simulador para app.html e consolidar marca KokoroSim
   - (ui,ci) publicar documentacao em HTML no GitHub Pages e abrir manual em nova aba
   - (ui) implementar sincronização bio-disparada RR da onda fantasma e linha sólida esmaecida anti-fadiga
   - (ui) implementar congelamento da simulação, onda fantasma sincronizada e reset limpo no gatilho automático

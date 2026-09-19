@@ -6,11 +6,11 @@ fn main() {
         .unwrap_or_else(|_| "0.1.0-dev".to_string())
         .trim()
         .to_string();
-    println!("cargo:rustc-env=SIMCARDIO_VERSION={version}");
+    println!("cargo:rustc-env=KOKOROSIM_VERSION={version}");
     println!("cargo:rerun-if-changed=../VERSION");
 
-    // 2. Read SIMCARDIO_BUILD_TIME from environment, or generate formatted local time
-    let build_time = std::env::var("SIMCARDIO_BUILD_TIME").unwrap_or_else(|_| {
+    // 2. Read KOKOROSIM_BUILD_TIME from environment, or generate formatted local time
+    let build_time = std::env::var("KOKOROSIM_BUILD_TIME").unwrap_or_else(|_| {
         let output = Command::new("date")
             .arg("+%Y-%m-%d %H:%M:%S")
             .output();
@@ -19,6 +19,6 @@ fn main() {
             Err(_) => "unknown".to_string(),
         }
     });
-    println!("cargo:rustc-env=SIMCARDIO_BUILD_TIME={build_time}");
-    println!("cargo:rerun-if-env-changed=SIMCARDIO_BUILD_TIME");
+    println!("cargo:rustc-env=KOKOROSIM_BUILD_TIME={build_time}");
+    println!("cargo:rerun-if-env-changed=KOKOROSIM_BUILD_TIME");
 }

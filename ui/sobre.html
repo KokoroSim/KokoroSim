@@ -255,12 +255,12 @@
             🌸 <span class="pulse">KokoroSim</span>
         </a>
         <div class="nav-links">
-            <a href="./index.html" class="btn-app">▶ Simulador Web</a>
-            <a href="./sobre.html" class="active">📖 Sobre</a>
+            <a href="./app.html" class="btn-app">🚀 Simulador Web</a>
+            <a href="./index.html" class="active">📖 Sobre</a>
             <a href="./roteiro.html" class="">🎓 Roteiro Prático</a>
             <a href="./roadmap.html" class="">🗺️ Roadmap</a>
             <a href="./arquitetura.html" class="">🏛️ Arquitetura</a>
-            <a href="https://github.com/KokoroSim/kokorosim" target="_blank">💻 GitHub</a>
+            <a href="https://github.com/KokoroSim/KokoroSim" target="_blank">💻 GitHub</a>
         </div>
     </nav>
     <main class="doc-container">
@@ -272,14 +272,14 @@
 <a href="https://dioxuslabs.com/"><img alt="Dioxus" src="https://img.shields.io/badge/UI-Dioxus_0.6-00cec9.svg" /></a>
 <a href="#-arquitetura-de-software"><img alt="Mobile Optimized" src="https://img.shields.io/badge/Hardware-Mobile_%26_Low--Power-success.svg" /></a>
 <a href="#-modos-de-visualização-do-osciloscópio-e-onda-fantasma"><img alt="Acessibilidade" src="https://img.shields.io/badge/Acessibilidade-Neurodivergente--Friendly-brightgreen.svg" /></a></p>
-<p>O <strong>KokoroSim 🌸</strong> (antigo <em>SimCardio</em>) é um projeto acadêmico de código aberto dedicado à simulação biofísica da eletrofisiologia celular cardíaca e hemodinâmica ventricular em tempo real diretamente no navegador web. Desenvolvido para servir prioritariamente a universidades e centros de pesquisa no Brasil, o software é construído em <strong>Rust</strong> e compilado para <strong>WebAssembly (WASM)</strong> com interface declarativa reativa em <strong>Dioxus</strong>. O motor numérico resolve mais de 160 equações diferenciais ordinárias (EDOs) e variáveis de estado simultaneamente utilizando o método numérico híbrido de <strong>Rush-Larsen</strong> a $dt = 0.01\text{ ms}$ (1.600 passos por quadro de 16 ms a 60 FPS), assegurando execução em <strong>1x tempo real</strong> com baixíssimo consumo de CPU (<strong>&lt; 5-10%</strong>) em smartphones, tablets, notebooks e computadores de laboratórios acadêmicos, sem depender de placas gráficas dedicadas.</p>
+<p>O <strong>KokoroSim 🌸</strong> é um projeto de código aberto dedicado à simulação biofísica da eletrofisiologia celular cardíaca e hemodinâmica ventricular em tempo real diretamente no navegador web. Desenvolvido inicialmente como projeto pessoal, evoluiu para uma ferramenta que pode auxiliar o ensino e a pesquisa no Brasil, sendo construído em <strong>Rust</strong> e compilado para <strong>WebAssembly (WASM)</strong> com interface declarativa reativa em <strong>Dioxus</strong>. O motor numérico resolve mais de 160 equações diferenciais ordinárias (EDOs) e variáveis de estado simultaneamente utilizando o método numérico híbrido de <strong>Rush-Larsen</strong> a $dt = 0.01\text{ ms}$ (1.600 passos por quadro de 16 ms a 60 FPS), assegurando execução em <strong>1x tempo real</strong> com baixíssimo consumo de CPU (<strong>&lt; 5-10%</strong>) em smartphones, tablets, notebooks e computadores de laboratórios acadêmicos, sem depender de placas gráficas dedicadas.</p>
 <hr />
 <h2 id="navegacao-e-documentacao-do-projeto">🧭 Navegação e Documentação do Projeto</h2>
 <ul>
-<li>🚀 <strong><a href="https://kokorosim.github.io/">Acessar Simulador em Execução (Web App)</a></strong></li>
-<li>🎓 <strong><a href="docs/roteiro_aulas_praticas.md">Roteiro de Aulas Práticas para Universidades</a></strong>: 4 experimentos completos para Fisiologia e Farmacologia.</li>
-<li>🗺️ <strong><a href="ROADMAP.md">Roadmap de Desenvolvimento (ROADMAP.md)</a></strong>: Fases concluídas e planejamento de expansão 2D/3D.</li>
-<li>🏛️ <strong><a href="ARCHITECTURE.md">Decisões de Arquitetura (ARCHITECTURE.md)</a></strong>: Justificativas biofísicas, matemáticas e de engenharia.</li>
+<li>🚀 <strong><a href="app.html">Abrir Simulador Interativo (Web App)</a></strong></li>
+<li>🎓 <strong><a href="./roteiro.html">Roteiro de Aulas Práticas para Universidades</a></strong>: 4 experimentos completos para Fisiologia e Farmacologia.</li>
+<li>🗺️ <strong><a href="./roadmap.html">Roadmap de Desenvolvimento (./roadmap.html)</a></strong>: Fases concluídas e planejamento de expansão 2D/3D.</li>
+<li>🏛️ <strong><a href="./arquitetura.html">Decisões de Arquitetura (./arquitetura.html)</a></strong>: Justificativas biofísicas, matemáticas e de engenharia.</li>
 <li>📜 <strong><a href="CITATION.cff">Como Citar o KokoroSim (CITATION.cff)</a></strong>: Metadados formais para TCCs, dissertações e artigos científicos.</li>
 </ul>
 <hr />
@@ -358,7 +358,7 @@
 </ol>
 <hr />
 <h2 id="sistema-de-conducao-e-dromotropismo-dinamico">⚡ Sistema de Condução e Dromotropismo Dinâmico</h2>
-<p>Diferente de simuladores convencionais que utilizam grampeamentos de voltagem ou temporizadores arbitrários estáticos, o SimCardio v2.0 implementa uma cadeia acoplada com <strong>estímulos de corrente fisiológica</strong> e <strong>latências dependentes de estado (dromotropismo dinâmico)</strong>:</p>
+<p>Diferente de simuladores convencionais que utilizam grampeamentos de voltagem ou temporizadores arbitrários estáticos, o KokoroSim v2.0 implementa uma cadeia acoplada com <strong>estímulos de corrente fisiológica</strong> e <strong>latências dependentes de estado (dromotropismo dinâmico)</strong>:</p>
 <h3 id="1-cadeia-de-propagacao-fisiologica">1. Cadeia de Propagação Fisiológica</h3>
 <p>$$\text{Nó SA} \xrightarrow{\Delta t_{SA \to Atr}} \text{Átrio} \xrightarrow{\Delta t_{Atr \to AV}} \text{Nó AV} \xrightarrow{\Delta t_{AV \to His}} \text{Purkinje} \xrightarrow{\Delta t_{Purk \to Endo}} \text{Endocárdio} \xrightarrow{\Delta t_{trans}} \text{Célula M} \to \text{Epicárdio}$$</p>
 <ul>
@@ -379,7 +379,7 @@
 - <strong>Retardo Conducional e Bloqueios:</strong> O $dV/dt_{\max}$ da Fase 0 ventricular é atenuado e a condução transmural sofre lentificação progressiva, criando o substrato clássico de arritmias por reentrada e dispersão tecidual.</p>
 <hr />
 <h2 id="eletrocardiograma-ecg-baseado-em-dipolo-transmural">📈 Eletrocardiograma (ECG) Baseado em Dipolo Transmural</h2>
-<p>O SimCardio calcula a derivação eletrocardiográfica (equivalente a DII / precordiais) a partir de primeiros princípios biofísicos, resolvendo o gradiente elétrico do campo distante dipolar gerado pela despolarização e repolarização da parede cardíaca:</p>
+<p>O KokoroSim calcula a derivação eletrocardiográfica (equivalente a DII / precordiais) a partir de primeiros princípios biofísicos, resolvendo o gradiente elétrico do campo distante dipolar gerado pela despolarização e repolarização da parede cardíaca:</p>
 <p>$$\text{ECG}(t) = 0.15 \cdot (V_{atrio}(t) + 80) + 0.55 \cdot (V_{endo}(t) - V_{epi}(t)) + 0.25 \cdot (V_M(t) - V_{epi}(t))$$</p>
 <h3 id="como-a-morfologia-p-qrs-t-real-emerge">Como a Morfologia P-QRS-T Real Emerge:</h3>
 <ol>
@@ -458,6 +458,20 @@
   url          = {https://kokorosim.github.io/}
 }
 </code></pre>
+<hr />
+<h2 id="versao-historica-10-prototipo-legado-em-typescriptvite">🕰️ Versão Histórica 1.0 (Protótipo Legado em TypeScript/Vite)</h2>
+<p>Para fins históricos, didáticos e de comparação de desempenho e evolução da engenharia de software, a primeira versão do simulador permanece disponível online:</p>
+<ul>
+<li>🌐 <strong><a href="https://kokorosim.github.io/v1/">Acessar KokoroSim v1.0 (Protótipo Legado)</a></strong></li>
+</ul>
+<h3 id="como-foi-concebida-e-construida-a-v10">Como foi concebida e construída a v1.0</h3>
+<p>A versão 1.0 foi o protótipo inicial do projeto, desenvolvida em Vanilla TypeScript, empacotada com Vite e executada em um Web Worker que integrava as equações diferenciais pelo método explícito de <em>Forward Euler</em> em JavaScript puro para os modelos atrioventriculares iniciais, desenhando os traçados em um elemento Canvas 2D.</p>
+<h3 id="por-que-o-projeto-foi-completamente-reescrito-na-v20-rust-webassembly-dioxus">Por que o projeto foi completamente reescrito na v2.0 (Rust + WebAssembly + Dioxus)?</h3>
+<ol>
+<li><strong>Rigidez Numérica (<em>Stiffness</em>) e a Transição de Forward Euler para Rush-Larsen:</strong> À medida que a simulação incorporou novos modelos acoplados (Purkinje, as 3 camadas ventriculares transmurais e fibroblastos), a rigidez matemática dos canais rápidos de sódio ($\tau_m \approx 0.0008\text{ ms}$) impôs passos microscópicos de integração ($dt = 0.001\text{ ms}$). O navegador precisava processar mais de 8 milhões de avaliações de EDOs por segundo, saturando CPUs modestas e tornando a execução lenta e inviável em celulares. Na v2.0, a reescrita em Rust e a adoção do método de integração exponencial de <strong>Rush-Larsen (1978)</strong> permitiram multiplicar o passo em 10x ($dt = 0.01\text{ ms}$), reduzindo o consumo de CPU para <strong>&lt; 5-10%</strong> com estabilidade numérica incondicional.</li>
+<li><strong>Eliminação de <em>Stuttering</em> por Garbage Collection:</strong> O motor V8 do JavaScript sofria com pausas intermitentes de desalocação de memória (<em>Garbage Collection</em>) e desotimizações JIT causadas pelo volume constante de arrays transitórios, provocando micro-travamentos no osciloscópio. O WebAssembly em Rust roda com determinismo estrito, latência zero de GC e taxa contínua de 60 FPS.</li>
+<li><strong>Memória Linear Compartilhada (<em>Zero-Copy</em>):</strong> Na arquitetura antiga, os buffers de pontos precisavam ser serializados e copiados via mensagens entre o Web Worker e a thread principal de renderização. Na v2.0, a interface reativa em Dioxus e o motor biofísico operam no mesmo espaço de memória linear contígua do Wasm sem nenhuma cópia de dados.</li>
+</ol>
 <hr />
 <h2 id="licenca">📜 Licença</h2>
 <p>Distribuído sob a licença <strong>GNU General Public License v3.0 (GPLv3)</strong>. Consulte o arquivo <code>LICENSE</code> para mais detalhes.</p>

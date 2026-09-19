@@ -1,6 +1,6 @@
-# Arquitetura do Sistema e Decisões de Engenharia — SimCardio v2.0
+# Arquitetura do Sistema e Decisões de Engenharia — KokoroSim v2.0
 
-Este documento detalha o "porquê" das decisões de engenharia, arquitetura de software e modelagem biofísica adotadas no SimCardio v2.0, contrapondo-as às alternativas descartadas e documentando a evolução histórica do projeto.
+Este documento detalha o "porquê" das decisões de engenharia, arquitetura de software e modelagem biofísica adotadas no KokoroSim v2.0, contrapondo-as às alternativas descartadas e documentando a evolução histórica do projeto.
 
 ---
 
@@ -77,7 +77,7 @@ Este documento detalha o "porquê" das decisões de engenharia, arquitetura de s
 * **Decisão Adotada:** Cálculo da pressão ventricular esquerda ($LVP$) via **Elastância Variável no Tempo** de Suga & Sagawa ($P_{LV} = E(t) \cdot (V - V_0)$) modulada pelo transiente real de $[Ca^{2+}]_i$, e da pressão aórtica ($AoP$) via modelo arterial **Windkessel de 3 elementos** com dinâmica de abertura/fechamento valvar baseada em gradientes físicos de pressão.
 * **Alternativa Recusada:** Geração de curvas senoidais pré-gravadas ou interpolação spline puramente cosmética.
 * **Justificativa Técnica:**
-  - Em simuladores puramente visuais, curvas de pressão são geradas como animações decorativas desconectadas da célula. No SimCardio v2.0, se um fármaco (como Verapamil ou Digoxina) alterar o influxo de cálcio ou a frequência cardíaca, a força ativa e a curva de elastância $E(t)$ mudam organicamente.
+  - Em simuladores puramente visuais, curvas de pressão são geradas como animações decorativas desconectadas da célula. No KokoroSim v2.0, se um fármaco (como Verapamil ou Digoxina) alterar o influxo de cálcio ou a frequência cardíaca, a força ativa e a curva de elastância $E(t)$ mudam organicamente.
   - A abertura da valva aórtica ocorre estritamente quando $P_{LV} > P_{ao}$, e o fechamento abrupto ocorre quando $P_{LV} \le P_{ao}$, gerando de forma determinística a **incisura dicrótica** na curva aórtica sem nenhuma aproximação artificial.
 
 ---
@@ -98,7 +98,7 @@ Este documento detalha o "porquê" das decisões de engenharia, arquitetura de s
 * **Decisão Adotada:** Implementação do método de integração híbrido **Rush-Larsen (1978)** para todas as variáveis de portão de condutância iônica nos modelos ventriculares (ten Tusscher 2006), de Purkinje (Stewart 2009) e atriais (Courtemanche 1998), aliado à calibração eletroacústica para microtransdutores de smartphones e notebooks.
 * **Alternativa Recusada:** Método explícito de Forward Euler puro com passo rígido microscópico ($dt = 0.001\text{ ms}$) ou integradores implícitos de passo adaptativo (Runge-Kutta / CVODE / BDF).
 * **Justificativa Técnica e Diretriz Arquitetural:**
-  - **Requisito Não-Funcional Inegociável: Acessibilidade e Inclusão Tecnológica:** O SimCardio foi concebido como ferramenta de ensino e pesquisa para alcançar o maior número de estudantes, médicos e pesquisadores em escala global, especialmente em regiões com restrição orçamentária e países em desenvolvimento. O sistema **não pode pressupor computadores potentes com GPUs dedicadas ou CPUs de alto desempenho**. Ele deve obrigatoriamente rodar com fluidez a **60 FPS estáveis** e consumo de CPU mínimo (**< 5-10% de uso de CPU**) em **smartphones de entrada (Android/iOS)**, **tablets**, **Chromebooks** e notebooks antigos com baixo TDP (Intel Celeron, Atom, processadores ARM eficientes).
+  - **Requisito Não-Funcional Inegociável: Acessibilidade e Inclusão Tecnológica:** O KokoroSim foi concebido como ferramenta de ensino e pesquisa para alcançar o maior número de estudantes, médicos e pesquisadores em escala global, especialmente em regiões com restrição orçamentária e países em desenvolvimento. O sistema **não pode pressupor computadores potentes com GPUs dedicadas ou CPUs de alto desempenho**. Ele deve obrigatoriamente rodar com fluidez a **60 FPS estáveis** e consumo de CPU mínimo (**< 5-10% de uso de CPU**) em **smartphones de entrada (Android/iOS)**, **tablets**, **Chromebooks** e notebooks antigos com baixo TDP (Intel Celeron, Atom, processadores ARM eficientes).
   - **O Gargalo do Forward Euler e a Rigidez Numérica (*Stiffness*):** No esquema anterior com Forward Euler a $dt = 0.001\text{ ms}$, cada quadro de 16 ms demandava 16.000 passos por modelo celular. Com 8 modelos simultâneos acoplados (SA, AV, Átrio, Purkinje, 3 camadas ventriculares e Fibroblasto), o navegador precisava computar **128.000 avaliações completas de EDOs por quadro (8 milhões por segundo)**. Em computadores e dispositivos móveis modestos, isso saturava a CPU em 100%, gerando lentidão de até 10x em relação ao tempo real.
   - Ao tentar aumentar o passo de integração para $dt = 0.01\text{ ms}$ no Forward Euler clássico, o sistema explodia numericamente para `NaN`. A causa física é a **rigidez numérica** dos canais rápidos de sódio: a constante de tempo do portão $m$ durante a Fase 0 atinge $\tau_m \approx 0.0008\text{ ms}$. No Forward Euler, qualquer passo $dt > 2\tau$ viola a estabilidade assintótica local ($|1 - dt/\tau| > 1$), amplificando o erro exponencialmente até o colapso.
   - **A Solução Analítica Exata de Rush-Larsen:** Todas as variáveis de abertura e inativação de canais iônicos seguem a forma canônica de relaxamento linear de 1ª ordem:

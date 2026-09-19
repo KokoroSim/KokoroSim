@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# SimCardio Local Development Server with Auto-Watch, Concurrency Queue & LiveReload
+# KokoroSim Local Development Server with Auto-Watch, Concurrency Queue & LiveReload
 # =============================================================================
 
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -26,13 +26,13 @@ if ! command -v inotifywait >/dev/null 2>&1; then
     exit 1
 fi
 
-FIFO=$(mktemp -u /tmp/simcardio_watch.XXXXXX)
+FIFO=$(mktemp -u /tmp/kokorosim_watch.XXXXXX)
 mkfifo "$FIFO"
 
 cleanup() {
     trap - INT TERM EXIT
     echo ""
-    echo "🛑 Encerrando ambiente local do SimCardio..."
+    echo "🛑 Encerrando ambiente local do KokoroSim..."
     if [ -n "${SERVER_PID:-}" ] && kill -0 "$SERVER_PID" 2>/dev/null; then
         kill -TERM "$SERVER_PID" 2>/dev/null || true
         wait "$SERVER_PID" 2>/dev/null || true
@@ -52,7 +52,7 @@ build_wasm() {
     echo "----------------------------------------------------------------------"
     echo "🔨 [$(date '+%H:%M:%S')] Compilando projeto Wasm (Build Time: $timestamp)..."
     
-    export SIMCARDIO_BUILD_TIME="$timestamp"
+    export KOKOROSIM_BUILD_TIME="$timestamp"
     if (cd "$UI_DIR" && wasm-pack build --target web); then
         python3 "$PROJECT_ROOT/scripts/build_docs.py" >/dev/null 2>&1 || true
         # Gera novo token de build para acionar o LiveReload no navegador
@@ -67,7 +67,7 @@ build_wasm() {
 }
 
 echo "======================================================================"
-echo " ★ SimCardio — Ambiente de Desenvolvimento Integrado com LiveReload ★"
+echo " ★ KokoroSim 🌸 — Ambiente de Desenvolvimento Integrado com LiveReload ★"
 echo "======================================================================"
 
 # 1. Executa build inicial

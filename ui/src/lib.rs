@@ -9,8 +9,8 @@ use plot::Plotter;
 
 mod audio;
 
-const VERSION: &str = env!("SIMCARDIO_VERSION");
-const BUILD_TIME: &str = env!("SIMCARDIO_BUILD_TIME");
+const VERSION: &str = env!("KOKOROSIM_VERSION");
+const BUILD_TIME: &str = env!("KOKOROSIM_BUILD_TIME");
 
 #[wasm_bindgen(start)]
 pub fn start() {
@@ -408,7 +408,7 @@ fn App() -> Element {
                         title: "Abrir documentação científica e manual completo em nova aba",
                         onclick: move |_| {
                             if let Some(w) = web_sys::window() {
-                                let _ = w.open_with_url_and_target("./sobre.html", "_blank");
+                                let _ = w.open_with_url_and_target("./index.html", "_blank");
                             }
                         },
                         "ℹ SOBRE"

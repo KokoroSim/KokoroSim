@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KokoroSim 🌸 — Simulador Eletrofisiológico e Hemodinâmico</title>
+    <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+    <div id="main"></div>
+    <script type="module">
+        import init from './pkg/ui.js';
+        init();
+    </script>
+    <script>
+        // KokoroSim LiveReload Client (desenvolvimento local)
+        (function() {
+            let lastBuildId = null;
+            async function pollLiveReload() {
+                try {
+                    const res = await fetch('/__livereload__?t=' + Date.now());
+                    if (res.ok) {
+                        const id = await res.text();
+                        if (lastBuildId !== null && id !== lastBuildId) {
+                            console.log('[KokoroSim LiveReload] Nova build detectada (' + id + '). Recarregando...');
+                            window.location.reload();
+                            return;
+                        }
+                        lastBuildId = id;
+                    }
+                } catch (_) {}
+                setTimeout(pollLiveReload, 800);
+            }
+            pollLiveReload();
+        })();
+    </script>
+</body>
+</html>

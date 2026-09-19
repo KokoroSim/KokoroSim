@@ -4,7 +4,7 @@ use wasm_bindgen::prelude::*;
 // Esta macro diz ao compilador para exportar essa função para o JavaScript
 #[wasm_bindgen]
 pub fn init_engine() -> String {
-    "SimCardio WASM Engine Inicializada com Sucesso!".to_string()
+    "KokoroSim WASM Engine Inicializada com Sucesso!".to_string()
 }
 
 // Uma função de teste para garantir que a matemática roda e se comunica

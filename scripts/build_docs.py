@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Gera páginas HTML estáticas a partir dos arquivos Markdown do SimCardio
+Gera páginas HTML estáticas a partir dos arquivos Markdown do KokoroSim
 com tema escuro médico, suporte a MathJax para fórmulas LaTeX e navegação integrada.
 """
 
@@ -265,12 +265,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             🌸 <span class="pulse">KokoroSim</span>
         </a>
         <div class="nav-links">
-            <a href="./index.html" class="btn-app">▶ Simulador Web</a>
-            <a href="./sobre.html" class="{active_sobre}">📖 Sobre</a>
+            <a href="./app.html" class="btn-app">🚀 Simulador Web</a>
+            <a href="./index.html" class="{active_sobre}">📖 Sobre</a>
             <a href="./roteiro.html" class="{active_roteiro}">🎓 Roteiro Prático</a>
             <a href="./roadmap.html" class="{active_roadmap}">🗺️ Roadmap</a>
             <a href="./arquitetura.html" class="{active_arquitetura}">🏛️ Arquitetura</a>
-            <a href="https://github.com/KokoroSim/kokorosim" target="_blank">💻 GitHub</a>
+            <a href="https://github.com/KokoroSim/KokoroSim" target="_blank">💻 GitHub</a>
         </div>
     </nav>
     <main class="doc-container">
@@ -285,6 +285,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 """
 
 DOCS_MAP = [
+    {
+        "src": "README.md",
+        "dest": "ui/index.html",
+        "title": "Sobre e Documentação",
+        "active": "sobre"
+    },
     {
         "src": "README.md",
         "dest": "ui/sobre.html",
@@ -333,6 +339,12 @@ def main():
 
         with open(src_path, "r", encoding="utf-8") as f:
             raw_text = f.read()
+
+        # Ajusta links internos entre documentos markdown para as páginas HTML geradas
+        raw_text = raw_text.replace("docs/roteiro_aulas_praticas.md", "./roteiro.html")
+        raw_text = raw_text.replace("ROADMAP.md", "./roadmap.html")
+        raw_text = raw_text.replace("ARCHITECTURE.md", "./arquitetura.html")
+        raw_text = raw_text.replace("README.md", "./index.html")
 
         html_body = md.convert(raw_text)
         md.reset()
