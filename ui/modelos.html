@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modelos Biofísicos e Referências Científicas</title>
+    <link rel="icon" type="image/png" href="assets/icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --bg-main: #090a0f;
+            --bg-card: #10121a;
+            --border: #1c202d;
+            --border-tech: #2a3144;
+            --text-main: #e2e8f0;
+            --text-muted: #8493a8;
+            --neon-carmine: #ff1754;
+            --carmine-glow: rgba(255, 23, 84, 0.45);
+            --neon-cyan: #00f2fe;
+            --cyan-glow: rgba(0, 242, 254, 0.4);
+            --neon-amber: #ffd32a;
+            --neon-green: #05c46b;
+            --code-bg: #141724;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.7;
+            font-size: 16px;
+            padding-bottom: 60px;
+            background-image: 
+                linear-gradient(rgba(28, 32, 45, 0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(28, 32, 45, 0.15) 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+
+        nav.top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(9, 10, 15, 0.94);
+            backdrop-filter: blur(12px);
+            border-bottom: 2px solid var(--border-tech);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 24px;
+            max-width: 100%;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+            letter-spacing: 0.05em;
+        }
+
+        .brand-logo {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 8px var(--carmine-glow));
+        }
+
+        .brand-kanji {
+            color: var(--neon-carmine);
+            text-shadow: 0 0 10px var(--carmine-glow);
+            font-weight: 900;
+            margin: 0 1px;
+        }
+
+        .brand-sim {
+            color: var(--neon-cyan);
+            text-shadow: 0 0 8px var(--cyan-glow);
+            font-weight: 700;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            flex-wrap: wrap;
+            font-family: 'Chakra Petch', sans-serif;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.92rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            padding: 6px 12px;
+            border: 1px solid transparent;
+            clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: #ffffff;
+            border-color: var(--neon-cyan);
+            background: rgba(0, 242, 254, 0.12);
+            box-shadow: 0 0 12px var(--cyan-glow);
+            text-shadow: 0 0 6px var(--cyan-glow);
+        }
+
+        .nav-links a.btn-app {
+            background: linear-gradient(135deg, var(--neon-carmine), #d61346);
+            color: #ffffff;
+            font-weight: 700;
+            padding: 7px 18px;
+            border: 1px solid #ff4d79;
+            box-shadow: 0 0 15px var(--carmine-glow);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .nav-links a.btn-app:hover {
+            background: linear-gradient(135deg, #ff4375, var(--neon-carmine));
+            box-shadow: 0 0 24px var(--neon-carmine);
+            transform: translateY(-1px);
+        }
+
+        main.doc-container {
+            max-width: 960px;
+            margin: 36px auto;
+            padding: 0 24px;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Chakra Petch', sans-serif;
+            color: #ffffff;
+            font-weight: 700;
+            margin-top: 1.8em;
+            margin-bottom: 0.6em;
+            letter-spacing: 0.02em;
+        }
+
+        h1 {
+            font-size: 2.3rem;
+            border-bottom: 2px solid var(--border-tech);
+            padding-bottom: 12px;
+            margin-top: 0.5em;
+            color: #ffffff;
+            text-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+
+        h1::after {
+            content: "";
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 80px;
+            height: 2px;
+            background: var(--neon-carmine);
+            box-shadow: 0 0 8px var(--neon-carmine);
+        }
+
+        h1[align="center"] {
+            border-bottom: none;
+            padding-bottom: 0;
+            text-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
+        }
+
+        h1[align="center"]::after {
+            display: none;
+        }
+
+        h2 {
+            font-size: 1.55rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 8px rgba(0, 242, 254, 0.25);
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            color: var(--neon-amber);
+        }
+
+        p {
+            margin-bottom: 1.1em;
+            color: var(--text-main);
+        }
+
+        a {
+            color: var(--neon-cyan);
+            text-decoration: none;
+            transition: 0.2s;
+            border-bottom: 1px dotted rgba(0, 242, 254, 0.4);
+        }
+
+        a:hover {
+            color: #80fbff;
+            text-shadow: 0 0 8px var(--cyan-glow);
+            border-bottom-color: var(--neon-cyan);
+        }
+
+        ul, ol {
+            margin-bottom: 1.2em;
+            padding-left: 28px;
+        }
+
+        li {
+            margin-bottom: 0.4em;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid var(--border-tech);
+            margin: 2.2em 0;
+            position: relative;
+        }
+
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border-tech);
+            border-left: 3px solid var(--neon-cyan);
+            border-radius: 4px;
+            padding: 16px;
+            overflow-x: auto;
+            margin-bottom: 1.4em;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #ffd32a;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        pre code {
+            background: none;
+            border: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.8em 0;
+            background: var(--bg-card);
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid var(--border-tech);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+        }
+
+        th, td {
+            padding: 11px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.92rem;
+        }
+
+        th {
+            font-family: 'Chakra Petch', sans-serif;
+            background: rgba(28, 32, 45, 0.6);
+            color: var(--neon-cyan);
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+
+        tr:hover {
+            background: rgba(0, 242, 254, 0.03);
+        }
+
+        blockquote {
+            border-left: 3px solid var(--neon-carmine);
+            background: rgba(255, 23, 84, 0.06);
+            padding: 14px 18px;
+            margin: 1.4em 0;
+            border-radius: 0 4px 4px 0;
+            color: var(--text-main);
+            box-shadow: inset 0 0 12px rgba(255, 23, 84, 0.04);
+        }
+
+        footer {
+            max-width: 960px;
+            margin: 60px auto 0 auto;
+            padding: 24px 20px 0 20px;
+            border-top: 1px solid var(--border-tech);
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-family: 'Chakra Petch', sans-serif;
+        }
+
+        footer p {
+            margin-bottom: 6px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                font-size: 15px;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            .nav-links {
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="top-nav">
+        <a href="./index.html" class="brand">
+            <img src="assets/icon.png" alt="KokoroSim" class="brand-logo">
+            <span>kokor<span class="brand-kanji">心</span><span class="brand-sim">sim</span></span>
+        </a>
+        <div class="nav-links">
+            <a href="./app.html" class="btn-app">🚀 Simulador Web</a>
+            <a href="./index.html" class="">📖 Sobre</a>
+            <a href="./modelos.html" class="active">🧬 Modelos</a>
+            <a href="./roteiro.html" class="">🎓 Roteiro Prático</a>
+            <a href="./roadmap.html" class="">🗺️ Roadmap</a>
+            <a href="./arquitetura.html" class="">🏛️ Arquitetura</a>
+            <a href="https://github.com/KokoroSim/KokoroSim" target="_blank">💻 GitHub</a>
+        </div>
+    </nav>
+    <main class="doc-container">
+        <h1 id="modelos-biofisicos-e-referencias-cientificas">Modelos Biofísicos e Referências Científicas</h1>
+<p>O <strong>KokoroSim</strong> implementa 7 modelos biofísicos padrão-ouro validados pela literatura científica internacional e pelo consórcio <a href="https://models.physiomeproject.org/">Physiome Model Repository (CellML)</a>. Este documento reúne a fundamentação biofísica, artigos seminais, identificadores científicos e repositórios computacionais de cada componente simulado.</p>
+<hr />
+<h2 id="sumario-dos-modelos">📋 Sumário dos Modelos</h2>
+<ol>
+<li><a href="#1-nó-sinoatrial-sa--marcapasso-primário">Nó Sinoatrial (SA) — Severi et al. (2012)</a></li>
+<li><a href="#2-músculo-atrial-humano">Músculo Atrial Humano — Courtemanche et al. (1998)</a></li>
+<li><a href="#3-nó-atrioventricular-av--filtro-e-retardo-fisiológico">Nó Atrioventricular (AV) — Inada et al. (2009)</a></li>
+<li><a href="#4-fibras-de-purkinje-e-feixe-de-his--condução-rápida-e-marcapasso-terciário">Fibras de Purkinje e Feixe de His — Stewart et al. (2009)</a></li>
+<li><a href="#5-músculo-ventricular-com-heterogeneidade-transmural">Músculo Ventricular com Heterogeneidade Transmural — ten Tusscher &amp; Panfilov (2006)</a></li>
+<li><a href="#6-fibroblastos-cardíacos-e-miofibroblastos">Fibroblastos Cardíacos e Fibrose — MacCannell et al. (2007)</a></li>
+<li><a href="#7-acoplamento-eletromecânico-e-hemodinâmica-diagrama-de-wiggers">Acoplamento Eletromecânico e Hemodinâmica — Suga-Sagawa &amp; Westerhof</a></li>
+</ol>
+<hr />
+<h2 id="1-no-sinoatrial-sa-marcapasso-primario">1. Nó Sinoatrial (SA) — Marcapasso Primário</h2>
+<ul>
+<li><strong>Modelo:</strong> Severi et al. (2012)</li>
+<li><strong>Artigo Original:</strong> <em>An updated computational model of rabbit sinoatrial action potential to investigate the mechanisms of heart rate modulation.</em> J Physiol. 2012;590(18):4483-4499.</li>
+<li><strong>Repositório CellML:</strong> <a href="https://models.physiomeproject.org/e/144/">PMR Model e/144</a></li>
+<li><strong>Identificadores Científicos:</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/22711956/">PubMed 22711956</a> | <a href="https://doi.org/10.1113/jphysiol.2012.234385">DOI 10.1113/jphysiol.2012.234385</a></li>
+</ul>
+<h3 id="biofisica-e-papel-fisiologico">Biofísica e Papel Fisiológico</h3>
+<p>O nó sinoatrial gera o automatismo elétrico intrínseco (Fase 4 despolarizante espontânea) através da interação sinérgica entre:
+- <strong>Relógio de Membrana (<em>Voltage Clock</em>):</strong> Ativação hiperpolarização-dependente da corrente <em>funny</em> ($I_f$), despolarizando a célula a partir de $-65\text{ mV}$.
+- <strong>Relógio de Cálcio (<em>Calcium Clock</em>):</strong> Liberações diastólicas submembranares espontâneas de cálcio pelo retículo sarcoplasmático via receptores de rianodina (RyR), ativando o trocador eletrogênico sódio-cálcio ($I_{NCX}$) que acelera a despolarização até o limiar de disparo dos canais de cálcio do tipo T ($I_{Ca,T}$) e do tipo L ($I_{Ca,L}$).
+- <strong>Modulação Autonômica:</strong> Sensibilidade direta à estimulação de receptores adrenérgicos $\beta_1$ (aceleração cronotrópica) e colinérgicos muscarínicos $M_2$ via corrente de potássio dependente de acetilcolina ($I_{K,ACh}$).</p>
+<hr />
+<h2 id="2-musculo-atrial-humano">2. Músculo Atrial Humano</h2>
+<ul>
+<li><strong>Modelo:</strong> Courtemanche, Ramirez, Nattel (1998)</li>
+<li><strong>Artigo Original:</strong> <em>Ionic mechanisms underlying human atrial action potential properties: insights from a mathematical model.</em> Am J Physiol. 1998;275(1):H301-H321.</li>
+<li><strong>Repositório CellML:</strong> <a href="https://models.physiomeproject.org/e/286/courtemanche_ramirez_nattel_1998.cellml">PMR Model e/286</a></li>
+<li><strong>Identificadores Científicos:</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/9688927/">PubMed 9688927</a> | <a href="https://doi.org/10.1152/ajpheart.1998.275.1.H301">DOI 10.1152/ajpheart.1998.275.1.H301</a></li>
+</ul>
+<h3 id="biofisica-e-papel-fisiologico_1">Biofísica e Papel Fisiológico</h3>
+<p>Representa os miócitos atriais contráteis humanos de resposta rápida:
+- <strong>Fase 0:</strong> Ascensão ultraveloz mediada por densa corrente rápida de canais de sódio ($I_{Na}$).
+- <strong>Platô Curto:</strong> Platô intermediário mantido por $I_{Ca,L}$ e balanceado pelas correntes transitórias para fora ($I_{to}$).
+- <strong>Repolarização Atrial Específica:</strong> Dependente da corrente de retificação tardia ultrarrápida ($I_{Kur}$), alvo preferencial de novos fármacos atriais seletivos para fibrilação atrial.
+- <strong>Eletrocardiograma:</strong> A despolarização da câmara atrial sincronizada gera a <strong>Onda P</strong> do traçado de ECG.</p>
+<hr />
+<h2 id="3-no-atrioventricular-av-filtro-e-retardo-fisiologico">3. Nó Atrioventricular (AV) — Filtro e Retardo Fisiológico</h2>
+<ul>
+<li><strong>Modelo:</strong> Inada et al. (2009)</li>
+<li><strong>Artigo Original:</strong> <em>One-dimensional mathematical model of the atrioventricular node including the atrioventricular ring and bundle of His.</em> Biophys J. 2009;97(8):2117-2127.</li>
+<li><strong>Repositório CellML:</strong> <a href="https://models.physiomeproject.org/e/55/inada_hancox_zhang_boyett_2009.cellml">PMR Model e/55</a></li>
+<li><strong>Identificadores Científicos:</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/19843444/">PubMed 19843444</a> | <a href="https://doi.org/10.1016/j.bpj.2009.06.056">DOI 10.1016/j.bpj.2009.06.056</a></li>
+</ul>
+<h3 id="biofisica-e-papel-fisiologico_2">Biofísica e Papel Fisiológico</h3>
+<p>Atua como filtro de segurança hemodinâmica e retardo cronometrado:
+- <strong>Retardo AV:</strong> Permite que a sístole atrial preencha completamente os ventrículos antes da contração ventricular (intervalo PR do ECG).
+- <strong>Condução Lenta de Resposta Lenta:</strong> Ausência de canais rápidos de sódio funcionais; a subida de potencial depende exclusivamente de $I_{Ca,L}$, conferindo baixa velocidade de condução.
+- <strong>Condução Decremental e Refratariedade:</strong> Em frequências elevadas, os canais de cálcio não se recuperam completamente da inativação, provocando lentificação progressiva ou bloqueio de condução (proteção contra taquicardias supraventriculares com resposta ventricular descontrolada).</p>
+<hr />
+<h2 id="4-fibras-de-purkinje-e-feixe-de-his-conducao-rapida-e-marcapasso-terciario">4. Fibras de Purkinje e Feixe de His — Condução Rápida e Marcapasso Terciário</h2>
+<ul>
+<li><strong>Modelo:</strong> Stewart et al. (2009)</li>
+<li><strong>Artigo Original:</strong> <em>Mathematical model of the electrical action potential of the human Purkinje cell.</em> Biophys J. 2009;96(9):3493-3507.</li>
+<li><strong>Repositório CellML:</strong> <a href="https://models.physiomeproject.org/e/7e/stewart_aslanidi_noble_noble_boyett_zhang_2009.cellml">PMR Model e/7e</a></li>
+<li><strong>Identificadores Científicos:</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/19413956/">PubMed 19413956</a> | <a href="https://doi.org/10.1016/j.bpj.2009.01.047">DOI 10.1016/j.bpj.2009.01.047</a></li>
+</ul>
+<h3 id="biofisica-e-papel-fisiologico_3">Biofísica e Papel Fisiológico</h3>
+<p>Constitui a rede condutora especializada do sistema His-Purkinje:
+- <strong>Alta Velocidade de Propagação:</strong> $dV/dt_{\max} &gt; 400\text{ V/s}$, garantindo sincronia biventricular.
+- <strong>Morfologia Característica:</strong> Entalhe precoce acentuado (<em>notch</em> na Fase 1) impulsionado por $I_{to1}$ e corrente sustentada para fora ($I_{sus}$).
+- <strong>Automatismo de Escape Terciário:</strong> Presença de corrente marcapasso $I_f$ residual, permitindo ritmo de escape idioventricular fisiológico (~25 a 35 BPM) em casos de bloqueio atrioventricular total (BAV de 3º grau).</p>
+<hr />
+<h2 id="5-musculo-ventricular-com-heterogeneidade-transmural">5. Músculo Ventricular com Heterogeneidade Transmural</h2>
+<ul>
+<li><strong>Modelo:</strong> ten Tusscher &amp; Panfilov (2006)</li>
+<li><strong>Artigo Original:</strong> <em>Alternans and spiral breakup in a human ventricular tissue model.</em> Am J Physiol Heart Circ Physiol. 2006;291(3):H1088-H1100.</li>
+<li><strong>Repositório CellML:</strong> <a href="https://models.physiomeproject.org/e/210/tentusscher_panfilov_2006_m.cellml">PMR Model e/210</a></li>
+<li><strong>Identificadores Científicos:</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/16565318/">PubMed 16565318</a> | <a href="https://doi.org/10.1152/ajpheart.00109.2006">DOI 10.1152/ajpheart.00109.2006</a></li>
+</ul>
+<h3 id="biofisica-e-papel-fisiologico_4">Biofísica e Papel Fisiológico</h3>
+<p>Modela a parede livre ventricular humana diferenciada em 3 camadas eletrofisiologicamente distintas:
+1. <strong>Endocárdio:</strong> Baixa densidade de corrente de saída transitória ($I_{to}$), ativado primeiro pela rede subendocárdica de Purkinje.
+2. <strong>Célula M (Mesomiocárdio):</strong> Densidade reduzida da corrente lenta de potássio ($I_{Ks}$), gerando o potencial de ação mais longo de toda a parede miocárdica.
+3. <strong>Epicárdio:</strong> Densidade elevada de $I_{to}$ e <strong>duração do potencial de ação (APD) significativamente mais curta</strong>.</p>
+<h4 id="a-genese-biofisica-da-onda-t">A Gênese Biofísica da Onda T</h4>
+<p>Como a despolarização avança do <strong>Endocárdio $\to$ Epicárdio</strong>, mas a repolarização ocorre na direção inversa (<strong>Epicárdio $\to$ Endocárdio</strong> devido ao APD mais curto do epicárdio), o vetor elétrico transmural mantém a mesma orientação em ambas as fases. Isso explica por que a <strong>Onda T normal é positiva e concordante com o complexo QRS</strong>.</p>
+<hr />
+<h2 id="6-fibroblastos-cardiacos-e-miofibroblastos">6. Fibroblastos Cardíacos e Miofibroblastos</h2>
+<ul>
+<li><strong>Modelo:</strong> MacCannell et al. (2007)</li>
+<li><strong>Artigo Original:</strong> <em>A mathematical model of electrotonic interactions between ventricular myocytes and fibroblasts.</em> Biophys J. 2007;92(11):4121-4132.</li>
+<li><strong>Repositório CellML:</strong> <a href="https://models.physiomeproject.org/e/98/maccannell_bazzazi_chilton_shibukawa_clark_giles_2007.cellml">PMR Model e/98</a></li>
+<li><strong>Identificadores Científicos:</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/17351008/">PubMed 17351008</a> | <a href="https://doi.org/10.1529/biophysj.106.101410">DOI 10.1529/biophysj.106.101410</a></li>
+</ul>
+<h3 id="biofisica-e-papel-fisiologico_5">Biofísica e Papel Fisiológico</h3>
+<p>Modela o acoplamento eletrotônico heterocelular via junções comunicantes (<em>gap junctions</em> de conexina-43 e conexina-45):
+- <strong>Células Não-Excitáveis de Repouso Alto:</strong> Fibroblastos possuem potencial de repouso entre $-35\text{ mV}$ e $-45\text{ mV}$.
+- <strong>Dreno Capacitivo:</strong> Ao se conectarem aos miócitos, drenam corrente durante a Fase 0 (reduzindo a amplitude e a velocidade de ascensão $dV/dt$) e injetam corrente durante a diástole (despolarizando parcialmente o potencial de repouso miocitário).
+- <strong>Substrato Arritmogênico:</strong> Na presença de fibrose miocárdica extensa pós-infarto ou senil, o aumento do número de fibroblastos acoplados ($G_{gap}$) causa dispersão espacial da repolarização, alargamento do QRS e predisposição a arritmias ventriculares por reentrada.</p>
+<hr />
+<h2 id="7-acoplamento-eletromecanico-e-hemodinamica-diagrama-de-wiggers">7. Acoplamento Eletromecânico e Hemodinâmica (Diagrama de Wiggers)</h2>
+<ul>
+<li><strong>Modelos:</strong> </li>
+<li>Elastância Ventricular Variável no Tempo: Suga &amp; Sagawa (1974)</li>
+<li>Circulação Arterial Windkessel de 3 Elementos: Westerhof et al. (2009)</li>
+<li><strong>Identificadores Científicos:</strong> </li>
+<li>Suga H, Sagawa K. <em>Instantaneous pressure-volume relationships and their ratio in the excised, supported canine left ventricle.</em> Circ Res. 1974;35(1):117-126. <a href="https://pubmed.ncbi.nlm.nih.gov/4841253/">PubMed 4841253</a></li>
+<li>Westerhof N, Lankhaar JW, Westerhof BE. <em>The arterial Windkessel.</em> Med Biol Eng Comput. 2009;47(2):131-141. <a href="https://pubmed.ncbi.nlm.nih.gov/19194725/">PubMed 19194725</a> | <a href="https://doi.org/10.1007/s11517-008-0359-2">DOI 10.1007/s11517-008-0359-2</a></li>
+</ul>
+<h3 id="biofisica-e-dinamica-ventricular">Biofísica e Dinâmica Ventricular</h3>
+<ol>
+<li><strong>Acoplamento Excitação-Contração:</strong> A concentração intracelular transitória de cálcio livre ($[Ca^{2+}]_i$) é mapeada dinamicamente na ativação miofilamentar e na função de elastância $E(t)$.</li>
+<li><strong>Pressão Ventricular Esquerda ($LVP$):</strong> Calculada em tempo real pela relação pressão-volume dependente da elastância instantânea.</li>
+<li><strong>Pressão Aórtica ($AoP$) e Incisura Dicrótica:</strong> Resolvida pelo modelo arterial de Windkessel de 3 elementos (resistência periférica total $R_p$, complacência arterial $C_a$ e impedância característica da aorta $Z_c$). O fechamento abrupto das cúspides aórticas gera a incisura dicrótica realista.</li>
+<li><strong>Bioacústica das Bulhas Cardíacas:</strong></li>
+<li><strong>Primeira Bulha (B1):</strong> Disparada acusticamente pelo fechamento de alta energia da valva mitral no início da sístole isovolumétrica ($LVP &gt; LAP$).</li>
+<li><strong>Segunda Bulha (B2):</strong> Disparada pelo fechamento das cúspides da valva aórtica no início da diástole isovolumétrica ($AoP &gt; LVP$).</li>
+</ol>
+    </main>
+    <footer>
+        <p><b>kokor<span style="color: var(--neon-carmine); font-weight: 900;">心</span><span style="color: var(--neon-cyan); font-weight: bold;">sim</span></b> — Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real</p>
+        <p>Software Livre sob licença GNU GPLv3. Desenvolvido para universidades e centros de pesquisa.</p>
+    </footer>
+</body>
+</html>

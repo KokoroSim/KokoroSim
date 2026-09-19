@@ -1,4 +1,4 @@
-# Roadmap de Implementação — KokoroSim 🌸
+# Roadmap de Desenvolvimento
 
 O desenvolvimento do **KokoroSim** está organizado em grandes marcos arquiteturais e eletrofisiológicos. 
 

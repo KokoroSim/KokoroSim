@@ -1,4 +1,4 @@
-# Arquitetura do Sistema e Decisões de Engenharia — KokoroSim v2.0
+# Decisões de Arquitetura e Engenharia
 
 Este documento detalha o "porquê" das decisões de engenharia, arquitetura de software e modelagem biofísica adotadas no KokoroSim v2.0, contrapondo-as às alternativas descartadas e documentando a evolução histórica do projeto.
 

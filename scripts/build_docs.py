@@ -13,272 +13,367 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{title} — KokoroSim 🌸</title>
+    <title>__PAGE_TITLE__</title>
+    <link rel="icon" type="image/png" href="assets/icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
+                displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']],
+                processEscapes: true
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            }
+        };
+    </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
-        :root {{
-            --bg-main: #0a0a0c;
-            --bg-card: #121216;
-            --border: #22222a;
+        :root {
+            --bg-main: #090a0f;
+            --bg-card: #10121a;
+            --border: #1c202d;
+            --border-tech: #2a3144;
             --text-main: #e2e8f0;
-            --text-muted: #94a3b8;
-            --neon-cyan: #00cec9;
-            --neon-yellow: #f1c40f;
-            --neon-coral: #ff7675;
-            --neon-green: #2ecc71;
-            --code-bg: #181820;
-        }}
+            --text-muted: #8493a8;
+            --neon-carmine: #ff1754;
+            --carmine-glow: rgba(255, 23, 84, 0.45);
+            --neon-cyan: #00f2fe;
+            --cyan-glow: rgba(0, 242, 254, 0.4);
+            --neon-amber: #ffd32a;
+            --neon-green: #05c46b;
+            --code-bg: #141724;
+        }
 
-        * {{
+        * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-        }}
+        }
 
-        body {{
+        body {
             background-color: var(--bg-main);
             color: var(--text-main);
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            line-height: 1.68;
+            line-height: 1.7;
             font-size: 16px;
             padding-bottom: 60px;
-        }}
+            background-image: 
+                linear-gradient(rgba(28, 32, 45, 0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(28, 32, 45, 0.15) 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
 
-        nav.top-nav {{
+        nav.top-nav {
             position: sticky;
             top: 0;
             z-index: 1000;
-            background: rgba(10, 10, 12, 0.88);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--border);
+            background: rgba(9, 10, 15, 0.94);
+            backdrop-filter: blur(12px);
+            border-bottom: 2px solid var(--border-tech);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 12px 24px;
+            padding: 10px 24px;
             max-width: 100%;
-        }}
+        }
 
-        .brand {{
+        .brand {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 1.15rem;
+            gap: 10px;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 1.25rem;
             font-weight: 700;
             color: #fff;
             text-decoration: none;
-        }}
+            letter-spacing: 0.05em;
+        }
 
-        .brand span.pulse {{
+        .brand-logo {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 8px var(--carmine-glow));
+        }
+
+        .brand-kanji {
+            color: var(--neon-carmine);
+            text-shadow: 0 0 10px var(--carmine-glow);
+            font-weight: 900;
+            margin: 0 1px;
+        }
+
+        .brand-sim {
             color: var(--neon-cyan);
-        }}
+            text-shadow: 0 0 8px var(--cyan-glow);
+            font-weight: 700;
+        }
 
-        .nav-links {{
+        .nav-links {
             display: flex;
-            gap: 16px;
+            gap: 14px;
             align-items: center;
             flex-wrap: wrap;
-        }}
+            font-family: 'Chakra Petch', sans-serif;
+        }
 
-        .nav-links a {{
+        .nav-links a {
             color: var(--text-muted);
             text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: color 0.2s;
-            padding: 4px 8px;
-            border-radius: 4px;
-        }}
+            font-size: 0.92rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            padding: 6px 12px;
+            border: 1px solid transparent;
+            clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+        }
 
-        .nav-links a:hover, .nav-links a.active {{
-            color: var(--neon-cyan);
-            background: rgba(0, 206, 201, 0.08);
-        }}
+        .nav-links a:hover, .nav-links a.active {
+            color: #ffffff;
+            border-color: var(--neon-cyan);
+            background: rgba(0, 242, 254, 0.12);
+            box-shadow: 0 0 12px var(--cyan-glow);
+            text-shadow: 0 0 6px var(--cyan-glow);
+        }
 
-        .nav-links a.btn-app {{
-            background: var(--neon-cyan);
-            color: #000;
+        .nav-links a.btn-app {
+            background: linear-gradient(135deg, var(--neon-carmine), #d61346);
+            color: #ffffff;
             font-weight: 700;
-            padding: 6px 14px;
-            border-radius: 6px;
-        }}
+            padding: 7px 18px;
+            border: 1px solid #ff4d79;
+            box-shadow: 0 0 15px var(--carmine-glow);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
 
-        .nav-links a.btn-app:hover {{
-            background: #81ecec;
-            color: #000;
-        }}
+        .nav-links a.btn-app:hover {
+            background: linear-gradient(135deg, #ff4375, var(--neon-carmine));
+            box-shadow: 0 0 24px var(--neon-carmine);
+            transform: translateY(-1px);
+        }
 
-        main.doc-container {{
-            max-width: 920px;
+        main.doc-container {
+            max-width: 960px;
             margin: 36px auto;
-            padding: 0 20px;
-        }}
+            padding: 0 24px;
+        }
 
-        h1, h2, h3, h4, h5, h6 {{
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Chakra Petch', sans-serif;
             color: #ffffff;
             font-weight: 700;
             margin-top: 1.8em;
             margin-bottom: 0.6em;
-            letter-spacing: -0.02em;
-        }}
+            letter-spacing: 0.02em;
+        }
 
-        h1 {{
-            font-size: 2.2rem;
-            border-bottom: 1px solid var(--border);
+        h1 {
+            font-size: 2.3rem;
+            border-bottom: 2px solid var(--border-tech);
             padding-bottom: 12px;
             margin-top: 0.5em;
-            color: var(--neon-cyan);
-        }}
+            color: #ffffff;
+            text-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
 
-        h2 {{
-            font-size: 1.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        h1::after {
+            content: "";
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 80px;
+            height: 2px;
+            background: var(--neon-carmine);
+            box-shadow: 0 0 8px var(--neon-carmine);
+        }
+
+        h1[align="center"] {
+            border-bottom: none;
+            padding-bottom: 0;
+            text-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
+        }
+
+        h1[align="center"]::after {
+            display: none;
+        }
+
+        h2 {
+            font-size: 1.55rem;
+            border-bottom: 1px solid var(--border);
             padding-bottom: 8px;
-        }}
+            color: var(--neon-cyan);
+            text-shadow: 0 0 8px rgba(0, 242, 254, 0.25);
+        }
 
-        h3 {{
+        h3 {
             font-size: 1.25rem;
-            color: var(--neon-yellow);
-        }}
+            color: var(--neon-amber);
+        }
 
-        p {{
+        p {
             margin-bottom: 1.1em;
             color: var(--text-main);
-        }}
+        }
 
-        a {{
+        a {
             color: var(--neon-cyan);
             text-decoration: none;
             transition: 0.2s;
-        }}
+            border-bottom: 1px dotted rgba(0, 242, 254, 0.4);
+        }
 
-        a:hover {{
-            text-decoration: underline;
-        }}
+        a:hover {
+            color: #80fbff;
+            text-shadow: 0 0 8px var(--cyan-glow);
+            border-bottom-color: var(--neon-cyan);
+        }
 
-        ul, ol {{
+        ul, ol {
             margin-bottom: 1.2em;
             padding-left: 28px;
-        }}
+        }
 
-        li {{
+        li {
             margin-bottom: 0.4em;
-        }}
+        }
 
-        hr {{
+        hr {
             border: none;
-            border-top: 1px solid var(--border);
-            margin: 2em 0;
-        }}
+            border-top: 1px solid var(--border-tech);
+            margin: 2.2em 0;
+            position: relative;
+        }
 
-        pre {{
+        pre {
             background: var(--code-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
+            border: 1px solid var(--border-tech);
+            border-left: 3px solid var(--neon-cyan);
+            border-radius: 4px;
             padding: 16px;
             overflow-x: auto;
             margin-bottom: 1.4em;
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.88rem;
-        }}
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
 
-        code {{
+        code {
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.9em;
-            background: rgba(255, 255, 255, 0.07);
+            background: rgba(255, 255, 255, 0.08);
             padding: 2px 6px;
-            border-radius: 4px;
-            color: #ffd166;
-        }}
+            border-radius: 3px;
+            color: #ffd32a;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
 
-        pre code {{
+        pre code {
             background: none;
+            border: none;
             padding: 0;
             color: inherit;
-        }}
+        }
 
-        table {{
+        table {
             width: 100%;
             border-collapse: collapse;
-            margin: 1.5em 0;
+            margin: 1.8em 0;
             background: var(--bg-card);
-            border-radius: 8px;
+            border-radius: 4px;
             overflow: hidden;
-            border: 1px solid var(--border);
-        }}
+            border: 1px solid var(--border-tech);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+        }
 
-        th, td {{
-            padding: 10px 14px;
+        th, td {
+            padding: 11px 16px;
             text-align: left;
             border-bottom: 1px solid var(--border);
             font-size: 0.92rem;
-        }}
+        }
 
-        th {{
-            background: rgba(255, 255, 255, 0.04);
+        th {
+            font-family: 'Chakra Petch', sans-serif;
+            background: rgba(28, 32, 45, 0.6);
             color: var(--neon-cyan);
-            font-weight: 600;
-        }}
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
 
-        tr:hover {{
-            background: rgba(255, 255, 255, 0.02);
-        }}
+        tr:hover {
+            background: rgba(0, 242, 254, 0.03);
+        }
 
-        blockquote {{
-            border-left: 3px solid var(--neon-cyan);
-            background: rgba(0, 206, 201, 0.05);
-            padding: 12px 16px;
-            margin: 1.2em 0;
-            border-radius: 0 6px 6px 0;
-            color: var(--text-muted);
-        }}
+        blockquote {
+            border-left: 3px solid var(--neon-carmine);
+            background: rgba(255, 23, 84, 0.06);
+            padding: 14px 18px;
+            margin: 1.4em 0;
+            border-radius: 0 4px 4px 0;
+            color: var(--text-main);
+            box-shadow: inset 0 0 12px rgba(255, 23, 84, 0.04);
+        }
 
-        footer {{
-            max-width: 920px;
+        footer {
+            max-width: 960px;
             margin: 60px auto 0 auto;
-            padding-top: 20px;
-            border-top: 1px solid var(--border);
+            padding: 24px 20px 0 20px;
+            border-top: 1px solid var(--border-tech);
             text-align: center;
             font-size: 0.85rem;
             color: var(--text-muted);
-        }}
+            font-family: 'Chakra Petch', sans-serif;
+        }
 
-        @media (max-width: 768px) {{
-            body {{
+        footer p {
+            margin-bottom: 6px;
+        }
+
+        @media (max-width: 768px) {
+            body {
                 font-size: 15px;
-            }}
-            h1 {{
+            }
+            h1 {
                 font-size: 1.8rem;
-            }}
-            .nav-links {{
+            }
+            .nav-links {
                 gap: 8px;
-            }}
-        }}
+            }
+        }
     </style>
 </head>
 <body>
     <nav class="top-nav">
         <a href="./index.html" class="brand">
-            🌸 <span class="pulse">KokoroSim</span>
+            <img src="assets/icon.png" alt="KokoroSim" class="brand-logo">
+            <span>kokor<span class="brand-kanji">心</span><span class="brand-sim">sim</span></span>
         </a>
         <div class="nav-links">
             <a href="./app.html" class="btn-app">🚀 Simulador Web</a>
-            <a href="./index.html" class="{active_sobre}">📖 Sobre</a>
-            <a href="./roteiro.html" class="{active_roteiro}">🎓 Roteiro Prático</a>
-            <a href="./roadmap.html" class="{active_roadmap}">🗺️ Roadmap</a>
-            <a href="./arquitetura.html" class="{active_arquitetura}">🏛️ Arquitetura</a>
+            <a href="./index.html" class="__ACTIVE_SOBRE__">📖 Sobre</a>
+            <a href="./modelos.html" class="__ACTIVE_MODELOS__">🧬 Modelos</a>
+            <a href="./roteiro.html" class="__ACTIVE_ROTEIRO__">🎓 Roteiro Prático</a>
+            <a href="./roadmap.html" class="__ACTIVE_ROADMAP__">🗺️ Roadmap</a>
+            <a href="./arquitetura.html" class="__ACTIVE_ARQUITETURA__">🏛️ Arquitetura</a>
             <a href="https://github.com/KokoroSim/KokoroSim" target="_blank">💻 GitHub</a>
         </div>
     </nav>
     <main class="doc-container">
-        {content}
+        __PAGE_CONTENT__
     </main>
     <footer>
-        <p><b>KokoroSim 🌸</b> — Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real</p>
-        <p>Software Livre distribuído sob a licença GNU GPLv3. Desenvolvido para universidades e centros de pesquisa.</p>
+        <p><b>kokor<span style="color: var(--neon-carmine); font-weight: 900;">心</span><span style="color: var(--neon-cyan); font-weight: bold;">sim</span></b> — Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real</p>
+        <p>Software Livre sob licença GNU GPLv3. Desenvolvido para universidades e centros de pesquisa.</p>
     </footer>
 </body>
 </html>
@@ -288,14 +383,20 @@ DOCS_MAP = [
     {
         "src": "README.md",
         "dest": "ui/index.html",
-        "title": "Sobre e Documentação",
+        "title": "KokoroSim — Simulador Eletrofisiológico Cardíaco em Tempo Real",
         "active": "sobre"
     },
     {
         "src": "README.md",
         "dest": "ui/sobre.html",
-        "title": "Sobre e Documentação",
+        "title": "Sobre o Projeto — KokoroSim",
         "active": "sobre"
+    },
+    {
+        "src": "docs/modelos.md",
+        "dest": "ui/modelos.html",
+        "title": "Modelos Biofísicos e Referências Científicas",
+        "active": "modelos"
     },
     {
         "src": "ROADMAP.md",
@@ -306,7 +407,7 @@ DOCS_MAP = [
     {
         "src": "ARCHITECTURE.md",
         "dest": "ui/arquitetura.html",
-        "title": "Decisões de Arquitetura",
+        "title": "Decisões de Arquitetura e Engenharia",
         "active": "arquitetura"
     },
     {
@@ -341,21 +442,25 @@ def main():
             raw_text = f.read()
 
         # Ajusta links internos entre documentos markdown para as páginas HTML geradas
+        raw_text = raw_text.replace("docs/modelos.md", "./modelos.html")
         raw_text = raw_text.replace("docs/roteiro_aulas_praticas.md", "./roteiro.html")
         raw_text = raw_text.replace("ROADMAP.md", "./roadmap.html")
         raw_text = raw_text.replace("ARCHITECTURE.md", "./arquitetura.html")
         raw_text = raw_text.replace("README.md", "./index.html")
+        raw_text = raw_text.replace("ui/assets/", "assets/")
 
         html_body = md.convert(raw_text)
         md.reset()
 
-        page_html = HTML_TEMPLATE.format(
-            title=doc["title"],
-            content=html_body,
-            active_sobre="active" if doc["active"] == "sobre" else "",
-            active_roteiro="active" if doc["active"] == "roteiro" else "",
-            active_roadmap="active" if doc["active"] == "roadmap" else "",
-            active_arquitetura="active" if doc["active"] == "arquitetura" else "",
+        page_html = (
+            HTML_TEMPLATE
+            .replace("__PAGE_TITLE__", doc["title"])
+            .replace("__PAGE_CONTENT__", html_body)
+            .replace("__ACTIVE_SOBRE__", "active" if doc["active"] == "sobre" else "")
+            .replace("__ACTIVE_MODELOS__", "active" if doc["active"] == "modelos" else "")
+            .replace("__ACTIVE_ROTEIRO__", "active" if doc["active"] == "roteiro" else "")
+            .replace("__ACTIVE_ROADMAP__", "active" if doc["active"] == "roadmap" else "")
+            .replace("__ACTIVE_ARQUITETURA__", "active" if doc["active"] == "arquitetura" else "")
         )
 
         os.makedirs(os.path.dirname(dest_path), exist_ok=True)
