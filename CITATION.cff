@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "Se você utilizar o SimCardio em pesquisas, dissertações, teses, aulas práticas ou publicações acadêmicas, por favor cite conforme abaixo:"
+title: "SimCardio: Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real"
+abstract: "Simulador computacional biofísico de código aberto desenvolvido em Rust e WebAssembly, modelando em tempo real o automatismo sinoatrial, condução atrioventricular, heterogeneidade transmural ventricular, acoplamento eletrotônico fibroblástico, eletrocardiograma dipolar e diagrama hemodinâmico de Wiggers."
+authors:
+  - family-names: "Pink"
+    given-names: "Lumen"
+    affiliation: "Universidade Federal de Santa Catarina (UFSC)"
+    email: "hi@lumen.pink"
+repository-code: "https://github.com/lumenpink/simcardio"
+url: "https://lumenpink.github.io/simcardio/"
+license: "GPL-3.0-or-later"
+version: "2.0.0"
+date-released: "2026-09-19"
+keywords:
+  - "eletrofisiologia"
+  - "cardiologia"
+  - "biofísica"
+  - "webassembly"
+  - "rust"
+  - "potencial-de-acao"
+  - "eletrocardiograma"
+  - "educacao-medica"

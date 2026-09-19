@@ -1,49 +1,79 @@
 # SimCardio: Simulador Eletrofisiológico Cardíaco em Tempo Real
 
-O **SimCardio** é um projeto de código aberto dedicado à simulação matemática da eletrofisiologia celular cardíaca em tempo real no navegador. Desenvolvido inteiramente em **Rust** e compilado para **WebAssembly (WASM)** com interface reativa em **Dioxus**, o sistema resolve mais de 160 equações diferenciais ordinárias (EDOs) e variáveis de estado simultaneamente utilizando o método numérico híbrido analítico de **Rush-Larsen** a $dt = 0.01\text{ ms}$ (1.600 passos por quadro de 16 ms a 60 FPS), garantindo execução fluida em **1x tempo real** com consumo de CPU mínimo (**< 5-10%**) em smartphones, tablets e computadores de baixo consumo, reproduzindo com rigor biofísico a gênese do potencial de ação e a condução elétrica através de todo o sincício cardíaco humano.
+[![Deploy to GitHub Pages](https://github.com/lumenpink/simcardio/actions/workflows/deploy.yml/badge.svg)](https://lumenpink.github.io/simcardio/)
+[![Licença: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Rust](https://img.shields.io/badge/Rust-2021_Edition-orange.svg?logo=rust)](https://www.rust-lang.org/)
+[![WebAssembly](https://img.shields.io/badge/WebAssembly-WASM-purple.svg?logo=webassembly)](https://webassembly.org/)
+[![Dioxus](https://img.shields.io/badge/UI-Dioxus_0.6-00cec9.svg)](https://dioxuslabs.com/)
+[![Mobile Optimized](https://img.shields.io/badge/Hardware-Mobile_%26_Low--Power-success.svg)](#-arquitetura-de-software)
+[![Acessibilidade](https://img.shields.io/badge/Acessibilidade-Neurodivergente--Friendly-brightgreen.svg)](#-modos-de-visualização-do-osciloscópio-e-onda-fantasma)
+
+O **SimCardio** é um projeto acadêmico de código aberto dedicado à simulação biofísica da eletrofisiologia celular cardíaca e hemodinâmica ventricular em tempo real diretamente no navegador web. Desenvolvido para servir prioritariamente a universidades e centros de pesquisa no Brasil, o software é construído em **Rust** e compilado para **WebAssembly (WASM)** com interface declarativa reativa em **Dioxus**. O motor numérico resolve mais de 160 equações diferenciais ordinárias (EDOs) e variáveis de estado simultaneamente utilizando o método numérico híbrido de **Rush-Larsen** a $dt = 0.01\text{ ms}$ (1.600 passos por quadro de 16 ms a 60 FPS), assegurando execução em **1x tempo real** com baixíssimo consumo de CPU (**< 5-10%**) em smartphones, tablets, notebooks e computadores de laboratórios acadêmicos, sem depender de placas gráficas dedicadas.
+
+---
+
+## 🧭 Navegação e Documentação do Projeto
+* 🚀 **[Acessar Simulador em Execução (Web App)](https://lumenpink.github.io/simcardio/)**
+* 🎓 **[Roteiro de Aulas Práticas para Universidades](docs/roteiro_aulas_praticas.md)**: 4 experimentos completos para Fisiologia e Farmacologia.
+* 🗺️ **[Roadmap de Desenvolvimento (ROADMAP.md)](ROADMAP.md)**: Fases concluídas e planejamento de expansão 2D/3D.
+* 🏛️ **[Decisões de Arquitetura (ARCHITECTURE.md)](ARCHITECTURE.md)**: Justificativas biofísicas, matemáticas e de engenharia.
+* 📜 **[Como Citar o SimCardio (CITATION.cff)](CITATION.cff)**: Metadados formais para TCCs, dissertações e artigos científicos.
 
 ---
 
 ## 🧬 Modelos Biofísicos Integrados
 
-O simulador implementa 5 modelos eletrofisiológicos padrão-ouro validados pela literatura acadêmica internacional e pelo consórcio [Physiome Project / CellML](https://models.physiomeproject.org/):
+O simulador implementa 7 modelos biofísicos padrão-ouro validados pela literatura científica internacional e pelo consórcio [Physiome Model Repository (CellML)](https://models.physiomeproject.org/):
 
 1. **Nó Sinoatrial (SA) — Marcapasso Primário:**
    - **Modelo:** Severi et al. (2012)
-   - **Referência:** Severi S, Fantini M, Charawi LA, DiFrancesco D. *An updated computational model of rabbit sinoatrial action potential to investigate the mechanisms of heart rate modulation.* J Physiol. 2012.
-   - **Função:** Gera o automatismo elétrico biológico (Fase 4 despolarizante) impulsionado pelo "relógio de membrana" (corrente *funny* $I_f$) e "relógio de cálcio" intracelular ($I_{Ca,L}$, $I_{Ca,T}$ e NCX). Modulado por receptores $\beta_1$-adrenérgicos e colinérgicos muscarínicos ($M_2$).
+   - **Artigo:** *An updated computational model of rabbit sinoatrial action potential to investigate the mechanisms of heart rate modulation.* J Physiol. 2012;590(18):4483-4499.
+   - **Repositório CellML:** [PMR Model e/144](https://models.physiomeproject.org/e/144/)
+   - **Identificadores:** [PubMed 22711956](https://pubmed.ncbi.nlm.nih.gov/22711956/) | [DOI 10.1113/jphysiol.2012.234385](https://doi.org/10.1113/jphysiol.2012.234385)
+   - **Função:** Gera o automatismo elétrico biológico (Fase 4 despolarizante espontânea) impulsionado pelo "relógio de membrana" (corrente *funny* $I_f$) e "relógio de cálcio" intracelular ($I_{Ca,L}$, $I_{Ca,T}$ e NCX). Modulado por receptores autonômicos $\beta_1$ e $M_2$.
 
 2. **Músculo Atrial Humano:**
    - **Modelo:** Courtemanche, Ramirez, Nattel (1998)
-   - **Referência:** Courtemanche M, Ramirez RJ, Nattel S. *Ionic mechanisms underlying human atrial action potential properties: insights from a mathematical model.* Am J Physiol. 1998.
-   - **Função:** Representa os miócitos atriais de resposta rápida, caracterizados por rápida ascensão dependente de canais de sódio ($I_{Na}$), platô intermediário e repolarização dependente de canais ultrarrápidos de potássio ($I_{Kur}$). Gera a deflexão mecânica e a **Onda P** do eletrocardiograma.
+   - **Artigo:** *Ionic mechanisms underlying human atrial action potential properties: insights from a mathematical model.* Am J Physiol. 1998;275(1):H301-H321.
+   - **Repositório CellML:** [PMR Model e/286](https://models.physiomeproject.org/e/286/courtemanche_ramirez_nattel_1998.cellml)
+   - **Identificadores:** [PubMed 9688927](https://pubmed.ncbi.nlm.nih.gov/9688927/) | [DOI 10.1152/ajpheart.1998.275.1.H301](https://doi.org/10.1152/ajpheart.1998.275.1.H301)
+   - **Função:** Miócitos atriais de resposta rápida, caracterizados por ascensão rápida via canais rápidos de sódio ($I_{Na}$), platô intermediário e repolarização dependente de canais ultrarrápidos de potássio ($I_{Kur}$). Gera a **Onda P** do ECG.
 
 3. **Nó Atrioventricular (AV) — Filtro e Retardo Fisiológico:**
    - **Modelo:** Inada et al. (2009)
-   - **Referência:** Inada S, et al. *One-dimensional mathematical model of the atrioventricular node...* Biophys J. 2009.
-   - **Função:** Executa o retardo atrioventricular essencial para permitir o enchimento ventricular prévio à sístole (intervalo PR). Implementa resposta lenta dependente de canais de cálcio do tipo L ($I_{Ca,L}$) com condução decremental.
+   - **Artigo:** *One-dimensional mathematical model of the atrioventricular node including the atrioventricular ring and bundle of His.* Biophys J. 2009;97(8):2117-2127.
+   - **Repositório CellML:** [PMR Model e/55](https://models.physiomeproject.org/e/55/inada_hancox_zhang_boyett_2009.cellml)
+   - **Identificadores:** [PubMed 19843444](https://pubmed.ncbi.nlm.nih.gov/19843444/) | [DOI 10.1016/j.bpj.2009.06.056](https://doi.org/10.1016/j.bpj.2009.06.056)
+   - **Função:** Retardo nodal essencial para o enchimento ventricular diastólico (intervalo PR). Resposta lenta dependente de $I_{Ca,L}$ com condução decremental frequência-dependente.
 
-4. **Fibras de Purkinje e Feixe de His — Rede de Condução Rápida:**
+4. **Fibras de Purkinje e Feixe de His — Condução Rápida e Marcapasso Terciário:**
    - **Modelo:** Stewart et al. (2009)
-   - **Referência:** Stewart P, Aslanidi OV, Noble D, Noble PJ, Boyett MR, Zhang H. *Mathematical model of the electrical action potential of the human Purkinje cell.* Biophys J. 2009.
-   - **Função:** Modela a rede hisiana e as fibras subendocárdicas com 20 variáveis de estado. Caracteriza-se por velocidade de ascensão extremamente rápida ($dV/dt > 400\text{ V/s}$), entalhe precoce acentuado ($I_{to}$ e $I_{sus}$) e potencial diastólico com corrente marcapasso $I_f$ residual, atuando como centro terciário de ritmo de escape idioventricular (~25–35 BPM).
+   - **Artigo:** *Mathematical model of the electrical action potential of the human Purkinje cell.* Biophys J. 2009;96(9):3493-3507.
+   - **Repositório CellML:** [PMR Model e/7e](https://models.physiomeproject.org/e/7e/stewart_aslanidi_noble_noble_boyett_zhang_2009.cellml)
+   - **Identificadores:** [PubMed 19413956](https://pubmed.ncbi.nlm.nih.gov/19413956/) | [DOI 10.1016/j.bpj.2009.01.047](https://doi.org/10.1016/j.bpj.2009.01.047)
+   - **Função:** Condução ultrarrápida hisiana ($dV/dt > 400\text{ V/s}$), entalhe precoce acentuado ($I_{to}$, $I_{sus}$) e corrente marcapasso $I_f$ residual de escape idioventricular (~25–35 BPM).
 
 5. **Músculo Ventricular com Heterogeneidade Transmural:**
    - **Modelo:** ten Tusscher & Panfilov (2006)
-   - **Referência:** ten Tusscher KHWJ, Panfilov AV. *Alternans and spiral breakup in a human ventricular tissue model.* Am J Physiol Heart Circ Physiol. 2006.
-   - **Função:** Modela as três camadas da parede livre ventricular humana:
-     - **Endocárdio (Subendocárdio):** Densidade de $I_{to}$ baixa ($G_{to} = 0.073\text{ nS/pF}$), platô arredondado e duração do potencial de ação (APD) intermediária. É ativado primeiro pelas fibras de Purkinje.
-     - **Célula M (Mid-miocárdio):** Densidade reduzida de $I_{Ks}$ ($G_{Ks} = 0.098\text{ nS/pF}$), conferindo o platô mais longo de todas as camadas. Principal determinante do intervalo QT e substrato para arritmias de reentrada.
-     - **Epicárdio (Subepicárdico):** Densidade de $I_{to}$ robusta ($G_{to} = 0.294\text{ nS/pF}$), entalhe proeminente na Fase 1 e **APD mais curto**. É a última camada a ser despolarizada, mas a **primeira a repolarizar**.
+   - **Artigo:** *Alternans and spiral breakup in a human ventricular tissue model.* Am J Physiol Heart Circ Physiol. 2006;291(3):H1088-H1100.
+   - **Repositório CellML:** [PMR Model e/210](https://models.physiomeproject.org/e/210/tentusscher_panfilov_2006_m.cellml)
+   - **Identificadores:** [PubMed 16565318](https://pubmed.ncbi.nlm.nih.gov/16565318/) | [DOI 10.1152/ajpheart.00109.2006](https://doi.org/10.1152/ajpheart.00109.2006)
+   - **Função:** Modela as três camadas da parede livre ventricular:
+     - **Endocárdio:** Densidade de $I_{to}$ baixa, ativado primeiro via Purkinje.
+     - **Célula M:** Densidade de $I_{Ks}$ reduzida e platô mais longo de todas as camadas.
+     - **Epicárdio:** Densidade de $I_{to}$ proeminente e **APD mais curto**. É o último a despolarizar e o **primeiro a repolarizar**, gerando a **Onda T positiva concordante** no ECG.
 
 6. **Fibroblastos Cardíacos e Miofibroblastos:**
    - **Modelo:** MacCannell et al. (2007)
-   - **Referência:** MacCannell KA, Bazzazi H, Chilton L, Shibukawa Y, Clark RB, Giles WR. *A mathematical model of electrotonic interactions between ventricular myocytes and fibroblasts.* Biophys J. 2007.
-   - **Função:** Modela células não-excitáveis com potencial de repouso despolarizado ($-35\text{ a }-45\text{ mV}$) e correntes $I_{Kv}$, $I_{K1}$, $I_b$ e $I_{NaK}$. Acopla-se eletrotonicamente aos miócitos por junções comunicantes (*gap junctions*), atuando como dreno capacitivo, despolarizando o repouso do miócito e diminuindo a velocidade de condução intramiocárdica.
+   - **Artigo:** *A mathematical model of electrotonic interactions between ventricular myocytes and fibroblasts.* Biophys J. 2007;92(11):4121-4132.
+   - **Repositório CellML:** [PMR Model e/98](https://models.physiomeproject.org/e/98/maccannell_bazzazi_chilton_shibukawa_clark_giles_2007.cellml)
+   - **Identificadores:** [PubMed 17351008](https://pubmed.ncbi.nlm.nih.gov/17351008/) | [DOI 10.1529/biophysj.106.101410](https://doi.org/10.1529/biophysj.106.101410)
+   - **Função:** Células não-excitáveis com repouso alto ($-38\text{ mV}$) que se acoplam eletrotonicamente aos miócitos por conexinas ($G_{gap}$ até $4.0\text{ nS}$), exercendo efeito de dreno capacitivo e lentificação na condução proporcional à fibrose.
 
 7. **Acoplamento Eletromecânico e Hemodinâmica (Diagrama de Wiggers):**
    - **Modelos:** Elastância Ventricular Variável no Tempo (Suga & Sagawa, 1974) e Circulação Arterial Windkessel de 3 elementos (Westerhof et al., 2009).
-   - **Função:** Converte o transiente real de $[Ca^{2+}]_i$ em desenvolvimento de força isométrica de troponina. Calcula em tempo real a Pressão Ventricular Esquerda ($LVP$, 0-140 mmHg), Pressão Aórtica ($AoP$, 80-120 mmHg) com incisura dicrótica, volume ventricular ($LVV$) e dinâmica valvar das cúspides mitral e aórtica.
+   - **Identificadores:** [PubMed 4841253](https://pubmed.ncbi.nlm.nih.gov/4841253/) (Suga & Sagawa) | [PubMed 19194725](https://pubmed.ncbi.nlm.nih.gov/19194725/) (Westerhof)
+   - **Função:** Transiente de $[Ca^{2+}]_i$ acoplado à elastância ventricular para calcular a Pressão Ventricular Esquerda ($LVP$, 0-140 mmHg), Pressão Aórtica ($AoP$) com incisura dicrótica e dinâmica valvar das cúspides mitral e aórtica.
 
 ---
 
@@ -148,6 +178,25 @@ O quarto canal do osciloscópio exibe em tempo real o núcleo mecânico do **Dia
 
 ---
 
+## 📖 Citação Acadêmica
+
+Se você utilizar o SimCardio em pesquisas científicas, aulas práticas, monografias, dissertações, teses ou publicações acadêmicas, por favor cite conforme as diretrizes do arquivo [`CITATION.cff`](CITATION.cff):
+
+```bibtex
+@software{pink2026simcardio,
+  author       = {Pink, Lumen},
+  title        = {SimCardio: Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real},
+  year         = {2026},
+  publisher    = {GitHub},
+  journal      = {GitHub repository},
+  howpublished = {\url{https://github.com/lumenpink/simcardio}},
+  url          = {https://lumenpink.github.io/simcardio/}
+}
+```
+
+---
+
 ## 📜 Licença
 
 Distribuído sob a licença **GNU General Public License v3.0 (GPLv3)**. Consulte o arquivo `LICENSE` para mais detalhes.
+
