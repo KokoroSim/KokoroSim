@@ -353,6 +353,7 @@
             <a href="./index.html" class="active">📖 Sobre</a>
             <a href="./modelos.html" class="">🧬 Modelos</a>
             <a href="./roteiro.html" class="">🎓 Roteiro Prático</a>
+            <a href="./identidade.html" class="">🎨 Identidade</a>
             <a href="./roadmap.html" class="">🗺️ Roadmap</a>
             <a href="./arquitetura.html" class="">🏛️ Arquitetura</a>
             <a href="https://github.com/KokoroSim/KokoroSim" target="_blank">💻 GitHub</a>
@@ -390,6 +391,7 @@
 <li>🎓 <strong><a href="./roteiro.html">Roteiro de Aulas Práticas para Universidades</a></strong>: 4 experimentos completos para Fisiologia e Farmacologia.</li>
 <li>🗺️ <strong><a href="./roadmap.html">Roadmap de Desenvolvimento</a></strong>: Fases concluídas da v2.0 e expansão espacial para a v2.1+.</li>
 <li>🏛️ <strong><a href="./arquitetura.html">Decisões de Arquitetura e Engenharia</a></strong>: Justificativas biofísicas, matemáticas e de engenharia de software.</li>
+<li>🎨 <strong><a href="./identidade.html">Identidade Visual e Conceito do Logotipo</a></strong>: O Rotor, o Magatama (勾玉) e a convergência biofísica.</li>
 <li>📜 <strong><a href="CITATION.cff">Como Citar o KokoroSim</a></strong>: Normas ABNT, Vancouver, BibTeX e metadados formais.</li>
 </ul>
 <hr />
@@ -487,6 +489,26 @@
 <li><strong>Isquemia Miocárdica:</strong> Ativação de canais $K_{ATP}$, encurtando precocemente o potencial de ação e provocando alterações morfológicas do segmento ST e da onda T.</li>
 </ul>
 <hr />
+<h2 id="identidade-visual-e-conceito-do-logotipo-o-rotor-magatama">🎨 Identidade Visual e Conceito do Logotipo: O Rotor / Magatama (勾玉)</h2>
+<p>O isotipo do <strong>KokoroSim</strong> foge dos clichês gráficos tradicionais da cardiologia (como corações estilizados ou traçados simplistas de ECG). Em vez disso, estabelece uma ponte geométrica direta entre a <strong>eletrofisiologia não-linear</strong>, a <strong>hemodinâmica ventricular</strong> e a <strong>iconografia tradicional japonesa</strong>:</p>
+<h3 id="1-a-convergencia-multifisica-o-choque-e-o-fluxo">1. A Convergência Multifísica (O Choque e o Fluxo)</h3>
+<p>A silhueta baseia-se no <strong>magatama</strong> (勾玉) e no elemento dinâmico unitário do <em>mitsudomoe</em> (a gota espiralada clássica). Essa topologia resolve em um único símbolo as duas forças que regem o simulador:
+- <strong>Na Eletrofisiologia (O Choque):</strong> Rotores são <strong>ondas espirais auto-sustentadas</strong> que giram em torno de uma singularidade de fase em meio excitável (reentrância funcional), representando a base matemática primordial das taquiarritmias e da fibrilação ventricular.
+- <strong>Na Hemodinâmica (O Fluxo):</strong> A mesma espiral descreve a formação dos <strong>anéis de vórtice transmitrais</strong> (<em>vortex rings</em>) durante o enchimento diastólico ventricular rápido, canalizando a inércia do sangue para a via de ejeção aórtica com máxima eficiência energética.</p>
+<h3 id="2-eficiencia-de-silhueta-e-traco-dinamico">2. Eficiência de Silhueta e Traço Dinâmico</h3>
+<ul>
+<li><strong>Assimetria Funcional:</strong> A terminação afiada e agressiva da cauda do magatama evoca o disparo elétrico da despolarização rápida da membrana (Fase 0 mediada por $I_{Na}$ / pico da Onda R). O corpo arredondado fecha-se em espiral logarítmica de vórtice, sugerindo o turbilhonamento fluido ventricular.</li>
+<li><strong>Resolução em Baixa Altura (1-bit / 24px):</strong> Projetado para manter reconhecimento visual imediato tanto em alta resolução quanto em ícones microscópicos de 24 pixels (avatares de repositório, favicons de navegador e executáveis de desktop), superando o ruído visual de diagramas densos e o peso estático de arabescos têxteis.</li>
+</ul>
+<h3 id="3-o-kanji-e-a-tipografia-integrada-kokorsim">3. O Kanji e a Tipografia Integrada: <code>kokor心sim</code></h3>
+<ul>
+<li>O caractere <strong>心</strong> (<em>kokoro</em> — coração, mente, espírito) é fundido diretamente na tipografia geométrica, substituindo o segundo "o" da palavra. Essa fusão sutil preserva a legibilidade fonética e ancora a alma do software.</li>
+<li>A paleta de cores adota o <strong>Carmesim Neon</strong> (<code>#ff1754</code> — representando o sangue, a pressão aórtica e o calor metabólico) em contraste com o <strong>Ciano Elétrico</strong> (<code>#00f2fe</code> — representando a bioeletricidade transmembrana e a polaridade iônica), montados sobre um fundo escuro com estética de interface tática Mecha/HUD de ficção científica.</li>
+</ul>
+<blockquote>
+<p>📖 <strong>Documento Conceitual Completo:</strong> Leia o ensaio detalhado sobre a semiologia, opções descartadas e fundamentação visual em <strong><a href="./identidade.html">Identidade Visual e Conceito do Logotipo</a></strong>.</p>
+</blockquote>
+<hr />
 <h2 id="arquitetura-de-software">💻 Arquitetura de Software</h2>
 <ul>
 <li><strong>Linguagem Principal:</strong> Rust 2021 Edition.</li>
@@ -538,7 +560,7 @@
     </main>
     <footer>
         <p><b>kokor<span style="color: var(--neon-carmine); font-weight: 900;">心</span><span style="color: var(--neon-cyan); font-weight: bold;">sim</span></b> — Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real</p>
-        <p>Software Livre sob licença GNU GPLv3. Desenvolvido para universidades e centros de pesquisa.</p>
+        <p style="font-size: 0.85rem; color: #7f8c8d; margin-top: 4px;">Desenvolvido com Rust, WebAssembly & Dioxus // Licença GPLv3</p>
     </footer>
 </body>
 </html>

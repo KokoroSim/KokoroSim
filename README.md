@@ -30,6 +30,7 @@ O **kokor<span style="color: #ff1754;">心</span><span style="color: #00cec9;">s
 * 🎓 **[Roteiro de Aulas Práticas para Universidades](docs/roteiro_aulas_praticas.md)**: 4 experimentos completos para Fisiologia e Farmacologia.
 * 🗺️ **[Roadmap de Desenvolvimento](ROADMAP.md)**: Fases concluídas da v2.0 e expansão espacial para a v2.1+.
 * 🏛️ **[Decisões de Arquitetura e Engenharia](ARCHITECTURE.md)**: Justificativas biofísicas, matemáticas e de engenharia de software.
+* 🎨 **[Identidade Visual e Conceito do Logotipo](docs/identidade_visual.md)**: O Rotor, o Magatama (勾玉) e a convergência biofísica.
 * 📜 **[Como Citar o KokoroSim](CITATION.cff)**: Normas ABNT, Vancouver, BibTeX e metadados formais.
 
 ---
@@ -137,6 +138,27 @@ O quarto canal do osciloscópio exibe em tempo real o núcleo mecânico do **Dia
   - *Classe IV (Verapamil):* Inibição seletiva de $I_{Ca,L}$, deprimindo a rampa nodal AV e simulando bloqueios atrioventriculares.
   - *Glicosídeo Cardíaco (Digoxina):* Inibição da bomba $Na^+/K^+$ ATPase, elevando o cálcio intracelular e a força de contração ativa.
 - **Isquemia Miocárdica:** Ativação de canais $K_{ATP}$, encurtando precocemente o potencial de ação e provocando alterações morfológicas do segmento ST e da onda T.
+
+---
+
+## 🎨 Identidade Visual e Conceito do Logotipo: O Rotor / Magatama (勾玉)
+
+O isotipo do **KokoroSim** foge dos clichês gráficos tradicionais da cardiologia (como corações estilizados ou traçados simplistas de ECG). Em vez disso, estabelece uma ponte geométrica direta entre a **eletrofisiologia não-linear**, a **hemodinâmica ventricular** e a **iconografia tradicional japonesa**:
+
+### 1. A Convergência Multifísica (O Choque e o Fluxo)
+A silhueta baseia-se no **magatama** (勾玉) e no elemento dinâmico unitário do *mitsudomoe* (a gota espiralada clássica). Essa topologia resolve em um único símbolo as duas forças que regem o simulador:
+- **Na Eletrofisiologia (O Choque):** Rotores são **ondas espirais auto-sustentadas** que giram em torno de uma singularidade de fase em meio excitável (reentrância funcional), representando a base matemática primordial das taquiarritmias e da fibrilação ventricular.
+- **Na Hemodinâmica (O Fluxo):** A mesma espiral descreve a formação dos **anéis de vórtice transmitrais** (*vortex rings*) durante o enchimento diastólico ventricular rápido, canalizando a inércia do sangue para a via de ejeção aórtica com máxima eficiência energética.
+
+### 2. Eficiência de Silhueta e Traço Dinâmico
+- **Assimetria Funcional:** A terminação afiada e agressiva da cauda do magatama evoca o disparo elétrico da despolarização rápida da membrana (Fase 0 mediada por $I_{Na}$ / pico da Onda R). O corpo arredondado fecha-se em espiral logarítmica de vórtice, sugerindo o turbilhonamento fluido ventricular.
+- **Resolução em Baixa Altura (1-bit / 24px):** Projetado para manter reconhecimento visual imediato tanto em alta resolução quanto em ícones microscópicos de 24 pixels (avatares de repositório, favicons de navegador e executáveis de desktop), superando o ruído visual de diagramas densos e o peso estático de arabescos têxteis.
+
+### 3. O Kanji e a Tipografia Integrada: `kokor心sim`
+- O caractere **心** (*kokoro* — coração, mente, espírito) é fundido diretamente na tipografia geométrica, substituindo o segundo "o" da palavra. Essa fusão sutil preserva a legibilidade fonética e ancora a alma do software.
+- A paleta de cores adota o **Carmesim Neon** (`#ff1754` — representando o sangue, a pressão aórtica e o calor metabólico) em contraste com o **Ciano Elétrico** (`#00f2fe` — representando a bioeletricidade transmembrana e a polaridade iônica), montados sobre um fundo escuro com estética de interface tática Mecha/HUD de ficção científica.
+
+> 📖 **Documento Conceitual Completo:** Leia o ensaio detalhado sobre a semiologia, opções descartadas e fundamentação visual em **[Identidade Visual e Conceito do Logotipo](docs/identidade_visual.md)**.
 
 ---
 

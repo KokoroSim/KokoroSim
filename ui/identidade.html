@@ -1,19 +1,9 @@
-#!/usr/bin/env python3
-"""
-Gera páginas HTML estáticas a partir dos arquivos Markdown do KokoroSim
-com tema escuro médico, suporte a MathJax para fórmulas LaTeX e navegação integrada.
-"""
-
-import os
-import sys
-import markdown
-
-HTML_TEMPLATE = """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>__PAGE_TITLE__</title>
+    <title>Identidade Visual e Conceito do Logotipo</title>
     <link rel="icon" type="image/png" href="assets/icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,8 +11,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <script>
         window.MathJax = {
             tex: {
-                inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
-                displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']],
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
                 processEscapes: true
             },
             options: {
@@ -360,17 +350,109 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         </a>
         <div class="nav-links">
             <a href="./app.html" class="btn-app">🚀 Simulador Web</a>
-            <a href="./index.html" class="__ACTIVE_SOBRE__">📖 Sobre</a>
-            <a href="./modelos.html" class="__ACTIVE_MODELOS__">🧬 Modelos</a>
-            <a href="./roteiro.html" class="__ACTIVE_ROTEIRO__">🎓 Roteiro Prático</a>
-            <a href="./identidade.html" class="__ACTIVE_IDENTIDADE__">🎨 Identidade</a>
-            <a href="./roadmap.html" class="__ACTIVE_ROADMAP__">🗺️ Roadmap</a>
-            <a href="./arquitetura.html" class="__ACTIVE_ARQUITETURA__">🏛️ Arquitetura</a>
+            <a href="./index.html" class="">📖 Sobre</a>
+            <a href="./modelos.html" class="">🧬 Modelos</a>
+            <a href="./roteiro.html" class="">🎓 Roteiro Prático</a>
+            <a href="./identidade.html" class="active">🎨 Identidade</a>
+            <a href="./roadmap.html" class="">🗺️ Roadmap</a>
+            <a href="./arquitetura.html" class="">🏛️ Arquitetura</a>
             <a href="https://github.com/KokoroSim/KokoroSim" target="_blank">💻 GitHub</a>
         </div>
     </nav>
     <main class="doc-container">
-        __PAGE_CONTENT__
+        <h1 id="identidade-visual-e-conceito-do-logotipo">🎨 Identidade Visual e Conceito do Logotipo</h1>
+<p align="center">
+  <img src="assets/logo.png" width="220" alt="Logotipo KokoroSim">
+</p>
+
+<h1 align="center" style="font-size: 2.5rem; letter-spacing: 2px;">
+  kokor<span style="color: #ff1754;">心</span><span style="color: #00cec9;">sim</span>
+</h1>
+
+<p align="center" style="font-size: 1.15rem; color: #a4b0be; font-weight: 500;">
+  O Rotor / Magatama (勾玉): A Convergência entre a Onda Espiral e o Vórtex Fluido
+</p>
+
+<hr />
+<h2 id="1-o-conceito-o-rotor-magatama-a-onda-espiral-e-o-vortex">🌪️ 1. O Conceito: O Rotor / Magatama (A Onda Espiral e o Vórtex)</h2>
+<p>O logotipo do <strong>KokoroSim</strong> rejeita os clichês visuais habituais da cardiologia tradicional — como corações vetoriais simplórios ou linhas genéricas de ECG com traçado estilizado. Em seu lugar, a identidade visual constrói uma síntese geométrica direta entre a <strong>eletrofisiologia não-linear</strong>, a <strong>mecânica de fluidos intracardíaca</strong> e a <strong>iconografia clássica japonesa</strong>.</p>
+<h3 id="a-base-visual">A Base Visual</h3>
+<p>A silhueta é inspirada no <strong>magatama</strong> (勾玉) e no elemento dinâmico unitário do <strong>mitsudomoe</strong> (a tradicional forma de gota ou vírgula espiralada presente há milênios na arte nipônica). Longe de ser um mero adorno esotérico, a geometria foi retraduzida sob parâmetros estritamente biofísicos.</p>
+<h3 id="a-convergencia-multifisica">A Convergência Multifísica</h3>
+<p>A forma espiralada resolve simultaneamente as duas físicas fundamentais simuladas pelo software:</p>
+<ol>
+<li><strong>Na Eletrofisiologia Celular (O Choque):</strong>
+   Rotores são <strong>ondas espirais auto-sustentadas</strong> que giram ao redor de uma singularidade de fase em meio excitável (reentrância funcional). São o substrato matemático primordial para a gênese e manutenção de arritmias letais, taquicardias ventriculares e fibrilação.</li>
+<li><strong>Na Hemodinâmica e Dinâmica de Fluidos (O Fluxo):</strong>
+   A mesma topologia espiralada descreve o <strong>núcleo de recirculação e os anéis de vórtice transmitrais</strong> (<em>vortex rings</em>) formados pelo sangue durante a fase de enchimento rápido ventricular diastólico, otimizando o direcionamento cinético da massa sanguínea em direção à via de saída aórtica.</li>
+</ol>
+<pre><code>                   Frente de Despolarização Rápida (Fase 0 / Pico R)
+                                   \
+                                    \  /\
+                                     \/  \
+                                     /    \
+                 Vórtice Hemodinâmico     /
+                 e Recirculação Diastólica (  @  )
+                                           \    /
+                                            \__/
+</code></pre>
+<hr />
+<h2 id="2-execucao-grafica-e-eficiencia-de-silhueta">🎯 2. Execução Gráfica e Eficiência de Silhueta</h2>
+<p>Um logotipo para ferramentas científicas e de computação precisa resolver um desafio de engenharia visual: <strong>manter impacto e legibilidade imediata tanto em 1-bit quanto em ícones de 24 pixels</strong> (como avatares de repositório no GitHub, favicons ou executáveis de desktop).</p>
+<h3 id="por-que-a-forma-espiralada-supera-outras-abordagens">Por que a forma espiralada supera outras abordagens?</h3>
+<ul>
+<li><strong>Contra o Mecha HUD complexo:</strong> Telas táticas com reticulados, miras e dados microscópicos funcionam como diagramas imersivos na interface, mas quando reduzidas ao tamanho de um ícone tornam-se um borrão cinzento incompreensível.</li>
+<li><strong>Contra o padrão têxtil (<em>Seigaiha</em>):</strong> Ondas repetidas concêntricas transmitem a calmaria estática de cerâmica ou embalagens de chá verde, carecendo da energia agressiva requerida por um simulador de propagação de pulsos e gradientes de pressão.</li>
+<li><strong>Contra o Kanji isolado:</strong> Um caractere japonês solto como isotipo corre o risco de assemelhar-se a um logotipo de dojo ou fachada de restaurante oriental.</li>
+</ul>
+<h3 id="tracado-e-dinamica-vetorial">Traçado e Dinâmica Vetorial</h3>
+<ul>
+<li><strong>Assimetria e Traço Dinâmico:</strong> A "cauda" do magatama possui terminação afiada e agressiva, evocando a frente de onda ultraveloz da despolarização da membrana miocárdica (a fase 0 mediada pelos canais rápidos de sódio $I_{Na}$ e o pico escarpado da onda R).</li>
+<li><strong>Núcleo em Recirculação:</strong> O "corpo" arredondado fecha-se como uma espiral logarítmica de vórtice, traduzindo o turbilhonamento fluido e a dissipação de energia ventricular.</li>
+</ul>
+<hr />
+<h2 id="3-tipografia-integrada-e-o-kanji-kokoro">🈲 3. Tipografia Integrada e o Kanji 心 (Kokoro)</h2>
+<p>A tipografia do logotipo é geométrica, técnica e limpa, inspirada nas interfaces de controle de ficção científica e animes clássicos de mecha dos anos 90 (como <em>Neon Genesis Evangelion</em> e <em>Ghost in the Shell</em>):</p>
+<p>$$\text{k} \cdot \text{o} \cdot \text{k} \cdot \text{o} \cdot \text{r} \cdot \mathbf{心} \cdot \text{s} \cdot \text{i} \cdot \text{m}$$</p>
+<ul>
+<li><strong>Integração Sutil e Autêntica:</strong> O kanji <strong>心</strong> (<em>kokoro</em> — coração, mente, espírito) é fundido diretamente na estrutura tipográfica, ocupando o lugar do segundo "o" da palavra. </li>
+<li><strong>Equilíbrio Semântico:</strong> Essa substituição preserva a legibilidade da pronúncia global (<em>kokoro</em> + <em>sim</em>), transformando o caractere no ponto focal de ligação entre a herança conceitual nipônica e a simulação de alta performance.</li>
+</ul>
+<hr />
+<h2 id="4-paleta-de-cores-a-dualidade-eletromecanica">🔴🔵 4. Paleta de Cores: A Dualidade Eletromecânica</h2>
+<p>Em vez dos degradês assépticos e esbranquiçados de softwares médicos hospitalares, o KokoroSim adota blocos de cor sólidos de altíssimo contraste sobre uma base preta profunda (<em>Dark Cyberpunk</em>):</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Cor</th>
+<th style="text-align: left;">Hex</th>
+<th style="text-align: left;">Função Biofísica e Semiótica</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Carmesim Neon</strong></td>
+<td style="text-align: left;"><code>#ff1754</code></td>
+<td style="text-align: left;">Representa o sangue arterial, o calor metabólico, a Pressão Aórtica ($AoP$) e a força inotrópica de ejeção ventricular.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Ciano Elétrico</strong></td>
+<td style="text-align: left;"><code>#00f2fe</code> / <code>#00cec9</code></td>
+<td style="text-align: left;">Representa a bioeletricidade, a polaridade transmembrana, os potenciais de ação rápidos e a Pressão Ventricular Esquerda ($LVP$).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Amarelo Neon</strong></td>
+<td style="text-align: left;"><code>#f1c40f</code></td>
+<td style="text-align: left;">Representa o retardo do Nó AV, a sincronia acústica e a telemetria do monitor de UTI.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Fundo Profundo</strong></td>
+<td style="text-align: left;"><code>#0a0c12</code></td>
+<td style="text-align: left;">O vazio eletrostático do chassi digital, destacando cada disparo iônico com brilho fosforescente.</td>
+</tr>
+</tbody>
+</table>
+<p>Essa combinação direta entre o <strong>calor mecânico do sangue (carmesim)</strong> e a <strong>eletricidade fria do potencial de ação (ciano)</strong> sintetiza a própria essência do KokoroSim: <strong>um simulador onde o pulso elétrico e a hidrodinâmica ventricular coexistem em perfeita harmonia matemática.</strong></p>
     </main>
     <footer>
         <p><b>kokor<span style="color: var(--neon-carmine); font-weight: 900;">心</span><span style="color: var(--neon-cyan); font-weight: bold;">sim</span></b> — Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real</p>
@@ -378,106 +460,3 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </footer>
 </body>
 </html>
-"""
-
-DOCS_MAP = [
-    {
-        "src": "README.md",
-        "dest": "ui/index.html",
-        "title": "KokoroSim — Simulador Eletrofisiológico Cardíaco em Tempo Real",
-        "active": "sobre"
-    },
-    {
-        "src": "README.md",
-        "dest": "ui/sobre.html",
-        "title": "Sobre o Projeto — KokoroSim",
-        "active": "sobre"
-    },
-    {
-        "src": "docs/modelos.md",
-        "dest": "ui/modelos.html",
-        "title": "Modelos Biofísicos e Referências Científicas",
-        "active": "modelos"
-    },
-    {
-        "src": "docs/identidade_visual.md",
-        "dest": "ui/identidade.html",
-        "title": "Identidade Visual e Conceito do Logotipo",
-        "active": "identidade"
-    },
-    {
-        "src": "ROADMAP.md",
-        "dest": "ui/roadmap.html",
-        "title": "Roadmap de Desenvolvimento",
-        "active": "roadmap"
-    },
-    {
-        "src": "ARCHITECTURE.md",
-        "dest": "ui/arquitetura.html",
-        "title": "Decisões de Arquitetura e Engenharia",
-        "active": "arquitetura"
-    },
-    {
-        "src": "docs/roteiro_aulas_praticas.md",
-        "dest": "ui/roteiro.html",
-        "title": "Guia Didático e Roteiro de Aulas Práticas",
-        "active": "roteiro"
-    }
-]
-
-def main():
-    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    os.chdir(root_dir)
-
-    md = markdown.Markdown(extensions=[
-        'tables',
-        'fenced_code',
-        'toc',
-        'attr_list',
-        'def_list'
-    ])
-
-    for doc in DOCS_MAP:
-        src_path = os.path.join(root_dir, doc["src"])
-        dest_path = os.path.join(root_dir, doc["dest"])
-
-        if not os.path.exists(src_path):
-            print(f"⚠️ Aviso: Arquivo fonte não encontrado: {src_path}")
-            continue
-
-        with open(src_path, "r", encoding="utf-8") as f:
-            raw_text = f.read()
-
-        # Ajusta links internos entre documentos markdown para as páginas HTML geradas
-        raw_text = raw_text.replace("docs/modelos.md", "./modelos.html")
-        raw_text = raw_text.replace("docs/roteiro_aulas_praticas.md", "./roteiro.html")
-        raw_text = raw_text.replace("docs/identidade_visual.md", "./identidade.html")
-        raw_text = raw_text.replace("ROADMAP.md", "./roadmap.html")
-        raw_text = raw_text.replace("ARCHITECTURE.md", "./arquitetura.html")
-        raw_text = raw_text.replace("README.md", "./index.html")
-        raw_text = raw_text.replace("../ui/assets/", "assets/")
-        raw_text = raw_text.replace("ui/assets/", "assets/")
-
-        html_body = md.convert(raw_text)
-        md.reset()
-
-        page_html = (
-            HTML_TEMPLATE
-            .replace("__PAGE_TITLE__", doc["title"])
-            .replace("__PAGE_CONTENT__", html_body)
-            .replace("__ACTIVE_SOBRE__", "active" if doc["active"] == "sobre" else "")
-            .replace("__ACTIVE_MODELOS__", "active" if doc["active"] == "modelos" else "")
-            .replace("__ACTIVE_IDENTIDADE__", "active" if doc["active"] == "identidade" else "")
-            .replace("__ACTIVE_ROTEIRO__", "active" if doc["active"] == "roteiro" else "")
-            .replace("__ACTIVE_ROADMAP__", "active" if doc["active"] == "roadmap" else "")
-            .replace("__ACTIVE_ARQUITETURA__", "active" if doc["active"] == "arquitetura" else "")
-        )
-
-        os.makedirs(os.path.dirname(dest_path), exist_ok=True)
-        with open(dest_path, "w", encoding="utf-8") as f:
-            f.write(page_html)
-
-        print(f"✅ Gerado: {doc['dest']} a partir de {doc['src']}")
-
-if __name__ == "__main__":
-    main()
