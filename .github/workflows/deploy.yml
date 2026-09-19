@@ -62,11 +62,18 @@ jobs:
           python3 main-repo/scripts/build_docs.py
 
       - name: Deploy to KokoroSim.github.io
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          deploy_key: ${{ secrets.DEPLOY_KEY }}
-          external_repository: KokoroSim/KokoroSim.github.io
-          publish_branch: main
-          publish_dir: ./main-repo/ui
-          force_orphan: true
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf "%s\n" "$DEPLOY_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          cd main-repo/ui
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b main
+          git add -A
+          git commit -m "deploy: publicar KokoroSim no GitHub Pages [skip ci]"
+          GIT_SSH_COMMAND="ssh -i ~/.ssh/id_deploy -o StrictHostKeyChecking=no" git push --force git@github.com:KokoroSim/KokoroSim.github.io.git main
 
