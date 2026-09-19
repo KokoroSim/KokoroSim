@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Features
+  - (assets,style) adicionar logo/icone oficiais e implementar paleta neon carmesim com estetica otomo
   - (ui,docs) reestruturar navegacao com home em sobre, mover simulador para app.html e consolidar marca KokoroSim
   - (ui,ci) publicar documentacao em HTML no GitHub Pages e abrir manual em nova aba
   - (ui) implementar sincronização bio-disparada RR da onda fantasma e linha sólida esmaecida anti-fadiga
