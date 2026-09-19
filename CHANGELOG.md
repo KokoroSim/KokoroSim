@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+- Routine maintenance, documentation updates, and operational improvements.
+
+## Previous Releases
+
+### [v2.0.0-dev]
+
+- Routine maintenance, documentation updates, and operational improvements.
+
+### [v2.0.0] - Marco Eletrofisiológico e Hemodinâmico
+
 ### Features
   - (ui) implementar tipografia kokor心sim, telemetria bilingue e estetica retro-futurista no simulador
   - (assets,style) adicionar logo/icone oficiais e implementar paleta neon carmesim com estetica otomo
@@ -26,12 +36,6 @@
 ### Bug Fixes
   - (dev) isolar injecao do livereload no server.py e limpar htmls estaticos de producao
   - (engine) corrigir dissincronia ventricular e implementar condução fisiológica por pulsos
-
-## Previous Releases
-
-### [v2.0.0-dev]
-
-- Routine maintenance, documentation updates, and operational improvements.
 
 ### [v1.0.0]
 
