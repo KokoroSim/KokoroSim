@@ -67,7 +67,7 @@ build_wasm() {
 }
 
 echo "======================================================================"
-echo " ★ KokoroSim 🌸 — Ambiente de Desenvolvimento Integrado com LiveReload ★"
+echo " ★ KokoroSim — Ambiente de Desenvolvimento Integrado com LiveReload ★"
 echo "======================================================================"
 
 # 1. Executa build inicial

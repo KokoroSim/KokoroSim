@@ -22,6 +22,7 @@
   - (ui/engine) adiciona sistema de plotagem em tempo real e modelo de força mecânica
 
 ### Bug Fixes
+  - (dev) isolar injecao do livereload no server.py e limpar htmls estaticos de producao
   - (engine) corrigir dissincronia ventricular e implementar condução fisiológica por pulsos
 
 ## Previous Releases

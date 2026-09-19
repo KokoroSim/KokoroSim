@@ -7,11 +7,40 @@ PORT = int(os.environ.get("PORT", 8081))
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BUILD_ID_FILE = os.path.join(BASE_DIR, ".build_id")
 
+LIVERELOAD_SNIPPET = b"""
+    <!-- Injetado dinamicamente pelo KokoroSim Dev Server (apenas em dev local) -->
+    <script>
+        (function() {
+            let lastBuildId = null;
+            async function pollLiveReload() {
+                try {
+                    const res = await fetch('/__livereload__?t=' + Date.now());
+                    if (res.ok) {
+                        const id = await res.text();
+                        if (lastBuildId !== null && id !== lastBuildId) {
+                            console.log('[KokoroSim Dev] Nova build detectada (' + id + '). Recarregando...');
+                            window.location.reload();
+                            return;
+                        }
+                        lastBuildId = id;
+                    }
+                } catch (_) {}
+                setTimeout(pollLiveReload, 800);
+            }
+            pollLiveReload();
+        })();
+    </script>
+</body>
+"""
+
 class DevServerHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=BASE_DIR, **kwargs)
 
     def do_GET(self):
+        if self.path.startswith("/ui/"):
+            self.path = self.path[3:]
+
         if self.path.startswith("/__livereload__"):
             token = "0"
             if os.path.exists(BUILD_ID_FILE):
@@ -26,6 +55,31 @@ class DevServerHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(token.encode("utf-8"))
             return
+
+        # Para arquivos HTML, injeta dinamicamente o script de LiveReload em tempo de execucao
+        clean_path = self.path.split("?")[0].split("#")[0]
+        local_file = self.translate_path(clean_path)
+        if os.path.isdir(local_file):
+            local_file = os.path.join(local_file, "index.html")
+
+        if local_file.endswith(".html") and os.path.isfile(local_file):
+            try:
+                with open(local_file, "rb") as f:
+                    content = f.read()
+                if b"</body>" in content:
+                    content = content.replace(b"</body>", LIVERELOAD_SNIPPET)
+                elif b"</html>" in content:
+                    content = content.replace(b"</html>", LIVERELOAD_SNIPPET + b"\n</html>")
+
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(content)))
+                self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+                self.end_headers()
+                self.wfile.write(content)
+                return
+            except Exception:
+                pass
 
         super().do_GET()
 
