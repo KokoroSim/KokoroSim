@@ -52,8 +52,10 @@ fn App() -> Element {
     let mut view_mode = use_signal(|| "rolling".to_string());
     let mut show_ghost = use_signal(|| false);
     let mut trigger_capture_ghost = use_signal(|| false);
+    let mut trigger_clear_ghost = use_signal(|| false);
     let mut trigger_arm_single = use_signal(|| false);
     let mut is_paused = use_signal(|| false);
+    let mut ghost_status_str = use_signal(|| "📸 Capturar".to_string());
 
     // Dynamic HUD metrics state
     let mut bpm = use_signal(|| 75.0);
@@ -100,6 +102,22 @@ fn App() -> Element {
             hemo_plotter_lvp.set_mode(current_mode);
             hemo_plotter_aop.set_mode(current_mode);
 
+            if trigger_clear_ghost() {
+                pa_plotter_sa.clear_ghost();
+                pa_plotter_av.clear_ghost();
+                pa_plotter_atrium.clear_ghost();
+                pa_plotter_purk.clear_ghost();
+                pa_plotter_endo.clear_ghost();
+                pa_plotter_epi.clear_ghost();
+                pa_plotter_fib.clear_ghost();
+                ecg_plotter.clear_ghost();
+                ch3_plotter.clear_ghost();
+                hemo_plotter_lvp.clear_ghost();
+                hemo_plotter_aop.clear_ghost();
+                trigger_clear_ghost.set(false);
+                ghost_status_str.set("📸 Capturar".to_string());
+            }
+
             if trigger_capture_ghost() {
                 pa_plotter_sa.capture_ghost();
                 pa_plotter_av.capture_ghost();
@@ -113,6 +131,26 @@ fn App() -> Element {
                 hemo_plotter_lvp.capture_ghost();
                 hemo_plotter_aop.capture_ghost();
                 trigger_capture_ghost.set(false);
+                ghost_status_str.set("⏳ Aguardando Nó SA...".to_string());
+            }
+
+            let g_state = ecg_plotter.ghost_state();
+            match g_state {
+                plot::GhostCaptureState::Armed => {
+                    if ghost_status_str() != "⏳ Aguardando Nó SA..." {
+                        ghost_status_str.set("⏳ Aguardando Nó SA...".to_string());
+                    }
+                }
+                plot::GhostCaptureState::Recording => {
+                    if ghost_status_str() != "🔴 Gravando Ciclo..." {
+                        ghost_status_str.set("🔴 Gravando Ciclo...".to_string());
+                    }
+                }
+                _ => {
+                    if ghost_status_str() != "📸 Capturar" {
+                        ghost_status_str.set("📸 Capturar".to_string());
+                    }
+                }
             }
 
             if trigger_arm_single() {
@@ -300,8 +338,10 @@ fn App() -> Element {
         view_mode.set("rolling".to_string());
         show_ghost.set(false);
         trigger_capture_ghost.set(false);
+        trigger_clear_ghost.set(true);
         trigger_arm_single.set(false);
         is_paused.set(false);
+        ghost_status_str.set("📸 Capturar".to_string());
         system.set(HeartSystem::new());
     };
 
@@ -403,12 +443,12 @@ fn App() -> Element {
                         button {
                             class: "icon-btn",
                             style: "padding: 6px 10px; background: #222; color: var(--neon-cyan); border: 1px solid var(--neon-cyan); border-radius: 4px; cursor: pointer; font-size: 1.4vh; white-space: nowrap;",
-                            title: "Captura snapshot do traçado atual para comparação em segundo plano",
+                            title: "Captura snapshot de 1 ciclo cardíaco completo ancorado na Fase 0 do Nó SA",
                             onclick: move |_| {
                                 show_ghost.set(true);
                                 trigger_capture_ghost.set(true);
                             },
-                            "📸 Capturar"
+                            "{ghost_status_str}"
                         }
                     }
 

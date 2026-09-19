@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Features
+  - (ui) implement bio-triggered RR ghost wave sync and anti-fatigue solid dimmed line
   - (ui) implement simulation freeze control, synchronized rolling ghost wave with dashed line, and auto-trigger canvas reset
   - (ui) implement 5 oscilloscope display modes, ghost wave snapshot, and multi-channel sound markers
   - (engine) add SA node phase 0 depolarization trigger event to batch stream

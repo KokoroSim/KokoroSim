@@ -35,11 +35,24 @@ pub enum SingleState {
     Frozen,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum GhostCaptureState {
+    Idle,
+    Armed,
+    Recording,
+    Ready,
+}
+
 pub struct Plotter {
     canvas_id: String,
     buffer: Vec<f64>,
     capacity: usize,
-    ghost_buffer: Option<Vec<f64>>,
+    ghost_state: GhostCaptureState,
+    ghost_beat: Vec<f64>,
+    ghost_recording: Vec<f64>,
+    ghost_rest_val: f64,
+    ghost_playback_idx: usize,
+    ghost_rolling_buffer: Vec<f64>,
     mode: ViewMode,
     head_idx: usize,
     paged_frozen: bool,
@@ -53,7 +66,12 @@ impl Plotter {
             canvas_id: canvas_id.to_string(),
             buffer: Vec::with_capacity(capacity),
             capacity,
-            ghost_buffer: None,
+            ghost_state: GhostCaptureState::Idle,
+            ghost_beat: Vec::new(),
+            ghost_recording: Vec::new(),
+            ghost_rest_val: 0.0,
+            ghost_playback_idx: 0,
+            ghost_rolling_buffer: Vec::with_capacity(capacity),
             mode: ViewMode::Rolling,
             head_idx: 0,
             paged_frozen: false,
@@ -74,18 +92,29 @@ impl Plotter {
             if mode != ViewMode::Rolling {
                 self.buffer.resize(self.capacity, f64::NAN);
             }
+            if mode == ViewMode::Rolling && self.ghost_state == GhostCaptureState::Ready {
+                self.ghost_playback_idx = 0;
+                self.ghost_rolling_buffer.clear();
+                self.ghost_rolling_buffer.resize(self.capacity, self.ghost_rest_val);
+            }
         }
     }
 
     pub fn capture_ghost(&mut self) {
-        if !self.buffer.is_empty() {
-            self.ghost_buffer = Some(self.buffer.clone());
-        }
+        self.ghost_state = GhostCaptureState::Armed;
+        self.ghost_recording.clear();
     }
 
-    #[allow(dead_code)]
+    pub fn ghost_state(&self) -> GhostCaptureState {
+        self.ghost_state
+    }
+
     pub fn clear_ghost(&mut self) {
-        self.ghost_buffer = None;
+        self.ghost_state = GhostCaptureState::Idle;
+        self.ghost_beat.clear();
+        self.ghost_recording.clear();
+        self.ghost_rolling_buffer.clear();
+        self.ghost_playback_idx = 0;
     }
 
     pub fn arm_single(&mut self) {
@@ -97,6 +126,45 @@ impl Plotter {
     pub fn push(&mut self, value: f64, sound_code: u32, is_sa_fire: bool) {
         let sound_flags = (sound_code & 7) as u8;
 
+        // 1. Gravação bio-disparada do ciclo basal de referência (Fase 0 do Nó SA)
+        match self.ghost_state {
+            GhostCaptureState::Armed => {
+                if is_sa_fire {
+                    self.ghost_state = GhostCaptureState::Recording;
+                    self.ghost_recording.clear();
+                    self.ghost_recording.push(value);
+                }
+            }
+            GhostCaptureState::Recording => {
+                if is_sa_fire && self.ghost_recording.len() > 10 {
+                    // O ciclo cardíaco RR completou 1 batimento inteiro
+                    self.ghost_beat = self.ghost_recording.clone();
+                    self.ghost_rest_val = value;
+                    self.ghost_state = GhostCaptureState::Ready;
+                    self.ghost_playback_idx = 0;
+                    self.ghost_recording.clear();
+                    if self.mode == ViewMode::Rolling {
+                        self.ghost_rolling_buffer.clear();
+                        self.ghost_rolling_buffer.resize(self.capacity, self.ghost_rest_val);
+                    }
+                } else {
+                    self.ghost_recording.push(value);
+                    if self.ghost_recording.len() >= self.capacity {
+                        self.ghost_beat = self.ghost_recording.clone();
+                        self.ghost_rest_val = value;
+                        self.ghost_state = GhostCaptureState::Ready;
+                        self.ghost_playback_idx = 0;
+                        self.ghost_recording.clear();
+                        if self.mode == ViewMode::Rolling {
+                            self.ghost_rolling_buffer.clear();
+                            self.ghost_rolling_buffer.resize(self.capacity, self.ghost_rest_val);
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+
         match self.mode {
             ViewMode::Rolling => {
                 if self.buffer.len() >= self.capacity {
@@ -104,12 +172,25 @@ impl Plotter {
                 }
                 self.buffer.push(value);
 
-                // A onda fantasma corre em sincronia perfeita com o gráfico ativo
-                if let Some(ref mut ghost) = self.ghost_buffer {
-                    if !ghost.is_empty() {
-                        let val = ghost.remove(0);
-                        ghost.push(val); // Wrap circular
+                // Projeção e sincronização da onda fantasma
+                if self.ghost_state == GhostCaptureState::Ready && !self.ghost_beat.is_empty() {
+                    if is_sa_fire {
+                        // Novo batimento: reancora a onda fantasma na Fase 0
+                        self.ghost_playback_idx = 0;
                     }
+
+                    let ghost_val = if self.ghost_playback_idx < self.ghost_beat.len() {
+                        let v = self.ghost_beat[self.ghost_playback_idx];
+                        self.ghost_playback_idx += 1;
+                        v
+                    } else {
+                        self.ghost_rest_val
+                    };
+
+                    if self.ghost_rolling_buffer.len() >= self.capacity {
+                        self.ghost_rolling_buffer.remove(0);
+                    }
+                    self.ghost_rolling_buffer.push(ghost_val);
                 }
 
                 // Desloca marcadores sonoros existentes 1 índice à esquerda
@@ -316,22 +397,18 @@ impl Plotter {
                     let dx = width / (self.capacity as f64 - 1.0);
                     let range_y = max_y - min_y;
 
-                    // 1. Desenha Onda Fantasma: PONTILHADA, semitransparente e sem sombra
-                    if show_ghost {
-                        if let Some(ref ghost) = self.ghost_buffer {
-                            if !ghost.is_empty() {
-                                ctx.save();
-                                ctx.begin_path();
-                                ctx.set_stroke_style_str(&format_ghost_color(color));
-                                ctx.set_line_width(1.5);
-                                ctx.set_shadow_blur(0.0);
-                                let _ = ctx.set_line_dash(&js_sys::Array::of2(
-                                    &wasm_bindgen::JsValue::from(4),
-                                    &wasm_bindgen::JsValue::from(4),
-                                ));
+                    // 1. Desenha Onda Fantasma: Linha contínua sólida esmaecida (sem pontilhado, anti-fadiga visual)
+                    if show_ghost && self.ghost_state == GhostCaptureState::Ready && !self.ghost_beat.is_empty() {
+                        ctx.save();
+                        ctx.begin_path();
+                        ctx.set_stroke_style_str(&format_ghost_color(color));
+                        ctx.set_line_width(1.2);
+                        ctx.set_shadow_blur(0.0);
 
-                                let mut first = true;
-                                for (i, &val) in ghost.iter().enumerate() {
+                        let mut first = true;
+                        match self.mode {
+                            ViewMode::Rolling => {
+                                for (i, &val) in self.ghost_rolling_buffer.iter().enumerate() {
                                     if !val.is_nan() {
                                         let x = i as f64 * dx;
                                         let y = height - ((val - min_y) / range_y) * height;
@@ -345,10 +422,32 @@ impl Plotter {
                                         first = true;
                                     }
                                 }
-                                ctx.stroke();
-                                ctx.restore();
+                            }
+                            ViewMode::Sweep | ViewMode::TriggeredAuto | ViewMode::Paged | ViewMode::TriggeredSingle => {
+                                let beat_len = self.ghost_beat.len();
+                                for i in 0..self.capacity {
+                                    let val = if i < beat_len {
+                                        self.ghost_beat[i]
+                                    } else {
+                                        self.ghost_rest_val
+                                    };
+                                    if !val.is_nan() {
+                                        let x = i as f64 * dx;
+                                        let y = height - ((val - min_y) / range_y) * height;
+                                        if first {
+                                            ctx.move_to(x, y);
+                                            first = false;
+                                        } else {
+                                            ctx.line_to(x, y);
+                                        }
+                                    } else {
+                                        first = true;
+                                    }
+                                }
                             }
                         }
+                        ctx.stroke();
+                        ctx.restore();
                     }
 
                     // 2. Desenha o traçado ativo de acordo com o ViewMode
@@ -510,8 +609,8 @@ fn format_ghost_color(hex: &str) -> String {
             u8::from_str_radix(&hex[3..5], 16),
             u8::from_str_radix(&hex[5..7], 16),
         ) {
-            return format!("rgba({}, {}, {}, 0.38)", r, g, b);
+            return format!("rgba({}, {}, {}, 0.35)", r, g, b);
         }
     }
-    "rgba(180, 180, 180, 0.38)".to_string()
+    "rgba(180, 180, 180, 0.35)".to_string()
 }
