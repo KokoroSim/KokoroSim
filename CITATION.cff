@@ -1,14 +1,14 @@
 cff-version: 1.2.0
-message: "Se você utilizar o SimCardio em pesquisas, dissertações, teses, aulas práticas ou publicações acadêmicas, por favor cite conforme abaixo:"
-title: "SimCardio: Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real"
+message: "Se você utilizar o KokoroSim em pesquisas, dissertações, teses, aulas práticas ou publicações acadêmicas, por favor cite conforme abaixo:"
+title: "KokoroSim: Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real"
 abstract: "Simulador computacional biofísico de código aberto desenvolvido em Rust e WebAssembly, modelando em tempo real o automatismo sinoatrial, condução atrioventricular, heterogeneidade transmural ventricular, acoplamento eletrotônico fibroblástico, eletrocardiograma dipolar e diagrama hemodinâmico de Wiggers."
 authors:
   - family-names: "Freitas"
     given-names: "Lumen Muller Lohn"
     affiliation: "Universidade Federal de Santa Catarina (UFSC)"
     email: "hi@lumen.pink"
-repository-code: "https://github.com/lumenpink/simcardio"
-url: "https://lumenpink.github.io/simcardio/"
+repository-code: "https://github.com/KokoroSim/kokorosim"
+url: "https://kokorosim.github.io/"
 license: "GPL-3.0-or-later"
 version: "2.0.0"
 date-released: "2026-09-19"

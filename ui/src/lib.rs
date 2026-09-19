@@ -355,7 +355,7 @@ fn App() -> Element {
                         class: "modal-content",
                         onclick: move |e| e.stop_propagation(),
                         div { class: "modal-header",
-                            h2 { "Sobre o SimCardio" }
+                            h2 { "Sobre o KokoroSim 🌸" }
                             button {
                                 class: "btn-close-modal",
                                 onclick: move |_| show_about.set(false),
@@ -363,7 +363,7 @@ fn App() -> Element {
                             }
                         }
                         div { class: "modal-body",
-                            p { "O SimCardio é um simulador eletrofisiológico cardíaco celular em tempo real executado nativamente via WebAssembly (WASM) com Rust e Dioxus." }
+                            p { "O KokoroSim é um simulador eletrofisiológico cardíaco celular em tempo real executado nativamente via WebAssembly (WASM) com Rust e Dioxus." }
                             br {}
                             h4 { style: "color: var(--neon-yellow); margin-bottom: 6px;", "Modelos Biofísicos Integrados:" }
                             ul { style: "margin-left: 20px; margin-bottom: 12px;",

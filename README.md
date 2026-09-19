@@ -1,6 +1,6 @@
-# SimCardio: Simulador Eletrofisiológico Cardíaco em Tempo Real
+# KokoroSim 🌸: Simulador Eletrofisiológico Cardíaco em Tempo Real
 
-[![Deploy to GitHub Pages](https://github.com/lumenpink/simcardio/actions/workflows/deploy.yml/badge.svg)](https://lumenpink.github.io/simcardio/)
+[![Deploy to GitHub Pages](https://github.com/KokoroSim/kokorosim/actions/workflows/deploy.yml/badge.svg)](https://kokorosim.github.io/)
 [![Licença: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Rust](https://img.shields.io/badge/Rust-2021_Edition-orange.svg?logo=rust)](https://www.rust-lang.org/)
 [![WebAssembly](https://img.shields.io/badge/WebAssembly-WASM-purple.svg?logo=webassembly)](https://webassembly.org/)
@@ -8,16 +8,16 @@
 [![Mobile Optimized](https://img.shields.io/badge/Hardware-Mobile_%26_Low--Power-success.svg)](#-arquitetura-de-software)
 [![Acessibilidade](https://img.shields.io/badge/Acessibilidade-Neurodivergente--Friendly-brightgreen.svg)](#-modos-de-visualização-do-osciloscópio-e-onda-fantasma)
 
-O **SimCardio** é um projeto acadêmico de código aberto dedicado à simulação biofísica da eletrofisiologia celular cardíaca e hemodinâmica ventricular em tempo real diretamente no navegador web. Desenvolvido para servir prioritariamente a universidades e centros de pesquisa no Brasil, o software é construído em **Rust** e compilado para **WebAssembly (WASM)** com interface declarativa reativa em **Dioxus**. O motor numérico resolve mais de 160 equações diferenciais ordinárias (EDOs) e variáveis de estado simultaneamente utilizando o método numérico híbrido de **Rush-Larsen** a $dt = 0.01\text{ ms}$ (1.600 passos por quadro de 16 ms a 60 FPS), assegurando execução em **1x tempo real** com baixíssimo consumo de CPU (**< 5-10%**) em smartphones, tablets, notebooks e computadores de laboratórios acadêmicos, sem depender de placas gráficas dedicadas.
+O **KokoroSim 🌸** (antigo *SimCardio*) é um projeto acadêmico de código aberto dedicado à simulação biofísica da eletrofisiologia celular cardíaca e hemodinâmica ventricular em tempo real diretamente no navegador web. Desenvolvido para servir prioritariamente a universidades e centros de pesquisa no Brasil, o software é construído em **Rust** e compilado para **WebAssembly (WASM)** com interface declarativa reativa em **Dioxus**. O motor numérico resolve mais de 160 equações diferenciais ordinárias (EDOs) e variáveis de estado simultaneamente utilizando o método numérico híbrido de **Rush-Larsen** a $dt = 0.01\text{ ms}$ (1.600 passos por quadro de 16 ms a 60 FPS), assegurando execução em **1x tempo real** com baixíssimo consumo de CPU (**< 5-10%**) em smartphones, tablets, notebooks e computadores de laboratórios acadêmicos, sem depender de placas gráficas dedicadas.
 
 ---
 
 ## 🧭 Navegação e Documentação do Projeto
-* 🚀 **[Acessar Simulador em Execução (Web App)](https://lumenpink.github.io/simcardio/)**
+* 🚀 **[Acessar Simulador em Execução (Web App)](https://kokorosim.github.io/)**
 * 🎓 **[Roteiro de Aulas Práticas para Universidades](docs/roteiro_aulas_praticas.md)**: 4 experimentos completos para Fisiologia e Farmacologia.
 * 🗺️ **[Roadmap de Desenvolvimento (ROADMAP.md)](ROADMAP.md)**: Fases concluídas e planejamento de expansão 2D/3D.
 * 🏛️ **[Decisões de Arquitetura (ARCHITECTURE.md)](ARCHITECTURE.md)**: Justificativas biofísicas, matemáticas e de engenharia.
-* 📜 **[Como Citar o SimCardio (CITATION.cff)](CITATION.cff)**: Metadados formais para TCCs, dissertações e artigos científicos.
+* 📜 **[Como Citar o KokoroSim (CITATION.cff)](CITATION.cff)**: Metadados formais para TCCs, dissertações e artigos científicos.
 
 ---
 
@@ -180,17 +180,17 @@ O quarto canal do osciloscópio exibe em tempo real o núcleo mecânico do **Dia
 
 ## 📖 Citação Acadêmica
 
-Se você utilizar o SimCardio em pesquisas científicas, aulas práticas, monografias, dissertações, teses ou publicações acadêmicas, por favor cite conforme as diretrizes do arquivo [`CITATION.cff`](CITATION.cff):
+Se você utilizar o KokoroSim em pesquisas científicas, aulas práticas, monografias, dissertações, teses ou publicações acadêmicas, por favor cite conforme as diretrizes do arquivo [`CITATION.cff`](CITATION.cff):
 
 ```bibtex
-@software{freitas2026simcardio,
+@software{freitas2026kokorosim,
   author       = {Freitas, Lumen Muller Lohn},
-  title        = {SimCardio: Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real},
+  title        = {KokoroSim: Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real},
   year         = {2026},
   publisher    = {GitHub},
   journal      = {GitHub repository},
-  howpublished = {\url{https://github.com/lumenpink/simcardio}},
-  url          = {https://lumenpink.github.io/simcardio/}
+  howpublished = {\url{https://github.com/KokoroSim/kokorosim}},
+  url          = {https://kokorosim.github.io/}
 }
 ```
 

@@ -13,7 +13,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{title} — SimCardio</title>
+    <title>{title} — KokoroSim 🌸</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -262,7 +262,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <body>
     <nav class="top-nav">
         <a href="./index.html" class="brand">
-            ❤️ <span class="pulse">SimCardio</span>
+            🌸 <span class="pulse">KokoroSim</span>
         </a>
         <div class="nav-links">
             <a href="./index.html" class="btn-app">▶ Simulador Web</a>
@@ -270,14 +270,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             <a href="./roteiro.html" class="{active_roteiro}">🎓 Roteiro Prático</a>
             <a href="./roadmap.html" class="{active_roadmap}">🗺️ Roadmap</a>
             <a href="./arquitetura.html" class="{active_arquitetura}">🏛️ Arquitetura</a>
-            <a href="https://github.com/lumenpink/simcardio" target="_blank">💻 GitHub</a>
+            <a href="https://github.com/KokoroSim/kokorosim" target="_blank">💻 GitHub</a>
         </div>
     </nav>
     <main class="doc-container">
         {content}
     </main>
     <footer>
-        <p><b>SimCardio</b> — Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real</p>
+        <p><b>KokoroSim 🌸</b> — Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real</p>
         <p>Software Livre distribuído sob a licença GNU GPLv3. Desenvolvido para universidades e centros de pesquisa.</p>
     </footer>
 </body>
