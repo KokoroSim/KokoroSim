@@ -156,9 +156,9 @@ A silhueta baseia-se no **magatama** (勾玉) e no elemento dinâmico unitário 
 
 ### 3. O Kanji e a Tipografia Integrada: `kokor心sim`
 - O caractere **心** (*kokoro* — coração, mente, espírito) é fundido diretamente na tipografia geométrica, substituindo o segundo "o" da palavra. Essa fusão sutil preserva a legibilidade fonética e ancora a alma do software.
-- A paleta de cores adota o **Carmesim Neon** (`#ff1754` — representando o sangue, a pressão aórtica e o calor metabólico) em contraste com o **Ciano Elétrico** (`#00f2fe` — representando a bioeletricidade transmembrana e a polaridade iônica), montados sobre um fundo escuro com estética de interface tática Mecha/HUD de ficção científica.
+- A paleta de cores adota o **Carmesim Neon** (`#ff1754` — representando o sangue arterial oxigenado, a pressão aórtica e o calor metabólico) em contraste com o **Ciano Elétrico** (`#00f2fe` — representando a bioeletricidade transmembrana, a polaridade iônica e a convenção anatômica do sangue venoso), montados sobre um fundo escuro com estética de interface tática Mecha/HUD de ficção científica.
 
-> 📖 **Documento Conceitual Completo:** Leia o ensaio detalhado sobre a semiologia, opções descartadas e fundamentação visual em **[Identidade Visual e Conceito do Logotipo](docs/identidade_visual.md)**.
+> 📖 **Documento Conceitual Completo:** Leia o ensaio ilustrado sobre a semiologia, geometria e fundamentação visual em **[Identidade Visual e Conceito do Logotipo](docs/identidade_visual.md)**.
 
 ---
 
