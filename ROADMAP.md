@@ -76,10 +76,10 @@ O desenvolvimento do **KokoroSim** está organizado em grandes marcos arquitetur
 ### Fase 9: Modernização de Infraestrutura e Qualidade de Software (Rust 2024 & Dioxus 0.7)
 * [ ] **Migração para Rust Edition 2024**: Adoção das novas convenções de compilação, closures assíncronas otimizadas e lifetimes estritos para WebAssembly.
 * [ ] **Atualização para Dioxus 0.7**: Transição para o novo reconciliador de Virtual DOM e reatividade avançada de Signals, reduzindo o overhead de renderização do osciloscópio.
-* [ ] **Harness de Testes Automatizados E2E e Wasm**:
-  - Testes unitários do motor numérico via `wasm-bindgen-test` em ambiente headless (validação de invariantes matemáticas, estabilidade de $V_m$ e imunidade a `NaN`).
-  - Suíte de testes de interface end-to-end com Playwright automatizando cenários críticos: reset, congelamento, disparos da onda fantasma e interações táteis nos sliders.
-  - Testes de regressão biofísica: verificação programática de efeitos farmacológicos (ex.: alargamento dinâmico de PR com Verapamil, prolongamento de QT com hipocalcemia).
+* [x] **Harness de Testes Automatizados E2E e Wasm**:
+  - [x] Testes unitários do motor numérico em Rust nativo e Wasm (validação de invariantes matemáticas, estabilidade de $V_m$, ausência de `NaN`, resiliência e não-congelamento sob espectro extremo de parâmetros).
+  - [x] Suíte de testes de interface end-to-end com Playwright em modo headless e worker único: validação de inicialização WASM, 4 canais de osciloscópio, congelamento/pausa, captura da Onda Fantasma bio-sincronizada, disparo Single-Shot, reset de parâmetros, 3 camadas padrão ativas e legendas humanizadas.
+  - [x] Testes de regressão biofísica e roteiro prático universitário: verificação programática dos 4 experimentos clínicos (Nernst e hipercalemia, dromotropismo e BAVT com Verapamil, modulação simpático/vagal com Wiggers, e acoplamento heterocelular com fibroblastos).
 
 ### Fase 10: Hemodinâmica Avançada, Ciclo de Wiggers e Alça Pressão-Volume
 * [ ] **Diagrama de Wiggers Completo e Alça Pressão-Volume ($P \times V$)**:

@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Features
+  - (ui) simplificar camadas ativas por padrao e humanizar marcadores de hemodinamica
+
 ### Bug Fixes
   - (engine) calibrar potencial de repouso despolarizado do fibroblasto maccannell
   - (engine) adaptar conducao e no sa para evitar travamento sob variacao de parametros

@@ -440,10 +440,10 @@
 <ul>
 <li>[ ] <strong>Migração para Rust Edition 2024</strong>: Adoção das novas convenções de compilação, closures assíncronas otimizadas e lifetimes estritos para WebAssembly.</li>
 <li>[ ] <strong>Atualização para Dioxus 0.7</strong>: Transição para o novo reconciliador de Virtual DOM e reatividade avançada de Signals, reduzindo o overhead de renderização do osciloscópio.</li>
-<li>[ ] <strong>Harness de Testes Automatizados E2E e Wasm</strong>:</li>
-<li>Testes unitários do motor numérico via <code>wasm-bindgen-test</code> em ambiente headless (validação de invariantes matemáticas, estabilidade de $V_m$ e imunidade a <code>NaN</code>).</li>
-<li>Suíte de testes de interface end-to-end com Playwright automatizando cenários críticos: reset, congelamento, disparos da onda fantasma e interações táteis nos sliders.</li>
-<li>Testes de regressão biofísica: verificação programática de efeitos farmacológicos (ex.: alargamento dinâmico de PR com Verapamil, prolongamento de QT com hipocalcemia).</li>
+<li>[x] <strong>Harness de Testes Automatizados E2E e Wasm</strong>:</li>
+<li>[x] Testes unitários do motor numérico em Rust nativo e Wasm (validação de invariantes matemáticas, estabilidade de $V_m$, ausência de <code>NaN</code>, resiliência e não-congelamento sob espectro extremo de parâmetros).</li>
+<li>[x] Suíte de testes de interface end-to-end com Playwright em modo headless e worker único: validação de inicialização WASM, 4 canais de osciloscópio, congelamento/pausa, captura da Onda Fantasma bio-sincronizada, disparo Single-Shot, reset de parâmetros, 3 camadas padrão ativas e legendas humanizadas.</li>
+<li>[x] Testes de regressão biofísica e roteiro prático universitário: verificação programática dos 4 experimentos clínicos (Nernst e hipercalemia, dromotropismo e BAVT com Verapamil, modulação simpático/vagal com Wiggers, e acoplamento heterocelular com fibroblastos).</li>
 </ul>
 <h3 id="fase-10-hemodinamica-avancada-ciclo-de-wiggers-e-alca-pressao-volume">Fase 10: Hemodinâmica Avançada, Ciclo de Wiggers e Alça Pressão-Volume</h3>
 <ul>

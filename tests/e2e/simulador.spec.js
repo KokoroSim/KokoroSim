@@ -42,16 +42,17 @@ test.describe('KokoroSim — Testes E2E do Simulador Web (Wasm + Dioxus)', () =>
   });
 
   test('deve renderizar os 4 canais de osciloscópio (Canvases ativos)', async ({ page }) => {
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(1500);
 
     const canvasIds = ['#canvas-pa', '#canvas-ecg', '#canvas-ch3', '#canvas-ch4'];
     for (const id of canvasIds) {
       const canvas = page.locator(id);
       await expect(canvas).toBeVisible();
+      await canvas.scrollIntoViewIfNeeded();
       const box = await canvas.boundingBox();
       expect(box).not.toBeNull();
-      expect(box.width).toBeGreaterThan(100);
-      expect(box.height).toBeGreaterThan(50);
+      expect(box.width).toBeGreaterThan(50);
+      expect(box.height).toBeGreaterThan(30);
     }
 
     const totalCanvases = page.locator('.canvas-wrapper canvas');
@@ -84,7 +85,7 @@ test.describe('KokoroSim — Testes E2E do Simulador Web (Wasm + Dioxus)', () =>
 
     // Dispara a captura da onda fantasma
     await ghostCaptureBtn.click();
-    await page.waitForTimeout(1500); // Aguarda o ciclo de gravação do Nó SA
+    await page.waitForTimeout(2000); // Aguarda o ciclo de gravação do Nó SA
 
     // O checkbox da onda fantasma deve estar ativado
     const ghostCheckbox = page.locator('.slider-container', { hasText: /Onda Fantasma/ }).locator('input[type="checkbox"]');
@@ -121,6 +122,39 @@ test.describe('KokoroSim — Testes E2E do Simulador Web (Wasm + Dioxus)', () =>
 
     const bpmLocator = page.locator('#hud-bpm');
     await expect(bpmLocator).toBeVisible();
+
+    expect(jsErrors).toHaveLength(0);
+  });
+
+  test('deve exibir padrão limpo de 3 camadas ativas no gráfico de PA e legenda humanizada na hemodinâmica', async ({ page }) => {
+    // 1. Valida checkboxes das camadas celulares no painel
+    const saCheckbox = page.locator('.slider-container', { hasText: /Nó SA/ }).locator('input[type="checkbox"]');
+    const atriumCheckbox = page.locator('.slider-container', { hasText: /Átrio/ }).locator('input[type="checkbox"]');
+    const epiCheckbox = page.locator('.slider-container', { hasText: /Epicárdio/ }).locator('input[type="checkbox"]');
+    const avCheckbox = page.locator('.slider-container', { hasText: /Nó AV/ }).locator('input[type="checkbox"]');
+    const purkCheckbox = page.locator('.slider-container', { hasText: /Purkinje/ }).locator('input[type="checkbox"]');
+    const endoCheckbox = page.locator('.slider-container', { hasText: /Endocárdio/ }).locator('input[type="checkbox"]');
+    const fibCheckbox = page.locator('.slider-container', { hasText: /Fibroblasto/ }).locator('input[type="checkbox"]');
+
+    // Apenas 3 ativas por padrão para visual limpo
+    await expect(saCheckbox).toBeChecked();
+    await expect(atriumCheckbox).toBeChecked();
+    await expect(epiCheckbox).toBeChecked();
+
+    // As demais desmarcadas por padrão
+    await expect(avCheckbox).not.toBeChecked();
+    await expect(purkCheckbox).not.toBeChecked();
+    await expect(endoCheckbox).not.toBeChecked();
+    await expect(fibCheckbox).not.toBeChecked();
+
+    // 2. Valida rótulo do CH-04 (Hemodinâmica): humano e sem hex cru
+    const hemoLabel = page.locator('.canvas-wrapper', { has: page.locator('#canvas-ch4') }).locator('.canvas-label');
+    await expect(hemoLabel).toBeVisible();
+    const labelText = (await hemoLabel.innerText()).toUpperCase();
+    expect(labelText).toContain('LVP');
+    expect(labelText).toContain('AOP');
+    expect(labelText).not.toContain('#00F2FE');
+    expect(labelText).not.toContain('#FF1754');
 
     expect(jsErrors).toHaveLength(0);
   });

@@ -37,10 +37,10 @@ fn App() -> Element {
     let mut fibrosis = use_signal(|| 0.0);
     
     let show_sa = use_signal(|| true);
-    let show_av = use_signal(|| true);
+    let show_av = use_signal(|| false);
     let show_atrium = use_signal(|| true);
-    let show_purkinje = use_signal(|| true);
-    let show_endo = use_signal(|| true);
+    let show_purkinje = use_signal(|| false);
+    let show_endo = use_signal(|| false);
     let show_epi = use_signal(|| true);
     let show_fibroblast = use_signal(|| false);
 
@@ -582,7 +582,21 @@ fn App() -> Element {
                     canvas { id: "canvas-ch3" }
                 }
                 div { class: "canvas-wrapper",
-                    div { class: "canvas-label", "CH-04 [ 左室圧迫曲線 // HEMODINÂMICA: LVP (#00f2fe) & AoP (#ff1754) ]" }
+                    div { class: "canvas-label",
+                        span { "CH-04 [ 左室圧迫曲線 // HEMODINÂMICA: " }
+                        span { 
+                            style: "display: inline-flex; align-items: center; gap: 4px;",
+                            span { style: "display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #00f2fe; box-shadow: 0 0 6px #00f2fe;" }
+                            span { style: "color: #00f2fe;", "LVP" }
+                        }
+                        span { "&" }
+                        span { 
+                            style: "display: inline-flex; align-items: center; gap: 4px;",
+                            span { style: "display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #ff1754; box-shadow: 0 0 6px #ff1754;" }
+                            span { style: "color: #ff1754;", "AoP" }
+                        }
+                        span { "]" }
+                    }
                     canvas { id: "canvas-ch4" }
                 }
             }
