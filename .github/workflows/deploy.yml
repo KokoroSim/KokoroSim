@@ -68,6 +68,8 @@ jobs:
           mkdir -p ~/.ssh
           printf "%s\n" "$DEPLOY_KEY" > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
+          ssh-keygen -l -f ~/.ssh/id_deploy || true
+          ssh -v -i ~/.ssh/id_deploy -o StrictHostKeyChecking=no -T git@github.com 2>&1 | head -n 30 || true
           cd main-repo/ui
           git init
           git config user.name "github-actions[bot]"
