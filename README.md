@@ -112,10 +112,11 @@ O quarto canal do osciloscópio exibe em tempo real o núcleo mecânico do **Dia
   5. *Gatilho Único (Single-Shot / Congelado):* Traça exatamente 1 ciclo completo e congela indefinidamente, aguardando o comando `⚡ DISPARAR / ARMAR PRÓXIMO CICLO`.
 - **Controle de Execução e Congelamento:**
   - Botão `[ ⏸ CONGELAR ]` / `[ ▶ CONTINUAR ]` no topo da barra de controles para suspender instantaneamente a simulação, congelar o traçado e silenciar o áudio para análise pedagógica detalhada.
-- **Onda Fantasma Dinâmica e Pontilhada (Histórico Comparativo em Memória):**
-  - Permite congelar um snapshot do traçado basal via botão `📸 Capturar`.
-  - A curva de referência é desenhada pontilhada em segundo plano com cor semitransparente suave.
-  - No modo *Fita Deslizante*, a onda fantasma corre em sincronia temporal perfeita (*lockstep*) com a curva ativa, permitindo comparar dinâmica e duração ciclo a ciclo com **custo de CPU rigorosamente zero**.
+- **Onda Fantasma Bio-Sincronizada (Referência Basal em Memória):**
+  - Gravação bio-disparada na **Fase 0 do Nó SA**: ao clicar em `📸 Capturar`, o sistema aguarda o marcapasso sinusal e grava com precisão 1 ciclo $RR$ completo fechado ($t_0 \to t_{RR}$).
+  - **Dinâmica de Espaçamento e Encurtamento:** Em bradicardia, repousa no potencial basal ($V_{rest}$) destacando o atraso; em taquicardia, reinicia sincronizada a cada novo batimento.
+  - **Acessibilidade Sensorial (Zero Formiguinhas):** Renderizada como linha sólida contínua translúcida e suave (`rgba(..., 0.35)`, espessura 1.2px), sem cintilações ou vibrações visuais, propiciando conforto máximo a usuários neurodivergentes.
+  - **Custo de CPU Zero:** Armazenada em vetor estático sem exigir instâncias secundárias da simulação.
 - **Reset Limpo de Memória nos Modos de Varredura e Gatilho:**
   - Comutação entre modos com higienização instantânea de memória por sentinelas `NaN`, eliminando quaisquer rastros ou artefatos de ciclos anteriores.
 
