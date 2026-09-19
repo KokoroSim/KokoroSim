@@ -291,12 +291,12 @@ fn App() -> Element {
                 pa_plotter_endo.draw(-90.0, 50.0, "#000000", true, false, uti_m, bulhas_m);
             }
             
-            ecg_plotter.draw(-35.0, 120.0, "#00ffff", true, ghost, uti_m, bulhas_m); // Ciano (#00ffff) para DII (ECG Transmural)
-            ch3_plotter.draw(0.0, 0.002, "#9b59b6", true, ghost, uti_m, bulhas_m); // Roxo (#9b59b6) para Cálcio
+            ecg_plotter.draw(-35.0, 120.0, "#00f2fe", true, ghost, uti_m, bulhas_m); // Neon Cyan (#00f2fe) para DII (ECG Transmural)
+            ch3_plotter.draw(0.0, 0.002, "#a29bfe", true, ghost, uti_m, bulhas_m); // Roxo-Lilás (#a29bfe) para Cálcio
             
             // Hemodinâmica: LVP e AoP sobrepostas (0 a 140 mmHg) com marcadores verticais
-            hemo_plotter_lvp.draw(0.0, 140.0, "#00cec9", true, ghost, uti_m, bulhas_m); // Ciano Claro (#00cec9) para LVP Ventricular
-            hemo_plotter_aop.draw(0.0, 140.0, "#ff7675", false, ghost, uti_m, bulhas_m); // Coral (#ff7675) para Pressão Aórtica (AoP)
+            hemo_plotter_lvp.draw(0.0, 140.0, "#00f2fe", true, ghost, uti_m, bulhas_m); // Ciano (#00f2fe) para LVP Ventricular
+            hemo_plotter_aop.draw(0.0, 140.0, "#ff1754", false, ghost, uti_m, bulhas_m); // Carmesim (#ff1754) para Pressão Aórtica (AoP)
 
             // 4. Update HUD metrics at ~10 Hz (every 6 frames)
             if !is_paused() {
@@ -355,7 +355,11 @@ fn App() -> Element {
                         class: "modal-content",
                         onclick: move |e| e.stop_propagation(),
                         div { class: "modal-header",
-                            h2 { "Sobre o KokoroSim 🌸" }
+                            h2 {
+                                "Sobre o kokor",
+                                span { class: "hud-kanji", "心" },
+                                span { class: "hud-sim", "sim" }
+                            }
                             button {
                                 class: "btn-close-modal",
                                 onclick: move |_| show_about.set(false),
@@ -383,12 +387,22 @@ fn App() -> Element {
             }
 
             header {
-                div { class: "hud-item", "BPM: ", span { id: "hud-bpm", "{bpm_str}" } }
-                div { class: "hud-item", "PR: ", span { id: "hud-pr", "{pr_str}" } }
-                div { class: "hud-item", "QRS: ", span { id: "hud-qrs", "{qrs_str}" } }
-                div { class: "hud-item", "QT: ", span { id: "hud-qt", "{qt_str}" } }
-                div { class: "hud-item", "V.Rep: ", span { id: "hud-vrest", "{vrest_str}" } }
-                div { class: "hud-item", "PR/RR: ", span { id: "hud-pr-rr", "{pr_rr_str}" } }
+                div { class: "hud-brand",
+                    img { src: "assets/icon.png", class: "hud-logo", alt: "KokoroSim" }
+                    span { class: "hud-brand-text",
+                        "kokor",
+                        span { class: "hud-kanji", "心" },
+                        span { class: "hud-sim", "sim" }
+                    }
+                }
+                div { class: "hud-metrics",
+                    div { class: "hud-item", "心拍数 // FC: ", span { id: "hud-bpm", "{bpm_str} BPM" } }
+                    div { class: "hud-item", "PR間隔 // PR: ", span { id: "hud-pr", "{pr_str}" } }
+                    div { class: "hud-item", "QRS幅 // QRS: ", span { id: "hud-qrs", "{qrs_str}" } }
+                    div { class: "hud-item", "QT間隔 // QT: ", span { id: "hud-qt", "{qt_str}" } }
+                    div { class: "hud-item", "静止電位 // V.Rep: ", span { id: "hud-vrest", "{vrest_str}" } }
+                    div { class: "hud-item", "PR/RR: ", span { id: "hud-pr-rr", "{pr_rr_str}" } }
+                }
             }
 
             aside { id: "controls-sidebar",
@@ -415,7 +429,7 @@ fn App() -> Element {
                     }
                 }
 
-                Accordion { label: "0. Visualização e Modos de Tela".to_string(), open: true,
+                Accordion { label: "0. 画面表示 // Visualização e Modos de Tela".to_string(), open: true,
                     div { style: "margin-bottom: 12px;",
                         div { class: "slider-header", style: "margin-bottom: 6px;",
                             span { style: "color: var(--neon-cyan); font-weight: bold; font-size: 1.7vh;", "Modo do Osciloscópio:" }
@@ -470,7 +484,7 @@ fn App() -> Element {
                     Checkbox { label: "Fibroblasto (Eletrotônico)".to_string(), color: "#a29bfe".to_string(), checked: show_fibroblast }
                 }
 
-                Accordion { label: "1. Íons e Eletrólitos".to_string(), open: false,
+                Accordion { label: "1. 電解質 // Íons e Eletrólitos".to_string(), open: false,
                     Slider {
                         label: "Potássio [K+]_o".to_string(),
                         min: 2.0, max: 8.5, step: 0.1, default_val: 5.4, unit: " mEq/L".to_string(),
@@ -491,7 +505,7 @@ fn App() -> Element {
                     }
                 }
 
-                Accordion { label: "2. Sistema Nervoso Autônomo".to_string(), open: false,
+                Accordion { label: "2. 自律神経 // Sistema Nervoso Autônomo".to_string(), open: false,
                     Slider {
                         label: "Tônus Simpático".to_string(),
                         min: 0.0, max: 100.0, step: 1.0, default_val: 0.0, unit: "%".to_string(),
@@ -506,7 +520,7 @@ fn App() -> Element {
                     }
                 }
 
-                Accordion { label: "3. Fármacos Antiarrítmicos".to_string(), open: false,
+                Accordion { label: "3. 抗不整脈薬 // Fármacos Antiarrítmicos".to_string(), open: false,
                     Slider {
                         label: "Bloq. Na+ (Lidocaína)".to_string(),
                         min: 0.0, max: 100.0, step: 1.0, default_val: 0.0, unit: "%".to_string(),
@@ -533,7 +547,7 @@ fn App() -> Element {
                     }
                 }
 
-                Accordion { label: "4. Condições Patológicas".to_string(), open: false,
+                Accordion { label: "4. 病態生理 // Condições Patológicas".to_string(), open: false,
                     Slider {
                         label: "Nível de Isquemia".to_string(),
                         min: 0.0, max: 100.0, step: 1.0, default_val: 0.0, unit: "%".to_string(),
@@ -548,7 +562,7 @@ fn App() -> Element {
                     }
                 }
 
-                Accordion { label: "5. Monitorização & Áudio".to_string(), open: true,
+                Accordion { label: "5. 生体音響 // Monitorização & Áudio".to_string(), open: true,
                     Checkbox { label: "🔊 Bip de Monitor (UTI - Onda R)".to_string(), color: "#2ecc71".to_string(), checked: sound_uti }
                     Checkbox { label: "🩺 Bulhas Cardíacas (B1 / B2)".to_string(), color: "#e74c3c".to_string(), checked: sound_bulhas }
                 }
@@ -556,31 +570,32 @@ fn App() -> Element {
 
             main {
                 div { class: "canvas-wrapper",
-                    div { class: "canvas-label", "Potencial de Ação Celular" }
+                    div { class: "canvas-label", "CH-01 [ 活動電位 // POTENCIAIS DE AÇÃO CELULAR ]" }
                     canvas { id: "canvas-pa" }
                 }
                 div { class: "canvas-wrapper",
-                    div { class: "canvas-label", "DII (ECG)" }
+                    div { class: "canvas-label", "CH-02 [ 心電図 // ECG DERIVAÇÃO II ]" }
                     canvas { id: "canvas-ecg" }
                 }
                 div { class: "canvas-wrapper",
-                    div { class: "canvas-label", "Cálcio Intracelular (Ca²⁺)" }
+                    div { class: "canvas-label", "CH-03 [ カルシウム動態 // TRANSIENTE DE CÁLCIO (Ca²⁺) ]" }
                     canvas { id: "canvas-ch3" }
                 }
                 div { class: "canvas-wrapper",
-                    div { class: "canvas-label", "Hemodinâmica: LVP Ventricular (#00cec9) & AoP Aórtica (#ff7675) [mmHg]" }
+                    div { class: "canvas-label", "CH-04 [ 左室圧迫曲線 // HEMODINÂMICA: LVP (#00f2fe) & AoP (#ff1754) ]" }
                     canvas { id: "canvas-ch4" }
                 }
             }
 
             footer {
                 div { class: "footer-item",
-                    "Versão: ",
-                    span { "{VERSION}" }
+                    "kokor",
+                    span { class: "hud-kanji", "心" },
+                    span { class: "hud-sim", "sim" },
+                    " [REALTIME WASM RUSH-LARSEN]"
                 }
                 div { class: "footer-item",
-                    "Build: ",
-                    span { "{BUILD_TIME}" }
+                    "SYS-VER: ", span { "{VERSION}" }, " // BUILD: ", span { "{BUILD_TIME}" }
                 }
             }
         }

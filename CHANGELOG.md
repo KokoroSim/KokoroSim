@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Features
+  - (ui) implementar tipografia kokor心sim, telemetria bilingue e estetica retro-futurista no simulador
   - (assets,style) adicionar logo/icone oficiais e implementar paleta neon carmesim com estetica otomo
   - (ui,docs) reestruturar navegacao com home em sobre, mover simulador para app.html e consolidar marca KokoroSim
   - (ui,ci) publicar documentacao em HTML no GitHub Pages e abrir manual em nova aba

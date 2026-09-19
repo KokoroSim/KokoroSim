@@ -609,8 +609,8 @@ fn format_ghost_color(hex: &str) -> String {
             u8::from_str_radix(&hex[3..5], 16),
             u8::from_str_radix(&hex[5..7], 16),
         ) {
-            return format!("rgba({}, {}, {}, 0.35)", r, g, b);
+            return format!("rgba({}, {}, {}, 0.45)", r, g, b);
         }
     }
-    "rgba(180, 180, 180, 0.35)".to_string()
+    "rgba(180, 180, 180, 0.45)".to_string()
 }
