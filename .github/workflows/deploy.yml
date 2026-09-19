@@ -63,7 +63,7 @@ jobs:
       - name: Build Documentation Pages (HTML to dist)
         run: |
           python3 -m pip install markdown
-          python3 main-repo/scripts/build_docs.py main-repo/dist
+          python3 main-repo/scripts/build_docs.py "$GITHUB_WORKSPACE/main-repo/dist"
 
       - name: Deploy to KokoroSim.github.io
         env:
@@ -73,6 +73,9 @@ jobs:
           printf "%s\n" "$DEPLOY_KEY" > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
           cd main-repo/dist
+          echo "=== Arquivos na pasta dist a serem publicados ==="
+          ls -la
+          test -f index.html || { echo "❌ ERRO: index.html não foi encontrado na pasta dist!"; exit 1; }
           git init
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

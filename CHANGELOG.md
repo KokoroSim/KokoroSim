@@ -6,6 +6,7 @@
   - (ui) simplificar camadas ativas por padrao e humanizar marcadores de hemodinamica
 
 ### Bug Fixes
+  - (ci) corrigir resolucao do caminho dist e adicionar validacao de index.html no deploy
   - (ui,docs) simplificar menu superior para quatro itens, blindar logotipo e corrigir citacao
   - (engine) calibrar potencial de repouso despolarizado do fibroblasto maccannell
   - (engine) adaptar conducao e no sa para evitar travamento sob variacao de parametros

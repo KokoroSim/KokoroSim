@@ -554,11 +554,23 @@ DOCS_MAP = [
 ]
 
 def main():
+    initial_cwd = os.getcwd()
     root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     os.chdir(root_dir)
 
-    target_dir_name = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("DOCS_OUT_DIR", "dist")
-    out_dir = target_dir_name if os.path.isabs(target_dir_name) else os.path.join(root_dir, target_dir_name)
+    if len(sys.argv) > 1:
+        arg_val = sys.argv[1]
+        if os.path.isabs(arg_val):
+            out_dir = arg_val
+        else:
+            caller_resolved = os.path.abspath(os.path.join(initial_cwd, arg_val))
+            if caller_resolved.startswith(root_dir):
+                out_dir = caller_resolved
+            else:
+                out_dir = os.path.abspath(os.path.join(root_dir, arg_val))
+    else:
+        out_dir = os.path.join(root_dir, os.environ.get("DOCS_OUT_DIR", "dist"))
+
     os.makedirs(out_dir, exist_ok=True)
 
     # Sincroniza assets para o diretório de destino
