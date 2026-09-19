@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Features
+  - (ui,ci) publicar documentacao em HTML no GitHub Pages e abrir manual em nova aba
   - (ui) implement bio-triggered RR ghost wave sync and anti-fatigue solid dimmed line
   - (ui) implement simulation freeze control, synchronized rolling ghost wave with dashed line, and auto-trigger canvas reset
   - (ui) implement 5 oscilloscope display modes, ghost wave snapshot, and multi-channel sound markers

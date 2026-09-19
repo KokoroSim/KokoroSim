@@ -405,7 +405,12 @@ fn App() -> Element {
                     }
                     button {
                         class: "btn-about",
-                        onclick: move |_| show_about.set(true),
+                        title: "Abrir documentação científica e manual completo em nova aba",
+                        onclick: move |_| {
+                            if let Some(w) = web_sys::window() {
+                                let _ = w.open_with_url_and_target("./sobre.html", "_blank");
+                            }
+                        },
                         "ℹ SOBRE"
                     }
                 }

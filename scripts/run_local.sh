@@ -54,6 +54,7 @@ build_wasm() {
     
     export SIMCARDIO_BUILD_TIME="$timestamp"
     if (cd "$UI_DIR" && wasm-pack build --target web); then
+        python3 "$PROJECT_ROOT/scripts/build_docs.py" >/dev/null 2>&1 || true
         # Gera novo token de build para acionar o LiveReload no navegador
         date +%s%N > "$BUILD_ID_FILE"
         echo "✅ [$(date '+%H:%M:%S')] Build concluída com sucesso! Recarregando navegador..."

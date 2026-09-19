@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roadmap de Desenvolvimento — SimCardio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --bg-main: #0a0a0c;
+            --bg-card: #121216;
+            --border: #22222a;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --neon-cyan: #00cec9;
+            --neon-yellow: #f1c40f;
+            --neon-coral: #ff7675;
+            --neon-green: #2ecc71;
+            --code-bg: #181820;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.68;
+            font-size: 16px;
+            padding-bottom: 60px;
+        }
+
+        nav.top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(10, 10, 12, 0.88);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            max-width: 100%;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .brand span.pulse {
+            color: var(--neon-cyan);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--neon-cyan);
+            background: rgba(0, 206, 201, 0.08);
+        }
+
+        .nav-links a.btn-app {
+            background: var(--neon-cyan);
+            color: #000;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 6px;
+        }
+
+        .nav-links a.btn-app:hover {
+            background: #81ecec;
+            color: #000;
+        }
+
+        main.doc-container {
+            max-width: 920px;
+            margin: 36px auto;
+            padding: 0 20px;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: #ffffff;
+            font-weight: 700;
+            margin-top: 1.8em;
+            margin-bottom: 0.6em;
+            letter-spacing: -0.02em;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+            margin-top: 0.5em;
+            color: var(--neon-cyan);
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 8px;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            color: var(--neon-yellow);
+        }
+
+        p {
+            margin-bottom: 1.1em;
+            color: var(--text-main);
+        }
+
+        a {
+            color: var(--neon-cyan);
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        ul, ol {
+            margin-bottom: 1.2em;
+            padding-left: 28px;
+        }
+
+        li {
+            margin-bottom: 0.4em;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 2em 0;
+        }
+
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            overflow-x: auto;
+            margin-bottom: 1.4em;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+            background: rgba(255, 255, 255, 0.07);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #ffd166;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5em 0;
+            background: var(--bg-card);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        th, td {
+            padding: 10px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.92rem;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--neon-cyan);
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        blockquote {
+            border-left: 3px solid var(--neon-cyan);
+            background: rgba(0, 206, 201, 0.05);
+            padding: 12px 16px;
+            margin: 1.2em 0;
+            border-radius: 0 6px 6px 0;
+            color: var(--text-muted);
+        }
+
+        footer {
+            max-width: 920px;
+            margin: 60px auto 0 auto;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                font-size: 15px;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            .nav-links {
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="top-nav">
+        <a href="./index.html" class="brand">
+            ❤️ <span class="pulse">SimCardio</span>
+        </a>
+        <div class="nav-links">
+            <a href="./index.html" class="btn-app">▶ Simulador Web</a>
+            <a href="./sobre.html" class="">📖 Sobre</a>
+            <a href="./roteiro.html" class="">🎓 Roteiro Prático</a>
+            <a href="./roadmap.html" class="active">🗺️ Roadmap</a>
+            <a href="./arquitetura.html" class="">🏛️ Arquitetura</a>
+            <a href="https://github.com/lumenpink/simcardio" target="_blank">💻 GitHub</a>
+        </div>
+    </nav>
+    <main class="doc-container">
+        <h1 id="roadmap-de-implementacao-simcardio">Roadmap de Implementação — SimCardio</h1>
+<p>O desenvolvimento do <strong>SimCardio</strong> está organizado em grandes marcos arquiteturais e eletrofisiológicos. </p>
+<hr />
+<h2 id="simcardio-v20-marco-eletrofisiologico-em-rust-wasm">🚀 SimCardio v2.0 (Marco Eletrofisiológico em Rust + WASM)</h2>
+<h3 id="fase-1-transicao-arquitetural-rust-wasm-dioxus-concluido">Fase 1: Transição Arquitetural (Rust + WASM + Dioxus) ✅ CONCLUÍDO</h3>
+<ul>
+<li>[x] Migração de todo o motor matemático de equações diferenciais para <strong>Rust nativo</strong>.</li>
+<li>[x] Compilação do motor para <strong>WebAssembly (WASM)</strong> com otimizações de alto rendimento.</li>
+<li>[x] Reescrever a interface de usuário reativa utilizando <strong>Dioxus 0.6</strong> e Signals.</li>
+<li>[x] Pipeline de execução em lote (<code>run_batch</code>) com amostragem direta em memória compartilhada WASM.</li>
+<li>[x] Ambiente de desenvolvimento local (<code>run_local.sh</code>) com monitoramento de arquivos, livereload, debounce e compilação concorrente assíncrona.</li>
+</ul>
+<h3 id="fase-2-conducao-fisiologica-por-corrente-e-fibras-de-purkinje-concluido">Fase 2: Condução Fisiológica por Corrente e Fibras de Purkinje ✅ CONCLUÍDO</h3>
+<ul>
+<li>[x] Eliminação da assincronia e marcapasso parasita ventricular (remoção do timer rígido de 1000 ms).</li>
+<li>[x] Substituição de grampeamentos de voltagem por <strong>injeção transitória de corrente despolarizante</strong> ($I_{stim}$).</li>
+<li>[x] Transposição do modelo biofísico de <strong>Stewart et al. (2009)</strong> para a célula de Purkinje humana (20 variáveis de estado, integração em ms, canais $I_f$, $I_{to}$, $I_{sus}$).</li>
+<li>[x] Acoplamento da cadeia completa: Nó SA $\to$ Átrio $\to$ Nó AV $\to$ Purkinje / His $\to$ Ventrículo.</li>
+<li>[x] Automatismo terciário de escape idioventricular (~30 BPM) em caso de bloqueio atrioventricular.</li>
+</ul>
+<h3 id="fase-3-heterogeneidade-transmural-ventricular-e-ecg-dipolar-concluido">Fase 3: Heterogeneidade Transmural Ventricular e ECG Dipolar ✅ CONCLUÍDO</h3>
+<ul>
+<li>[x] Implementação dos 3 subtipos ventriculares de <strong>ten Tusscher &amp; Panfilov (2006)</strong>:</li>
+<li><strong>Endocárdio (Subendocárdio):</strong> $G_{to}$ baixo ($0.073$), platô arredondado, ativado primeiro via Purkinje.</li>
+<li><strong>Célula M (Mid-miocárdio):</strong> $G_{Ks}$ reduzido ($0.098$), platô estendido, substrato para dispersão do QT.</li>
+<li><strong>Epicárdio (Subepicárdico):</strong> $G_{to}$ robusto ($0.294$), entalhe proeminente na Fase 1, APD curto, repolariza primeiro.</li>
+<li>[x] Condução transmural intramiocárdica com velocidade finita (Endo $\to$ M-cell em ~6ms $\to$ Epicárdio em ~12ms).</li>
+<li>[x] Gênese biofísica do <strong>Eletrocardiograma (ECG)</strong> a partir do gradiente dipolar de campo distante:
+  $$\text{ECG}(t) = 0.15 \cdot V_{atrio} + 0.55 \cdot (V_{endo} - V_{epi}) + 0.25 \cdot (V_M - V_{epi})$$
+  gerando organicamente a <strong>Onda P</strong>, o <strong>Complexo QRS escarpado</strong> e a <strong>Onda T POSITIVA e fisiológica</strong>.</li>
+</ul>
+<h3 id="fase-4-dromotropismo-dinamico-e-conducao-decremental-no-no-av-concluido">Fase 4: Dromotropismo Dinâmico e Condução Decremental no Nó AV ✅ CONCLUÍDO</h3>
+<ul>
+<li>[x] Eliminação de atrasos nodais estáticos.</li>
+<li>[x] Implementação da <strong>condução decremental frequência-dependente</strong> (aumento do retardo sob taquicardia devido à cinética de recuperação do $I_{Ca,L}$).</li>
+<li>[x] Modulação autonômica do atraso nodal: simpático encurta o PR (dromotropismo +); vagal alarga o PR (dromotropismo -).</li>
+<li>[x] Sensibilidade a bloqueadores de cálcio (Verapamil) e isquemia, induzindo Bloqueios AV de 1º, 2º e 3º grau com escape terciário de Purkinje.</li>
+</ul>
+<h3 id="fase-5-fibroblastos-cardiacos-e-acoplamento-eletrotonico-maccannell-et-al-2007-concluido">Fase 5: Fibroblastos Cardíacos e Acoplamento Eletrotônico (MacCannell et al., 2007) ✅ CONCLUÍDO</h3>
+<ul>
+<li>[x] Implementação do modelo biofísico do <strong>Fibroblasto Cardíaco Humano</strong> (MacCannell et al., 2007) com $C_f = 6.3\text{ pF}$, canais $I_{Kv}$, $I_{K1}$, $I_b$ e bomba eletrogênica $I_{NaK}$.</li>
+<li>[x] Acoplamento eletrotônico miócito-fibroblasto via junções comunicantes ($I_{gap}$ bidirecional) com condutância $G_{gap} = \text{fibrose} \times 4.0\text{ nS}$.</li>
+<li>[x] Simulação de dreno capacitivo, despolarização parcial diastólica do miócito (inativação de $I_{Na}$ em repouso) e lentificação da condução intramiocárdica proporcional à fibrose.</li>
+<li>[x] Visualização no osciloscópio de Potencial de Ação com canal lilás (<code>#a29bfe</code>) e slider de controle de Fibrose Miocárdica (0% a 100%).</li>
+</ul>
+<hr />
+<h2 id="proximos-passos-simcardio-v21">🔬 Próximos Passos (SimCardio v2.1+)</h2>
+<h3 id="fase-6-acoplamento-eletromecanico-hemodinamica-e-audio-wiggers-concluido">Fase 6: Acoplamento Eletromecânico, Hemodinâmica e Áudio (Wiggers) ✅ CONCLUÍDO</h3>
+<ul>
+<li>[x] Acoplamento Excitação-Contração via cinemática cooperativa de ligação de Cálcio na Troponina C.</li>
+<li>[x] Modelo de <strong>Elastância Ventricular Variável no Tempo ($E(t)$)</strong> de Suga &amp; Sagawa para calcular a Pressão Ventricular Esquerda ($LVP$).</li>
+<li>[x] Acoplamento hidráulico com modelo arterial <strong>Windkessel de 3 elementos</strong> para calcular a Pressão Aórtica ($AoP$) com incisura dicrótica.</li>
+<li>[x] Dinâmica valvar das cúspides mitral e aórtica acionadas por gradientes pressóricos instantâneos.</li>
+<li>[x] <strong>Síntese de Áudio Biofísico via Web Audio API</strong>:</li>
+<li><code>🔊 Bip de Monitor (UTI)</code> acoplado à detecção de onda R (880 Hz).</li>
+<li><code>🩺 Ausculta de Bulhas (B1 / B2)</code> acoplada ao fechamento das valvas mitral e aórtica.</li>
+<li>[x] Compressão horizontal do traçado (janela de 2.5s com capacidade de 500 amostras, comportando &gt; 3 ciclos completos).</li>
+</ul>
+<h3 id="fase-7-otimizacao-numerica-hibrida-rush-larsen-e-acessibilidade-universal-mobilelow-end-concluido">Fase 7: Otimização Numérica Híbrida (Rush-Larsen) e Acessibilidade Universal (Mobile/Low-End) ✅ CONCLUÍDO</h3>
+<ul>
+<li>[x] Diagnóstico e resolução do gargalo de rigidez numérica (<em>stiffness</em>) dos canais rápidos de sódio ($m$).</li>
+<li>[x] Integração analítica exata <strong>Rush-Larsen</strong> para todos os portões de condutância iônica em Ventrículo (ten Tusscher 2006), Purkinje (Stewart 2009) e Átrio (Courtemanche 1998).</li>
+<li>[x] Elevação do passo de integração para $dt = 0.01\text{ ms}$ com 100% de estabilidade e redução de 10x no orçamento de cálculo (1.600 passos por quadro de 16 ms a 60 FPS).</li>
+<li>[x] Execução em <strong>1x tempo real garantida</strong> com consumo de CPU mínimo (<strong>&lt; 5-10%</strong>) em smartphones, tablets, Chromebooks e computadores de baixo custo.</li>
+<li>[x] Recalibração acústica das bulhas B1 e B2 com <em>pitch sweeps</em> (140 $\to$ 85 Hz e 240 $\to$ 160 Hz) e ganho otimizado para microtransdutores de celulares e laptops.</li>
+<li>[x] Formalização do requisito não-funcional de acessibilidade e computação inclusiva no <code>ARCHITECTURE.md</code>.</li>
+</ul>
+<h3 id="fase-8-modos-de-exibicao-do-osciloscopio-gatilho-biofisico-e-onda-fantasma-concluido">Fase 8: Modos de Exibição do Osciloscópio, Gatilho Biofísico e Onda Fantasma ✅ CONCLUÍDO</h3>
+<ul>
+<li>[x] Implementação dos <strong>5 modos de exibição temporal</strong>: Fita Deslizante (Padrão), Varredura Contínua (Monitor UTI com barra apagadora), Paginação Sincronizada (Triggered Paged), Gatilho Automático (Auto-Trigger por batimento) e Gatilho Único (Single-Shot congelado).</li>
+<li>[x] Detecção no motor e sincronização biofísica da varredura temporal pela <strong>Fase 0 do Nó Sinoatrial</strong> (marcapasso primário), preservando a sequência anatômica estrita (SA $\to$ P $\to$ PR $\to$ QRS $\to$ T).</li>
+<li>[x] Botão <code>⚡ DISPARAR / ARMAR PRÓXIMO CICLO</code> para captura e congelamento de 1 batimento no modo Single-Shot.</li>
+<li>[x] <strong>Onda Fantasma Bio-Sincronizada (Ciclo Fechado $RR$ na Fase 0 do Nó SA)</strong>: captura precisa de 1 batimento basal completo, suporte fisiológico a espaçamento (bradicardia com repouso em $V_{rest}$) e encurtamento (taquicardia com reinício imediato), re-ancoragem em tempo real na fita deslizante e renderização sólida esmaecida (1.2px, <code>rgba(..., 0.35)</code>) anti-fadiga visual para neurodivergentes (zero <em>marching ants</em>).</li>
+<li>[x] <strong>Higienização de Memória e Reset Limpo</strong>: inicialização e apagamento de buffers com sentinelas <code>NaN</code> nos modos de varredura e gatilho automático, eliminando qualquer rastro residual de ciclos anteriores.</li>
+<li>[x] <strong>Controle de Pausa / Congelamento da Simulação</strong>: botão <code>[ ⏸ CONGELAR ]</code> / <code>[ ▶ CONTINUAR ]</code> no cabeçalho da barra lateral, permitindo suspender o cálculo biológico e o áudio instantaneamente para inspeção estática.</li>
+<li>[x] <strong>Marcadores Visuais Acústicos Multicanal</strong>: linhas verticais correspondentes desenhadas simultaneamente em todos os 4 canais (amarelo tracejado para Onda R/UTI, verde para B1 e coral para B2).</li>
+</ul>
+<hr />
+<h2 id="proximos-passos-simcardio-v23">🔬 Próximos Passos (SimCardio v2.3+)</h2>
+<h3 id="fase-9-expansao-espacial-monodominio-2d-3d">Fase 9: Expansão Espacial (Monodomínio 2D / 3D)</h3>
+<ul>
+<li>[ ] Substituição do modelo 0D acoplado por malha bidimensional de diferenças finitas (matriz de 100x100 a 200x200 miócitos).</li>
+<li>[ ] Difusão tecidual contínua com tensor de condutividade anisotrópica.</li>
+<li>[ ] Visualização topográfica de frentes de onda, espirais arritmogênicas (<em>rotor waves</em>), fibrilação ventricular e despolarizações fracionadas.</li>
+</ul>
+<hr />
+<h2 id="simcardio-v10-historico-legado-js">🏛️ SimCardio v1.0 (Histórico / Legado JS) ✅</h2>
+<ul>
+<li>Marco inicial com simulação zero-dimensional em Web Worker JavaScript, interface estática e 3 modelos celulares (concluído e posteriormente reescrito em Rust na versão 2.0).</li>
+</ul>
+    </main>
+    <footer>
+        <p><b>SimCardio</b> — Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real</p>
+        <p>Software Livre distribuído sob a licença GNU GPLv3. Desenvolvido para universidades e centros de pesquisa.</p>
+    </footer>
+</body>
+</html>
