@@ -183,8 +183,8 @@ O quarto canal do osciloscópio exibe em tempo real o núcleo mecânico do **Dia
 Se você utilizar o SimCardio em pesquisas científicas, aulas práticas, monografias, dissertações, teses ou publicações acadêmicas, por favor cite conforme as diretrizes do arquivo [`CITATION.cff`](CITATION.cff):
 
 ```bibtex
-@software{pink2026simcardio,
-  author       = {Pink, Lumen},
+@software{freitas2026simcardio,
+  author       = {Freitas, Lumen Muller Lohn},
   title        = {SimCardio: Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real},
   year         = {2026},
   publisher    = {GitHub},

@@ -4,25 +4,25 @@
 
 ### Features
   - (ui,ci) publicar documentacao em HTML no GitHub Pages e abrir manual em nova aba
-  - (ui) implement bio-triggered RR ghost wave sync and anti-fatigue solid dimmed line
-  - (ui) implement simulation freeze control, synchronized rolling ghost wave with dashed line, and auto-trigger canvas reset
-  - (ui) implement 5 oscilloscope display modes, ghost wave snapshot, and multi-channel sound markers
-  - (engine) add SA node phase 0 depolarization trigger event to batch stream
-  - (ui) calibrate heart sounds for mobile speakers and set 1x real-time step budget
-  - (engine) optimize numerical integration with hybrid Rush-Larsen method for mobile and low-power hardware
-  - (ui) add Web Audio synthesizer for ICU monitor beep and B1/B2 heart sounds, Wiggers hemodynamics chart, and compressed time window
-  - (engine) implement electromechanical coupling, time-varying elastance, and 3-element Windkessel hemodynamics
-  - (ui) add myocardial fibrosis control slider and fibroblast visualization
-  - (engine) implement MacCannell et al. (2007) cardiac fibroblast model and electrotonic myocyte coupling
-  - (ui) display transmural ventricular action potentials and dipolar ECG waveform
-  - (engine) implement dynamic AV conduction dromotropism and transmural ventricular heterogeneity (Epi, M-cell, Endo)
-  - (engine,ui) integrate Stewart et al. (2009) human Purkinje cell model into conduction chain
-  - (dev) add file watching, livereload, and version footer to local dev environment
-  - add initial cardiac electrophysiology UI dashboard and simulation engine
+  - (ui) implementar sincronização bio-disparada RR da onda fantasma e linha sólida esmaecida anti-fadiga
+  - (ui) implementar congelamento da simulação, onda fantasma sincronizada e reset limpo no gatilho automático
+  - (ui) implementar 5 modos de osciloscópio, captura de onda fantasma e marcadores acústicos multicanal
+  - (engine) adicionar evento de disparo da Fase 0 do Nó SA ao fluxo de dados em lote
+  - (ui) calibrar sons cardíacos para alto-falantes de celular e fixar orçamento de cálculo em 1x tempo real
+  - (engine) otimizar integração numérica com método híbrido de Rush-Larsen para dispositivos móveis e hardware modesto
+  - (ui) adicionar sintetizador Web Audio para bip de UTI e bulhas B1/B2, gráfico hemodinâmico de Wiggers e compressão temporal
+  - (engine) implementar acoplamento eletromecânico, elastância variável no tempo e hemodinâmica Windkessel de 3 elementos
+  - (ui) adicionar controle deslizante de fibrose miocárdica e visualização de fibroblastos
+  - (engine) implementar modelo de fibroblasto cardíaco de MacCannell et al. (2007) e acoplamento eletrotônico miocitário
+  - (ui) exibir potenciais de ação ventriculares transmurais e traçado de ECG dipolar
+  - (engine) implementar dromotropismo dinâmico na condução AV e heterogeneidade ventricular transmural (Epi, M-cell, Endo)
+  - (engine,ui) integrar modelo de células de Purkinje humanas de Stewart et al. (2009) à cadeia de condução
+  - (dev) adicionar monitoramento de arquivos, livereload e rodapé de versão no ambiente local
+  - (ui,engine) adicionar painel inicial de eletrofisiologia e motor de simulação
   - (ui/engine) adiciona sistema de plotagem em tempo real e modelo de força mecânica
 
 ### Bug Fixes
-  - (engine) resolve ventricular dyssynchrony and implement pulse-based physiological conduction
+  - (engine) corrigir dissincronia ventricular e implementar condução fisiológica por pulsos
 
 ## Previous Releases
 
