@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "Se você utilizar o KokoroSim em pesquisas, dissertações, teses, aulas práticas ou publicações acadêmicas, por favor cite conforme abaixo:"
-title: "KokoroSim: Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real"
-abstract: "Simulador computacional biofísico de código aberto desenvolvido em Rust e WebAssembly, modelando em tempo real o automatismo sinoatrial, condução atrioventricular, heterogeneidade transmural ventricular, acoplamento eletrotônico fibroblástico, eletrocardiograma dipolar e diagrama hemodinâmico de Wiggers."
+title: "KokoroSim: Simulador Cardíaco Open Source — Eletrofisiológico, Dromotrópico e Hemodinâmico"
+abstract: "Simulador computacional biofísico de código aberto desenvolvido em Rust e WebAssembly, modelando a eletrofisiologia celular, dromotropismo atrioventricular e hemodinâmica cardíaca no navegador."
 authors:
   - family-names: "Freitas"
     given-names: "Lumen Muller Lohn"

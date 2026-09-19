@@ -7,7 +7,7 @@
 </h1>
 
 <p align="center" style="font-size: 1.25rem; font-weight: 500; color: #a4b0be; margin-top: 0; margin-bottom: 18px;">
-  Simulador Eletrofisiológico Cardíaco em Tempo Real
+  Simulador Cardíaco Open Source: Eletrofisiológico, Dromotrópico e Hemodinâmico
 </p>
 
 <p align="center">
@@ -178,16 +178,16 @@ A silhueta baseia-se no **magatama** (勾玉) e no elemento dinâmico unitário 
 Se você utilizar o KokoroSim em pesquisas científicas, aulas práticas, monografias, dissertações, teses ou publicações acadêmicas, por favor cite conforme os formatos padronizados abaixo:
 
 ### Formato ABNT (NBR 6023:2018)
-> FREITAS, Lumen Muller Lohn. **KokoroSim: Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real**. Versão 2.0.0. Florianópolis: Universidade Federal de Santa Catarina (UFSC), 2026. Disponível em: <https://kokorosim.github.io/>. Acesso em: [data de acesso].
+> FREITAS, Lumen Muller Lohn. **KokoroSim: Simulador Cardíaco Open Source — Eletrofisiológico, Dromotrópico e Hemodinâmico**. Versão 2.0.0. Florianópolis: Universidade Federal de Santa Catarina (UFSC), 2026. Disponível em: <https://kokorosim.github.io/>. Acesso em: [data de acesso].
 
 ### Formato Vancouver
-> Freitas LML. KokoroSim: Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real [software na Internet]. Versão 2.0.0. Florianópolis: Universidade Federal de Santa Catarina; 2026 [citado em ano mês dia]. Disponível em: https://kokorosim.github.io/
+> Freitas LML. KokoroSim: Simulador Cardíaco Open Source — Eletrofisiológico, Dromotrópico e Hemodinâmico [software na Internet]. Versão 2.0.0. Florianópolis: Universidade Federal de Santa Catarina; 2026 [citado em ano mês dia]. Disponível em: https://kokorosim.github.io/
 
 ### Formato BibTeX
 ```bibtex
 @software{freitas2026kokorosim,
   author       = {Freitas, Lumen Muller Lohn},
-  title        = {KokoroSim: Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real},
+  title        = {KokoroSim: Simulador Cardíaco Open Source --- Eletrofisiológico, Dromotrópico e Hemodinâmico},
   year         = {2026},
   publisher    = {GitHub},
   journal      = {GitHub repository},

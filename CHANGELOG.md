@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Features
+  - (ui,docs) padronizar subtitulo, metatags e banner com safe zone 4:3
   - (ui,docs) otimizar banner de compartilhamento social com safe zone e metatags
   - (ui) simplificar camadas ativas por padrao e humanizar marcadores de hemodinamica
 

@@ -2,7 +2,7 @@
   "name": "kokorosim",
   "version": "2.0.0",
   "private": true,
-  "description": "Simulador Eletrofisiológico Cardíaco Celular e Hemodinâmico em Tempo Real",
+  "description": "Simulador cardíaco open source de eletrofisiologia, dromotropismo e hemodinâmica com Rust e Wasm.",
   "scripts": {
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed"
