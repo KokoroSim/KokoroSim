@@ -12,12 +12,13 @@
 
 <p align="center">
   <a href="https://kokorosim.github.io/"><img alt="Deploy to GitHub Pages" src="https://github.com/KokoroSim/KokoroSim/actions/workflows/deploy.yml/badge.svg"></a>
+  <a href="https://github.com/KokoroSim/KokoroSim/actions/workflows/test.yml"><img alt="Testes Biofísicos" src="https://github.com/KokoroSim/KokoroSim/actions/workflows/test.yml/badge.svg"></a>
   <a href="https://www.gnu.org/licenses/gpl-3.0"><img alt="Licença: GPL v3" src="https://img.shields.io/badge/License-GPLv3-blue.svg"></a>
   <a href="https://www.rust-lang.org/"><img alt="Rust" src="https://img.shields.io/badge/Rust-2021_Edition-orange.svg?logo=rust"></a>
   <a href="https://webassembly.org/"><img alt="WebAssembly" src="https://img.shields.io/badge/WebAssembly-WASM-purple.svg?logo=webassembly"></a>
   <a href="https://dioxuslabs.com/"><img alt="Dioxus" src="https://img.shields.io/badge/UI-Dioxus_0.6-00cec9.svg"></a>
-  <a href="#-arquitetura-de-software"><img alt="Mobile Optimized" src="https://img.shields.io/badge/Hardware-Mobile_%26_Low--Power-success.svg"></a>
-  <a href="#-modos-de-visualização-do-osciloscópio-e-onda-fantasma"><img alt="Acessibilidade" src="https://img.shields.io/badge/Acessibilidade-Neurodivergente--Friendly-brightgreen.svg"></a>
+  <a href="#arquitetura-de-software"><img alt="Mobile Optimized" src="https://img.shields.io/badge/Hardware-Mobile_%26_Low--Power-success.svg"></a>
+  <a href="#modos-de-visualizacao-do-osciloscopio-e-onda-fantasma"><img alt="Acessibilidade" src="https://img.shields.io/badge/Acessibilidade-Neurodivergente--Friendly-brightgreen.svg"></a>
 </p>
 
 O **kokor<span style="color: #ff1754;">心</span><span style="color: #00cec9;">sim</span>** é um projeto de código aberto dedicado à simulação biofísica da eletrofisiologia celular cardíaca e hemodinâmica ventricular em tempo real diretamente no navegador web. Desenvolvido inicialmente como projeto pessoal, evoluiu para uma ferramenta que pode auxiliar o ensino e a pesquisa no Brasil, sendo construído em **Rust** e compilado para **WebAssembly (WASM)** com interface declarativa reativa em **Dioxus**. O motor numérico resolve mais de 160 equações diferenciais ordinárias (EDOs) e variáveis de estado simultaneamente utilizando o método numérico híbrido de **Rush-Larsen** a $dt = 0.01\text{ ms}$ (1.600 passos por quadro de 16 ms a 60 FPS), assegurando execução em **1x tempo real** com baixíssimo consumo de CPU (**< 5-10%**) em smartphones, tablets, notebooks e computadores de laboratórios acadêmicos, sem depender de placas gráficas dedicadas.
@@ -25,17 +26,33 @@ O **kokor<span style="color: #ff1754;">心</span><span style="color: #00cec9;">s
 ---
 
 ## 🧭 Navegação e Documentação do Projeto
-* 🚀 **[Abrir Simulador Interativo (Web App)](app.html)**
-* 🧬 **[Modelos Biofísicos e Referências Científicas](docs/modelos.md)**: Equações completas, formulações de gating e modelos CellML validados.
-* 🎓 **[Roteiro de Aulas Práticas para Universidades](docs/roteiro_aulas_praticas.md)**: 4 experimentos completos para Fisiologia e Farmacologia.
-* 🗺️ **[Roadmap de Desenvolvimento](ROADMAP.md)**: Fases concluídas da v2.0 e expansão espacial para a v2.1+.
-* 🏛️ **[Decisões de Arquitetura e Engenharia](ARCHITECTURE.md)**: Justificativas biofísicas, matemáticas e de engenharia de software.
+
+### 🚀 Módulos e Páginas do Projeto
+* ⚡ **[Abrir Simulador Interativo (Web App)](app.html)**: Aplicação biofísica em tempo real no navegador (Rust + WebAssembly).
+* 🧬 **[Modelos Biofísicos e Referências Científicas](docs/modelos.md)**: Equações detalhadas, formulações de canais iônicos, CellML e adaptações coelho → humano.
+* 🎓 **[Roteiro de Aulas Práticas para Universidades](docs/roteiro_aulas_praticas.md)**: 4 experimentos didáticos completos para Fisiologia e Farmacologia.
+* 🏛️ **[Decisões de Arquitetura e Engenharia](ARCHITECTURE.md)**: Justificativas biofísicas, matemáticas e arquiteturais do software.
+* 🗺️ **[Roadmap de Desenvolvimento](ROADMAP.md)**: Fases concluídas da v2.0 e planejamento da expansão espacial para a v2.1+.
 * 🎨 **[Identidade Visual e Conceito do Logotipo](docs/identidade_visual.md)**: O Rotor, o Magatama (勾玉) e a convergência biofísica.
-* 📜 **[Como Citar o KokoroSim](#citacao-academica)**: Normas ABNT, Vancouver, BibTeX e referências bibliográficas.
+
+<a id="indice"></a>
+### 📌 Índice Rápido Desta Página (Sobre)
+* 🧬 [Modelos Biofísicos Integrados](#modelos-biofisicos-integrados)
+* ⚡ [Sistema de Condução e Dromotropismo Dinâmico](#sistema-de-conducao-e-dromotropismo-dinamico)
+* 📈 [Eletrocardiograma (ECG) Baseado em Dipolo Transmural](#eletrocardiograma-ecg-baseado-em-dipolo-transmural)
+* 💓 [Hemodinâmica Ventricular, Diagrama de Wiggers e Síntese de Áudio](#hemodinamica-ventricular-diagrama-de-wiggers-e-sintese-de-audio)
+* 📺 [Modos de Visualização do Osciloscópio e Onda Fantasma](#modos-de-visualizacao-do-osciloscopio-e-onda-fantasma)
+* 🎛️ [Modulação Farmacológica, Eletrolítica e Patológica](#modulacao-farmacologica-eletrolitica-e-patologica)
+* 🎨 [Identidade Visual e Conceito do Logotipo](#identidade-visual-e-conceito-do-logotipo-o-rotor-magatama)
+* 💻 [Arquitetura de Software](#arquitetura-de-software)
+* 📖 [Como Citar o KokoroSim (ABNT, Vancouver, BibTeX)](#citacao-academica)
+* 💖 [Agradecimentos e Dedicatória](#agradecimentos-e-dedicatoria)
+* 🕰️ [Versão Histórica 1.0 (Protótipo Legado)](https://kokorosim.github.io/v1/)
+* 📜 [Licença (GPLv3)](#licenca)
 
 ---
 
-## 🧬 Modelos Biofísicos Integrados
+## 🧬 Modelos Biofísicos Integrados [↑](#indice "Voltar ao Índice")
 
 O simulador implementa 7 modelos biofísicos padrão-ouro validados pela literatura científica internacional e pelo consórcio [Physiome Model Repository (CellML)](https://models.physiomeproject.org/):
 
@@ -51,7 +68,7 @@ O simulador implementa 7 modelos biofísicos padrão-ouro validados pela literat
 
 ---
 
-## ⚡ Sistema de Condução e Dromotropismo Dinâmico
+## ⚡ Sistema de Condução e Dromotropismo Dinâmico [↑](#indice "Voltar ao Índice")
 
 Diferente de simuladores convencionais que utilizam grampeamentos de voltagem ou temporizadores arbitrários estáticos, o KokoroSim v2.0 implementa uma cadeia acoplada com **estímulos de corrente fisiológica** e **latências dependentes de estado (dromotropismo dinâmico)**:
 
@@ -77,7 +94,7 @@ A fibrose cardíaca pós-isquêmica ou senescente é simulada através da prolif
 
 ---
 
-## 📈 Eletrocardiograma (ECG) Baseado em Dipolo Transmural
+## 📈 Eletrocardiograma (ECG) Baseado em Dipolo Transmural [↑](#indice "Voltar ao Índice")
 
 O KokoroSim calcula a derivação eletrocardiográfica (equivalente a DII / precordiais) a partir de primeiros princípios biofísicos, resolvendo o gradiente elétrico do campo distante dipolar gerado pela despolarização e repolarização da parede cardíaca:
 
@@ -94,7 +111,7 @@ $$\text{ECG}(t) = 0.15 \cdot (V_{atrio}(t) + 80) + 0.55 \cdot (V_{endo}(t) - V_{
 
 ---
 
-## 💓 Hemodinâmica Ventricular, Diagrama de Wiggers e Síntese de Áudio
+## 💓 Hemodinâmica Ventricular, Diagrama de Wiggers e Síntese de Áudio [↑](#indice "Voltar ao Índice")
 
 O quarto canal do osciloscópio exibe em tempo real o núcleo mecânico do **Diagrama de Wiggers**:
 - **Pressão Ventricular Esquerda ($LVP$, ciano `#00cec9`):** Eleva-se de ~7 mmHg na diástole até ~120 mmHg na sístole, cruzando a curva aórtica nos pontos de abertura e fechamento valvar.
@@ -107,7 +124,9 @@ O quarto canal do osciloscópio exibe em tempo real o núcleo mecânico do **Dia
   - **Marcadores Visuais Verticais Multicanal:** Quando as opções de áudio estão ativas, linhas verticais correspondentes são desenhadas simultaneamente em todos os 4 canais (amarelo tracejado para Onda R/UTI, verde esmeralda para B1 e coral para B2), estabelecendo correlação áudio-visual em tempo real.
   - As duas opções de som vêm **desativadas por padrão** no Accordion "5. Monitorização & Áudio", sendo ativadas pelo clique do usuário em conformidade com as diretrizes de autoplay dos navegadores.
 
-### 📺 Modos de Visualização do Osciloscópio e Onda Fantasma
+<a id="modos-de-visualizacao-do-osciloscopio-e-onda-fantasma"></a>
+<a id="-modos-de-visualização-do-osciloscópio-e-onda-fantasma"></a>
+### 📺 Modos de Visualização do Osciloscópio e Onda Fantasma [↑](#indice "Voltar ao Índice")
 - **5 Modos de Varredura Temporal:**
   1. *Fita Deslizante (Rolling Strip-Chart — Padrão):* Fluxo contínuo da direita para a esquerda.
   2. *Varredura Contínua (Continuous Sweep — Monitor UTI):* Varredura da esquerda para a direita com barra apagadora à frente da caneta e wrap-around.
@@ -126,7 +145,7 @@ O quarto canal do osciloscópio exibe em tempo real o núcleo mecânico do **Dia
 
 ---
 
-## 🎛️ Modulação Farmacológica, Eletrolítica e Patológica
+## 🎛️ Modulação Farmacológica, Eletrolítica e Patológica [↑](#indice "Voltar ao Índice")
 
 - **Potássio $[K^+]_o$ (2.0 a 8.5 mEq/L):** Modula o potencial de repouso ($V_{rest}$) pela equação de Nernst. Hipocalemia causa hiperexcitabilidade e pós-despolarizações; hipercalemia severa causa inativação permanente dos canais de sódio e parada diastólica.
 - **Cálcio $[Ca^{2+}]_o$ (1.0 a 3.5 mmol/L):** Regula a corrente $I_{Ca,L}$, modulando a duração do platô ventricular e o intervalo QT.
@@ -141,7 +160,7 @@ O quarto canal do osciloscópio exibe em tempo real o núcleo mecânico do **Dia
 
 ---
 
-## 🎨 Identidade Visual e Conceito do Logotipo: O Rotor / Magatama (勾玉)
+## 🎨 Identidade Visual e Conceito do Logotipo: O Rotor / Magatama (勾玉) [↑](#indice "Voltar ao Índice")
 
 O isotipo do **KokoroSim** foge dos clichês gráficos tradicionais da cardiologia (como corações estilizados ou traçados simplistas de ECG). Em vez disso, estabelece uma ponte geométrica direta entre a **eletrofisiologia não-linear**, a **hemodinâmica ventricular** e a **iconografia tradicional japonesa**:
 
@@ -162,7 +181,9 @@ A silhueta baseia-se no **magatama** (勾玉) e no elemento dinâmico unitário 
 
 ---
 
-## 💻 Arquitetura de Software
+<a id="arquitetura-de-software"></a>
+<a id="-arquitetura-de-software"></a>
+## 💻 Arquitetura de Software [↑](#indice "Voltar ao Índice")
 
 - **Linguagem Principal:** Rust 2021 Edition.
 - **Compilação WebAssembly:** `wasm-bindgen` e `wasm-pack` com otimizações em release (`-O3`).
@@ -173,7 +194,7 @@ A silhueta baseia-se no **magatama** (勾玉) e no elemento dinâmico unitário 
 
 ---
 
-## 📖 Citação Acadêmica
+## 📖 Citação Acadêmica [↑](#indice "Voltar ao Índice")
 
 Se você utilizar o KokoroSim em pesquisas científicas, aulas práticas, monografias, dissertações, teses ou publicações acadêmicas, por favor cite conforme os formatos padronizados abaixo:
 
@@ -198,7 +219,28 @@ Se você utilizar o KokoroSim em pesquisas científicas, aulas práticas, monogr
 
 ---
 
-## 🕰️ Versão Histórica 1.0 (Protótipo Legado em TypeScript/Vite)
+## 💖 Agradecimentos e Dedicatória [↑](#indice "Voltar ao Índice")
+
+Este projeto não existiria sem as pessoas que guiaram meus passos nessa jornada e sustentam os meus dias:
+
+### À Universidade Federal de Santa Catarina (UFSC) e aos meus mestres:
+* **Profa. Andréa Gonçalves Trentin** e **Profa. Cláudia B. N. Mendes de Aguiar**, que me apresentaram o funcionamento das células.
+* **Prof. Carlos Peres Silva**, **Prof. Marcelo Farina** e **Profa. Nicolle Platt dos Santos**, que me mostraram as maravilhas da bioquímica.
+* **Profa. Domitila Augusta Huber**, **Prof. Eduardo Luiz Gasnhar Moreira**, **Prof. Gustavo Jorge dos Santos** e **Profa. Renata Maria Lataro**, que me apresentaram a fisiologia e inspiraram o gosto por ela.
+* **Profa. Patrícia de Souza Brocardo** e **Profa. Viviane Mara Woehl**, que mostraram que uma célula não funciona sozinha.
+
+### Aos colegas e amigos:
+* **Alicy Nunes Silveira**, **Amabilli de Souza Ferreira**, **Arthur Martins Daux Medeiros** e **C. Luís dos Santos**, por serem os melhores companheiros que eu poderia desejar.
+* **Ao Butisal**, por ser a primeira vez que eu faço parte de um grupo de meninas como uma delas (apesar do intruso).
+
+### À minha família e ao meu alicerce:
+* **Lisiane Freitas**, amada esposa, amante, cúmplice, confidente e apoio até quando eu mesma acho que não mereço.
+* **Charlotte, Tobias, Miojo, Nemo, Pru, Ratinha e Tutu**, companhias para todos os momentos, mesmo quando só ficam em silêncio ao meu lado.
+* **Agatha, Pedro e Sophia**, filhos que eu desejei e só me enchem de orgulho e, claro, são a razão de continuar aqui.
+
+---
+
+## 🕰️ Versão Histórica 1.0 (Protótipo Legado em TypeScript/Vite) [↑](#indice "Voltar ao Índice")
 
 Para fins históricos, didáticos e de comparação de desempenho e evolução da engenharia de software, a primeira versão do simulador permanece disponível online:
 
@@ -214,7 +256,7 @@ A versão 1.0 foi o protótipo inicial do projeto, desenvolvida em Vanilla TypeS
 
 ---
 
-## 📜 Licença
+## 📜 Licença [↑](#indice "Voltar ao Índice")
 
 Distribuído sob a licença **GNU General Public License v3.0 (GPLv3)**. Consulte o arquivo `LICENSE` para mais detalhes.
 

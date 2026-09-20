@@ -13,6 +13,8 @@ O **KokoroSim** implementa 7 modelos biofísicos padrão-ouro validados pela lit
 5. [Músculo Ventricular com Heterogeneidade Transmural — ten Tusscher & Panfilov (2006)](#5-músculo-ventricular-com-heterogeneidade-transmural)
 6. [Fibroblastos Cardíacos e Fibrose — MacCannell et al. (2007)](#6-fibroblastos-cardíacos-e-miofibroblastos)
 7. [Acoplamento Eletromecânico e Hemodinâmica — Suga-Sagawa & Westerhof](#7-acoplamento-eletromecânico-e-hemodinâmica-diagrama-de-wiggers)
+8. [Quimerismo Biofísico e Calibrações Computacionais (Coelho → Humano)](#8-quimerismo-biofísico-e-calibrações-computacionais-coelho--humano)
+9. [Referências Científicas Complementares (Além do CellML)](#9-referências-científicas-complementares-além-do-cellml)
 
 ---
 
@@ -29,10 +31,10 @@ O nó sinoatrial gera o automatismo elétrico intrínseco (Fase 4 despolarizante
 - **Relógio de Cálcio (*Calcium Clock*):** Liberações diastólicas submembranares espontâneas de cálcio pelo retículo sarcoplasmático via receptores de rianodina (RyR), ativando o trocador eletrogênico sódio-cálcio ($I_{NCX}$) que acelera a despolarização até o limiar de disparo dos canais de cálcio do tipo T ($I_{Ca,T}$) e do tipo L ($I_{Ca,L}$).
 - **Modulação Autonômica:** Sensibilidade direta à estimulação de receptores adrenérgicos $\beta_1$ (aceleração cronotrópica) e colinérgicos muscarínicos $M_2$ via corrente de potássio dependente de acetilcolina ($I_{K,ACh}$).
 
-> [!NOTE] Adaptação Computacional de Estabilidade (KokoroSim v2.1+)
-> **O que foi feito:** Definição de piso fisiológico $[K^+]_o \ge 5.4\text{ mM}$ para a formulação nodal de Severi (2012).
-> **Por que foi feito:** O modelo original de Severi foi calibrado exclusivamente em banho experimental de Tyrode a $5.4\text{ mM}$. Em modelos unicelulares isolados sem sincício, reduções para $K^+ < 5.2\text{ mM}$ geram bifurcação matemática de Hopf e parada de oscilação artificial. Na fisiologia humana real *in vivo*, o nó SA não expressa $I_{K1}$ e mantém automatismo marcapasso contínuo mesmo em normocalemia baixa ($3.5 - 4.5\text{ mM}$).
-> **Resultado esperado:** Automatismo sinusal preservado em toda a faixa clínica de potássio ($2.0\text{ a }10.0\text{ mM}$) sem interrupção do ritmo cardíaco.
+> [!NOTE] Adaptação Computacional de Estabilidade e Escala Temporal (KokoroSim v2.1+)
+> * **Origem Experimental:** Modelo formulado originalmente para cardiomiócitos marcapasso isolados de coelho (*Oryctolagus cuniculus*), cujas taxas cinéticas e equações diferenciais operavam no domínio de **Segundos ($s$)**.
+> * **Conversão Estrutural de Tempo:** O motor do KokoroSim aplica a transformação de escala temporal ($dt / 1000$) no loop de Euler/Rush-Larsen, sincronizando o modelo aos tecidos humanos calculados em **Milissegundos ($ms$)** a $dt = 0.01\text{ ms}$.
+> * **Piso Eletrolítico Anti-Bifurcação ($[K^+]_o \ge 5.4\text{ mM}$):** O modelo original de Severi foi calibrado exclusivamente na concentração de banho de Tyrode a $5.4\text{ mM}$. Em modelos unicelulares isolados desprovidos de sincício e homeostase tecidual, qualquer redução para $[K^+]_o < 5.2\text{ mM}$ causa bifurcação matemática de Hopf e parada de oscilação artificial. Na fisiologia humana real *in vivo*, o nó SA mantém automatismo contínuo em normocalemia e hipocalemia ($3.5 - 4.5\text{ mM}$). O KokoroSim estabelece o piso de $5.4\text{ mM}$ no cálculo do potencial de Nernst intrínseco, assegurando ritmo sinusal contínuo em qualquer faixa clínica de potássio ($2.0\text{ a }10.0\text{ mM}$).
 
 ---
 
@@ -65,10 +67,14 @@ Atua como filtro de segurança hemodinâmica e retardo cronometrado:
 - **Condução Lenta de Resposta Lenta:** Ausência de canais rápidos de sódio funcionais; a subida de potencial depende exclusivamente de $I_{Ca,L}$, conferindo baixa velocidade de condução.
 - **Condução Decremental e Refratariedade:** Em frequências elevadas, os canais de cálcio não se recuperam completamente da inativação, provocando lentificação progressiva ou bloqueio de condução (proteção contra taquicardias supraventriculares com resposta ventricular descontrolada).
 
-> [!NOTE] Adaptação Computacional de Estabilidade (KokoroSim v2.1+)
-> **O que foi feito:** Aplicação de piso $[K^+]_o \ge 5.4\text{ mM}$ nas correntes nodais de Inada (2009) e transição dos limiares de refratariedade funcional nos pingers de condução de $-60\text{ mV}$ para $-45\text{ mV}$ (e disparo AV em $\ge -20\text{ mV}$).
-> **Por que foi feito:** Previne bloqueio artificial de condução por hiperpolarização em hipocalemia e impede o aprisionamento de refratariedade quando hipercalemia ou isquemia mantêm o repouso despolarizado em $-55\text{ mV}$.
-> **Resultado esperado:** Condução fisiológica atrioventricular íntegra e contínua sob qualquer intervenção farmacológica ou eletrolítica na interface.
+> [!NOTE] Adaptações Biofísicas do Quimerismo de Espécies e Condução (KokoroSim v2.1+)
+> * **Origem Experimental em Coelho (*Oryctolagus cuniculus*):** O modelo original de Inada et al. (2009) reflete o nó atrioventricular de coelho, dotado de automatismo espontâneo muito acelerado (~150 a 180 BPM). Se transposto sem intervenção para um coração humano, o nó AV competiria ativamente com o nó sinoatrial, deflagrando taquicardia juncional ininterrupta e suprimindo o ritmo sinusal.
+> * **Inibição do Automatismo e Conversão em Filtro Condutor:**
+>   Para rebaixar a excitabilidade espontânea e forçar o nó AV a atuar estritamente como via de retardo e condução fisiológica, as condutâncias de marcapasso foram atenuadas:
+>   - **Corrente *Funny* ($I_f$):** Reduzida para **15%** do valor original (`cell.g_f = 0.001 * 0.15`).
+>   - **Corrente de Fuga Basal ($I_b$):** Reduzida para **45%** (`cell.g_b = 0.0012 * 0.45`), ponto ótimo (*sweet-spot*) que mantém a rampa de despolarização lenta pronta para condução decremental sem disparar ritmos ectópicos inadvertidos, preservando o ritmo de escape idioventricular/juncional apenas em bloqueios atrioventriculares totais prolongados.
+> * **Conversão de Unidade Temporal:** As taxas diferenciais de Inada (2009) formuladas em **Segundos ($s$)** são integradas dinamicamente com passo corrigido ($dt / 1000$) para coexistir harmoniosamente com a malha ventricular em **Milissegundos ($ms$)**.
+> * **Piso Eletrolítico ($[K^+]_o \ge 5.4\text{ mM}$) e Limiares Funcionais:** Aplicação de piso de potássio e recalibração dos limiares de refratariedade funcional nos pingers de condução de $-60\text{ mV}$ para $-45\text{ mV}$ (com disparo de ativação em $\ge -20\text{ mV}$), prevenindo bloqueio AV artificial sob hipocalemia ou isquemia.
 
 ---
 
@@ -141,3 +147,66 @@ Modela o acoplamento eletrotônico heterocelular via junções comunicantes (*ga
 4. **Bioacústica das Bulhas Cardíacas:**
    - **Primeira Bulha (B1):** Disparada acusticamente pelo fechamento de alta energia da valva mitral no início da sístole isovolumétrica ($LVP > LAP$).
    - **Segunda Bulha (B2):** Disparada pelo fechamento das cúspides da valva aórtica no início da diástole isovolumétrica ($AoP > LVP$).
+
+---
+
+## 8. Quimerismo Biofísico e Calibrações Computacionais (Coelho → Humano)
+
+A construção de um simulador cardiovascular multi-escala totalmente interativo impôs a superação de um dos maiores desafios da modelagem biofísica computacional: a **integração coerente de modelos padrão-ouro oriundos de espécies e escalas experimentais distintas**.
+
+Na literatura eletrofisiológica internacional, a maior parte dos dados experimentais detalhados de pinçamento de membrana (*patch-clamp*) unicelular para tecidos marcapasso isolados advém de preparações em coelho (*Oryctolagus cuniculus*), como os modelos de Severi et al. (2012) para o Nó SA e Inada et al. (2009) para o Nó AV. Por outro lado, os miócitos contráteis (Courtemanche 1998, ten Tusscher 2006) e as fibras de Purkinje (Stewart 2009) são de origem humana.
+
+Para harmonizar esses modelos em um coração virtual funcional e fidedigno à clínica humana, o KokoroSim implementou as seguintes adaptações:
+
+### 1. Compatibilização de Domínios Temporais (Segundos vs. Milissegundos)
+* **O Problema:** Os modelos matemáticos CellML de Severi (2012) e Inada (2009) foram formulados com equações diferenciais e taxas cinéticas expressas em **Segundos ($s$) e $s^{-1}$**. Já Courtemanche (1998), Stewart (2009) e ten Tusscher (2006) operavam em **Milissegundos ($ms$)**.
+* **A Solução:** O motor interno do KokoroSim aplica uma conversão dimensional estrita da variável temporal ($dt / 1000$) no loop de integração para Severi e Inada, assegurando que todas as equações evoluam com exatidão sincronizada a um passo temporal unificado de $dt = 0.01\text{ ms}$ (60 FPS contínuos).
+
+### 2. Inibição do Automatismo e Eliminação da Competição Juncional do Nó AV
+* **O Problema:** O nó AV de coelho (Inada 2009) possui automatismo basal nativo extremamente rápido (~150 a 180 BPM). Em um coração humano simulado, essa alta frequência intrínseca competiria ativamente com o nó sinoatrial, causando taquicardia juncional ininterrupta e impedindo o marcapasso sinusal de assumir o comando cronotrópico.
+* **A Solução:**
+  - Redução da condutância da corrente *funny* do Nó AV para **15%** do valor original (`cell.g_f = 0.001 * 0.15`).
+  - Redução da corrente de fuga basal para **45%** (`cell.g_b = 0.0012 * 0.45`).
+* **Resultado:** O Nó AV foi transformado estritamente em uma **via de condução lenta com retardo fisiológico e filtro decremental**, respondendo fielmente aos disparos atriais e expressando ritmo de escape idioventricular/juncional tardio apenas quando ocorrem bloqueios AV totais prolongados.
+
+### 3. Blindagem Eletrolítica contra Bifurcações Matemáticas de Hopf ($[K^+]_o \ge 5.4\text{ mM}$)
+* **O Problema:** Os modelos unicelulares de Severi e Inada foram calibrados estritamente na concentração de banho de Tyrode de $5.4\text{ mM}$. Em modelos unicelulares isolados desprovidos de sincício tecidual, qualquer redução para $[K^+]_o < 5.2\text{ mM}$ provoca uma bifurcação matemática de Hopf, travando abruptamente as oscilações e gerando assistolia artificial.
+* **A Solução:** Estabeleceu-se um piso fisiológico de potássio ($[K^+]_o \ge 5.4\text{ mM}$) especificamente para os cálculos de reversão de Nernst dos canais intrínsecos nodais, permitindo ao usuário manipular hipocalemia severa ($2.0\text{ a }3.5\text{ mM}$) na interface sem paralisar o automatismo cardíaco.
+
+### 4. Integração Exponencial Híbrida de Rush-Larsen e Micro-stepping em Canais $I_{Na}$
+* **O Problema:** Células rápidas humanas (átrio, Purkinje e ventrículo) apresentam velocidade de ascensão da Fase 0 que ultrapassa $dV/dt > 400\text{ V/s}$ com constantes de tempo dos canais de sódio extremamente curtas ($\tau_m \approx 0.0008\text{ ms}$). Métodos explícitos tradicionais (como Euler simples) divergem para infinito (`NaN`) caso o passo não seja microscopicamente pequeno.
+* **A Solução:** Aplicação do método numérico híbrido de **Rush-Larsen (1978)**, que integra analiticamente as comportas iônicas na forma exponencial e desacopla a rigidez numérica (*stiffness*), garantindo estabilidade matemática absoluta com consumo de CPU inferior a 5-10%.
+
+### 5. Calibração do Potencial de Repouso do Fibroblasto (MacCannell 2007)
+* **O Problema:** Na importação direta da formulação, uma superestimativa da condutância retificadora de entrada $G_{K1}$ forçava o repouso para $-71.3\text{ mV}$, colando o traçado no rodapé da escala do osciloscópio.
+* **A Solução:** Ajuste para o valor canônico $G_{K1} = 0.04822\text{ nS}$, estabelecendo o potencial de repouso fisiológico despolarizado característico em $-49.6\text{ mV}$ e permitindo a visualização nítida das deflexões eletrotônicas acopladas aos cardiomiócitos.
+
+---
+
+## 9. Referências Científicas Complementares (Além do CellML)
+
+Além dos artigos seminais dos modelos iônicos celulares registrados no consórcio Physiome/CellML, o KokoroSim fundamenta-se nas seguintes obras da biofísica, hemodinâmica, métodos numéricos e bioeletromagnetismo:
+
+### Métodos Numéricos e Computacionais
+* **Rush S, Larsen H.** *A practical algorithm for solving dynamic membrane equations.* **IEEE Transactions on Biomedical Engineering.** 1978;BME-25(4):389-392. [DOI: 10.1109/TBME.1978.326270](https://doi.org/10.1109/TBME.1978.326270)
+* **Press WH, Teukolsky SA, Vetterling WT, Flannery BP.** *Numerical Recipes: The Art of Scientific Computing.* 3rd ed. Cambridge University Press; 2007.
+
+### Hemodinâmica, Elastância Ventricular e Dinâmica Cardiovascular
+* **Suga H, Sagawa K.** *Instantaneous pressure-volume relationships and their ratio in the excised, supported canine left ventricle.* **Circulation Research.** 1974;35(1):117-126. [PubMed: 4841253](https://pubmed.ncbi.nlm.nih.gov/4841253/)
+* **Sagawa K, Maughan L, Suga H, Sunagawa K.** *Cardiac Contraction and the Left Ventricle: A Natural Approach to Left Ventricular Function.* Oxford University Press; 1988.
+* **Westerhof N, Lankhaar JW, Westerhof BE.** *The arterial Windkessel.* **Medical & Biological Engineering & Computing.** 2009;47(2):131-141. [PubMed: 19194725](https://pubmed.ncbi.nlm.nih.gov/19194725/) | [DOI: 10.1007/s11517-008-0359-2](https://doi.org/10.1007/s11517-008-0359-2)
+* **Wiggers CJ.** *The Pressure Pulses in the Cardiovascular System.* Longmans, Green and Co.; 1928.
+* **Sunagawa K, Maughan WL, Burkhoff D, Sagawa K.** *Left ventricular interaction with arterial system in dogs: conceptual framework.* **American Journal of Physiology.** 1983;245(5):H773-H780. [PubMed: 6638195](https://pubmed.ncbi.nlm.nih.gov/6638195/)
+
+### Bioeletromagnetismo, Eletrocardiografia e Teoria Dipolar
+* **Wilson FN, Johnston FD, Macleod AG, Barker PS.** *Electrocardiograms that represent the potential variations of a single electrode.* **American Heart Journal.** 1934;9(4):447-458. [DOI: 10.1016/S0002-8703(34)90382-7](https://doi.org/10.1016/S0002-8703(34)90382-7)
+* **Malmivuo J, Plonsey R.** *Bioelectromagnetism: Principles and Applications of Bioelectric and Biomagnetic Fields.* Oxford University Press; 1995.
+* **Plonsey R, Barr RC.** *Bioelectricity: A Quantitative Approach.* 3rd ed. Springer; 2007.
+
+### Eletrofisiologia Celular, Acoplamento Miofibroblástico e Tecidual
+* **Kohl P, Camelliti P, Burton FL, Smith GL.** *Electrical coupling of fibroblasts and myocytes: relevance for cardiac conduction.* **Journal of Electrocardiology.** 2005;38(4 Suppl):45-50. [PubMed: 16226075](https://pubmed.ncbi.nlm.nih.gov/16226075/)
+* **Kohl P, Gourdie RG.** *Fibroblast-myocyte electrotonic coupling: Does it occur in native mammalian heart?* **Circulation Research.** 2014;114(4):596-598. [PubMed: 24526670](https://pubmed.ncbi.nlm.nih.gov/24526670/)
+
+### Fisiologia Autonômica e Farmacologia Cardíaca
+* **Levy MN.** *Sympathetic-parasympathetic interactions in the heart.* **Circulation Research.** 1971;29(5):437-445. [PubMed: 4940562](https://pubmed.ncbi.nlm.nih.gov/4940562/)
+* **Katz AM.** *Physiology of the Heart.* 5th ed. Lippincott Williams & Wilkins; 2011.

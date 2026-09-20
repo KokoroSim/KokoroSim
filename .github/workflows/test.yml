@@ -1,0 +1,22 @@
+name: Testes Biofísicos
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Executar Suíte de Testes Biofísicos
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do Repositório
+        uses: actions/checkout@v4
+
+      - name: Instalar Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Executar Testes Unitários e de Integração
+        run: cargo test --workspace --verbose

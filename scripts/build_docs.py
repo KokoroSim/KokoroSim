@@ -248,6 +248,22 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             color: var(--neon-amber);
         }
 
+        h2 a[href="#indice"], h3 a[href="#indice"] {
+            font-size: 0.8em;
+            color: var(--text-muted);
+            border-bottom: none;
+            margin-left: 8px;
+            opacity: 0.55;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        h2 a[href="#indice"]:hover, h3 a[href="#indice"]:hover {
+            color: var(--neon-cyan);
+            opacity: 1;
+            text-shadow: 0 0 8px var(--cyan-glow);
+        }
+
         p {
             margin-bottom: 1.1em;
             color: var(--text-main);
