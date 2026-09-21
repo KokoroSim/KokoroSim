@@ -140,10 +140,11 @@ O desenvolvimento do **KokoroSim** está organizado em grandes marcos arquitetur
   - [x] Cálculo contínuo de volumes ventriculares: Volume Diastólico Final (VDF), Volume Sistólico Final (VSF), Volume Sistólico e Fração de Ejeção ($FE = VS / VDF$).
   - [ ] Novo traçado bidimensional em plano de fase exibindo a alça $P \times V$ dinâmica em tempo real (resposta direta à contratilidade via ESPVR, complacência via EDPVR, pré-carga e pós-carga).
 * [x] **Mecânica e Pressão Atrial**: Ondas *a* (contração atrial ativa pós-onda P), *c* (abaulamento isovolumétrico da mitral) e *v* com descenso *y* (enchimento sistólico passivo e esvaziamento diastólico).
-* [ ] **Patologias Valvares e Desafios Hemodinâmicos**:
-  - Modelagem de Estenose Aórtica (gradiente transvalvar patológico e sobrecarga pressórica).
-  - Insuficiência Aórtica (regurgitação diastólica, colapso de pressão de pulso e ausência de incisura dicrótica).
-  - Estenose e Insuficiência Mitral com repercussão volumétrica retrógrada.
+* [x] **Patologias Valvares e Desafios Hemodinâmicos**:
+  - Modelagem de Estenose Aórtica (gradiente transvalvar sistólico patológico > 40 mmHg e sobrecarga pressórica com efeito Anrep).
+  - Insuficiência Aórtica (regurgitação diastólica com colapso de pressão aórtica diastólica < 50 mmHg e sobrecarga volumétrica).
+  - Estenose Mitral (hipertensão atrial esquerda > 18 mmHg por retardo de esvaziamento diastólico).
+  - Insuficiência Mitral (regurgitação sistólica ventrículo-atrial gerando onda v patológica gigante > 25 mmHg).
 
 ### Fase 14: Expansão Espacial (Monodomínio 2D / 3D)
 * [ ] Substituição do modelo 0D acoplado por malha bidimensional de diferenças finitas (matriz de 100x100 a 200x200 miócitos).
