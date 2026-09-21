@@ -80,8 +80,8 @@ test.describe('KokoroSim — Testes E2E do Simulador Web (Wasm + Dioxus)', () =>
   });
 
   test('deve capturar a Onda Fantasma bio-sincronizada', async ({ page }) => {
-    // Abre a sanfona de Visualização
-    const visAccordion = page.locator('summary', { hasText: /Visualização/ });
+    // Abre a sanfona de Osciloscópio & Fantasma
+    const visAccordion = page.locator('summary', { hasText: /Osciloscópio/ });
     await visAccordion.click();
 
     const ghostCaptureBtn = page.locator('button', { hasText: /Capturar/ });
@@ -99,8 +99,8 @@ test.describe('KokoroSim — Testes E2E do Simulador Web (Wasm + Dioxus)', () =>
   });
 
   test('deve alternar para modo Single-Shot e exibir botão de disparo único', async ({ page }) => {
-    // Abre a sanfona de Visualização
-    const visAccordion = page.locator('summary', { hasText: /Visualização/ });
+    // Abre a sanfona de Osciloscópio & Fantasma
+    const visAccordion = page.locator('summary', { hasText: /Osciloscópio/ });
     await visAccordion.click();
 
     const modeSelect = page.locator('select').first();
@@ -135,9 +135,9 @@ test.describe('KokoroSim — Testes E2E do Simulador Web (Wasm + Dioxus)', () =>
   });
 
   test('deve exibir padrão limpo de 3 camadas ativas no gráfico de PA e legenda humanizada na hemodinâmica', async ({ page }) => {
-    // Abre a sanfona de Visualização
-    const visAccordion = page.locator('summary', { hasText: /Visualização/ });
-    await visAccordion.click();
+    // Abre a sanfona de Camadas Ativas
+    const layersAccordion = page.locator('summary', { hasText: /Camadas Ativas/ });
+    await layersAccordion.click();
 
     // 1. Valida checkboxes das camadas celulares no painel
     const saCheckbox = page.locator('.slider-container', { hasText: /Nó SA/ }).locator('input[type="checkbox"]');
@@ -173,10 +173,10 @@ test.describe('KokoroSim — Testes E2E do Simulador Web (Wasm + Dioxus)', () =>
 
   test('deve iniciar com todas as sanfonas fechadas e permitir apenas uma aberta por vez', async ({ page }) => {
     const accordions = page.locator('details.control-group');
-    await expect(accordions).toHaveCount(6);
+    await expect(accordions).toHaveCount(8);
 
     // 1. Todas iniciam fechadas
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 8; i++) {
       await expect(accordions.nth(i)).not.toHaveAttribute('open');
     }
 
@@ -194,6 +194,56 @@ test.describe('KokoroSim — Testes E2E do Simulador Web (Wasm + Dioxus)', () =>
     // 4. Clica novamente na segunda sanfona -> ela deve fechar
     await summary1.click();
     await expect(accordions.nth(1)).not.toHaveAttribute('open');
+
+    expect(jsErrors).toHaveLength(0);
+  });
+
+  test('deve alternar entre Cardio Lab e Pulmo Lab mantendo o motor contínuo e telemetria funcional', async ({ page }) => {
+    await page.waitForTimeout(1000);
+
+    // 1. Alterna para o Pulmo Lab
+    const pulmoTabBtn = page.locator('.lab-tab', { hasText: 'PULMO LAB' });
+    await expect(pulmoTabBtn).toBeVisible();
+    await pulmoTabBtn.click();
+    await expect(pulmoTabBtn).toHaveClass(/active/);
+
+    // 2. Valida os 4 canvases respiratórios
+    const pulmoCanvasIds = ['#canvas-resp-vol', '#canvas-resp-flow', '#canvas-resp-ppl', '#canvas-resp-rsa'];
+    for (const id of pulmoCanvasIds) {
+      const canvas = page.locator(id);
+      await expect(canvas).toBeVisible();
+      const box = await canvas.boundingBox();
+      expect(box).not.toBeNull();
+      expect(box.width).toBeGreaterThan(50);
+      expect(box.height).toBeGreaterThan(30);
+    }
+
+    // 3. Valida pods de telemetria respiratória no HUD
+    await expect(page.locator('#hud-rr')).toContainText('irpm');
+    await expect(page.locator('#hud-vef1')).toContainText('L');
+    await expect(page.locator('#hud-cvf')).toContainText('L');
+    await expect(page.locator('#hud-tiff')).toContainText('%');
+    await expect(page.locator('#hud-pef')).toContainText('L/s');
+
+    // 4. Abre sanfona de espirometria forçada e dispara a manobra
+    const spiroAccordion = page.locator('details.control-group', { hasText: 'Espirometria Forçada' });
+    await spiroAccordion.locator('summary').click();
+    await expect(spiroAccordion).toHaveAttribute('open');
+
+    const triggerBtn = page.locator('.btn-spiro-trigger');
+    await expect(triggerBtn).toBeVisible();
+    await triggerBtn.click();
+
+    // Aguarda conclusão da manobra e valida laudo
+    await page.waitForTimeout(1200);
+    const diagBanner = page.locator('.spiro-diag');
+    await expect(diagBanner).toBeVisible();
+
+    // 5. Retorna para o Cardio Lab e valida restauração dos canvases cardíacos
+    const cardioTabBtn = page.locator('.lab-tab', { hasText: 'CARDIO LAB' });
+    await cardioTabBtn.click();
+    await expect(page.locator('#canvas-pa')).toBeVisible();
+    await expect(page.locator('#canvas-ecg')).toBeVisible();
 
     expect(jsErrors).toHaveLength(0);
   });
