@@ -114,8 +114,8 @@ O desenvolvimento do **KokoroSim** está organizado em grandes marcos arquitetur
   - **Nova Sanfona (Canais Iônicos & Cinética)**: Checkboxes coloridos para habilitar correntes individuais ($I_{Na}$, $I_{Ca,L}$, $I_f$, $I_{Kr}$, $I_{Ks}$, $I_{K1}$, $[Ca^{2+}]_{SR}$).
   - **Nova Sanfona (Mecânica Respiratória & Espirometria)**: Controles ventilatórios e disparos de manobras pulmonares.
 
-### Fase 12: Mecânica Respiratória, Espirometria e Acoplamento Cardiorrespiratório
-* [ ] **Modelagem Matemática de Volumes e Capacidades Pulmonares Estáticos e Dinâmicos**:
+### Fase 12: Mecânica Respiratória, Espirometria e Acoplamento Cardiorrespiratório (Pulmo Lab) ✅ CONCLUÍDO
+* [x] **Modelagem Matemática de Volumes e Capacidades Pulmonares Estáticos e Dinâmicos**:
   - **Volume Corrente ($V_T$ ~500 mL)**: Volume ventilado na respiração tranquila de repouso.
   - **Volume de Reserva Inspiratório ($VRI$ ~3.000 mL)**: Volume máximo adicional inspirado pós-eupneia.
   - **Volume de Reserva Expiratório ($VRE$ ~1.100 mL)**: Volume máximo expelido pós-expiração normal.
@@ -124,14 +124,16 @@ O desenvolvimento do **KokoroSim** está organizado em grandes marcos arquitetur
     - **Capacidade Vital Forçada ($CVF = V_T + VRI + VRE$ ~4.600 mL)**
     - **Capacidade Residual Funcional ($CRF = VRE + VR$ ~2.300 mL — repouso elástico torácico)**
     - **Capacidade Pulmonar Total ($CPT = CVF + VR$ ~5.800 mL)**
-* [ ] **Manobra de Espirometria Forçada e Gráficos Respiratórios**:
-  - Botão de disparo `[ 🫁 MANOBRA DE ESPIROMETRIA (CVF) ]` no menu lateral.
-  - **Espirograma Dinâmico ($V \times t$)**: Curva de volume no tempo com mensuração automática de **$VEF_1$** (Volume Expiratório Forçado no 1º segundo) e do **Índice de Tiffeneau** ($VEF_1 / CVF$, ~75–80% fisiológico).
-  - **Alça Fluxo-Volume ($\dot{V} \times V$ em Plano de Fase 2D)**: Traçado bidimensional com identificação do Pico de Fluxo Expiratório (PFE/PEF) e padrão diagnóstico morfológico de distúrbios obstrutivos (asma/DPOC com concavidade expiratória) e restritivos (alça estreita).
-* [ ] **Acoplamento Cardiorrespiratório e Pressão Pleural**:
-  - Dinâmica da **Pressão Intrapleural ($P_{pl}$)** oscilando entre $-5\text{ cmH}_2\text{O}$ e $-8\text{ cmH}_2\text{O}$ (e variações sob esforço).
-  - **Arritmia Sinusal Respiratória (RSA)**: Modulação autonômica do Nó Sinoatrial pela respiração (taquicardia transitória na inspiração por inibição vagal; bradicardia na expiração por eferência parassimpática).
-  - Gráfico de **Tacograma $RR$** (intervalos $RR$ em ms batimento a batimento) evidenciando a variabilidade da frequência cardíaca (VFC) respiratória.
+* [x] **Manobra de Espirometria Forçada e Gráficos Respiratórios**:
+  - Botão de disparo animado `[ 💨 INICIAR MANOBRA DE ESPIROMETRIA ]` no menu lateral do Pulmo Lab.
+  - **Espirograma Dinâmico ($V \times t$)**: Curva contínua de volume no tempo com mensuração automática de **$VEF_1$** (Volume Expiratório Forçado no 1º segundo) e do **Índice de Tiffeneau** ($VEF_1 / CVF$, ~82.6% fisiológico).
+  - **Fluxo Aéreo Instantâneo ($\dot{V} \times t$)**: Traçado com identificação do Pico de Fluxo Expiratório (PEF) e padrão diagnóstico morfológico de distúrbios obstrutivos (asma/DPOC com concavidade expiratória) e restritivos.
+  - **Laudo Funcional Automatizado**: Diagnóstico em tempo real diferenciando padrões normais, obstrutivos e suspeita de restritivos.
+* [x] **Acoplamento Cardiorrespiratório e Pressão Pleural**:
+  - Dinâmica da **Pressão Intrapleural ($P_{pl}$)** oscilando entre $-8\text{ cmH}_2\text{O}$ e $-5\text{ cmH}_2\text{O}$ em repouso e até $+30\text{ cmH}_2\text{O}$ na manobra forçada.
+  - **Arritmia Sinusal Respiratória (RSA)**: Modulação autonômica do Nó Sinoatrial (Severi) pela respiração (taquicardia transitória na inspiração por inibição vagal; bradicardia na expiração por eferência parassimpática).
+* [x] **Arquitetura de Abas Especializadas (`.lab-tabs`)**:
+  - Divisão da interface em dois grandes espaços de trabalho (`💓 CARDIO LAB` e `🫁 PULMO LAB`) sem perda de continuidade do motor biofísico em segundo plano a 60 FPS.
 
 ### Fase 13: Hemodinâmica Avançada, Ciclo de Wiggers e Alça Pressão-Volume ($P \times V$)
 * [ ] **Diagrama de Wiggers Completo e Alça Pressão-Volume ($P \times V$)**:
