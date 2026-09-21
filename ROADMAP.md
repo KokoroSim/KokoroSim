@@ -137,9 +137,9 @@ O desenvolvimento do **KokoroSim** está organizado em grandes marcos arquitetur
 
 ### Fase 13: Hemodinâmica Avançada, Ciclo de Wiggers e Alça Pressão-Volume ($P \times V$)
 * [ ] **Diagrama de Wiggers Completo e Alça Pressão-Volume ($P \times V$)**:
-  - Cálculo contínuo de volumes ventriculares: Volume Diastólico Final (VDF), Volume Sistólico Final (VSF), Volume Sistólico e Fração de Ejeção ($FE = VS / VDF$).
-  - Novo traçado bidimensional em plano de fase exibindo a alça $P \times V$ dinâmica em tempo real (resposta direta à contratilidade via ESPVR, complacência via EDPVR, pré-carga e pós-carga).
-* [ ] **Mecânica e Pressão Atrial**: Ondas *a* (contração atrial ativa), *c* (protrusão valvar) e *v* (enchimento passivo ventricular).
+  - [x] Cálculo contínuo de volumes ventriculares: Volume Diastólico Final (VDF), Volume Sistólico Final (VSF), Volume Sistólico e Fração de Ejeção ($FE = VS / VDF$).
+  - [ ] Novo traçado bidimensional em plano de fase exibindo a alça $P \times V$ dinâmica em tempo real (resposta direta à contratilidade via ESPVR, complacência via EDPVR, pré-carga e pós-carga).
+* [x] **Mecânica e Pressão Atrial**: Ondas *a* (contração atrial ativa pós-onda P), *c* (abaulamento isovolumétrico da mitral) e *v* com descenso *y* (enchimento sistólico passivo e esvaziamento diastólico).
 * [ ] **Patologias Valvares e Desafios Hemodinâmicos**:
   - Modelagem de Estenose Aórtica (gradiente transvalvar patológico e sobrecarga pressórica).
   - Insuficiência Aórtica (regurgitação diastólica, colapso de pressão de pulso e ausência de incisura dicrótica).
