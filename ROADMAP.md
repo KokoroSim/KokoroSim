@@ -81,37 +81,83 @@ O desenvolvimento do **KokoroSim** está organizado em grandes marcos arquitetur
   - [x] Suíte de testes de interface end-to-end com Playwright em modo headless e worker único: validação de inicialização WASM, 4 canais de osciloscópio, congelamento/pausa, captura da Onda Fantasma bio-sincronizada, disparo Single-Shot, reset de parâmetros, 3 camadas padrão ativas e legendas humanizadas.
   - [x] Testes de regressão biofísica e roteiro prático universitário: verificação programática dos 4 experimentos clínicos (Nernst e hipercalemia, dromotropismo e BAVT com Verapamil, modulação simpático/vagal com Wiggers, e acoplamento heterocelular com fibroblastos).
 
-### Fase 10: Hemodinâmica Avançada, Ciclo de Wiggers e Alça Pressão-Volume
+### Fase 10: Osciloscópio Modular, Calibração Eletrocardiográfica (Padrão Livro-Texto) e Grade Isotrópica
+* [ ] **Canais Modulares com Dropdown Dupla em Cascata**:
+  - Implementação de seletor duplo no cabeçalho de cada um dos 4 osciloscópios (`CH-01` a `CH-04`), tornando todos os canais 100% dinâmicos e intercambiáveis.
+  - **1ª Dropdown (Domínio Fisiológico)**: `Potenciais de Ação`, `Eletrocardiograma (ECG)`, `Cinética Iônica e Transportadores`, `Hemodinâmica (Wiggers & Alça PxV)`, `Espirometria e Mecânica Respiratória`.
+  - **2ª Dropdown (Visão ou Derivação Contextual)**: Ajusta-se dinamicamente conforme o domínio selecionado na primeira.
+* [ ] **Recalibração do ECG (Morfologia Clássica de Livro-Texto)**:
+  - Resolução da distorção do traçado da v2 (onde a diferença direta $V_{endo} - V_{epi}$ produzia ruído e ausência de morfologia escarpada realista).
+  - Reintrodução da síntese biofísica espaço-temporal calibrada (como no modelo consagrado da v1):
+    - **Onda P**: Deflexão atrial suave, arredondada e com duração fisiológica (~80 ms).
+    - **Complexo QRS**: Deflexão ventricular afiada, escarpada e bifásica/trifásica (ondas Q, R e S nítidas com largura < 120 ms modulada por bloqueadores de sódio).
+    - **Onda T ("Morrinho")**: Repolarização suave, positiva e assimétrica modulada por potássio e bloqueadores de $I_K$.
+* [ ] **Grade Biomédica Proporcional do ECG (Isotrópica 40 ms × 0.1 mV)**:
+  - Mapeamento matemático em pixels preservando a proporção 1:1 rigorosa do papel milimetrado de ECG:
+    - **Quadradinhos pequenos**: $40\text{ ms}$ (horizontal) $\times$ $0.1\text{ mV}$ (vertical).
+    - **Quadradões grandes**: $200\text{ ms}$ ($5\text{ quadradinhos}$) $\times$ $0.5\text{ mV}$ ($5\text{ quadradinhos}$).
+    - Garantia de que 1 quadradinho no Canvas seja visualmente um quadrado perfeito, permitindo diagnóstico imediato por contagem visual de quadradinhos (PR em 3–5 quadradinhos, QRS < 3 quadradinhos, R com 10 quadradinhos de altura).
+    - Toggle de ganho rápido: padrão **$1N$ ($10\text{ mm/mV}$)** e **$2N$ ($20\text{ mm/mV}$)**.
+* [ ] **ECG de 12 Derivações Clínicas**:
+  - Projeção tridimensional do dipolo cardíaco nas derivações periféricas de Einthoven/Goldberger (**DI, DII, DIII, aVR, aVL, aVF**) e precordiais horizontais (**V1 a V6**).
+  - Modo Vetorcardiograma 2D ($DI \times aVF$) traçando o loop elétrico frontal instantâneo e o cálculo do Eixo Elétrico Cardíaco em graus.
+* [ ] **Escalas Metrológicas Dinâmicas em Todos os Gráficos**:
+  - Indicação numérica visual contínua dos eixos em cada canal: **Topo (Valor Máximo $Y_{max}$)**, **Centro (Valor Médio / Zero $Y_{mid}$)** e **Base (Valor Mínimo $Y_{min}$)** acompanhados das respectivas unidades de engenharia biomédica ($mV$, $mmHg$, $L$, $L/s$, $\mu M$).
+
+### Fase 11: Transparência Iônica Celular e Reestruturação das Sanfonas
+* [ ] **Origem e Identificação da Célula na Cinética Iônica**:
+  - Discriminação explícita de **qual célula** está sendo inspecionada dentre os 7 subtipos simulados (Nó SA, Músculo Atrial, Nó AV, Fibras de Purkinje, Endocárdio, Célula M, Epicárdio ou Fibroblasto).
+  - Seletor de célula e correntes na 2ª dropdown do canal iônico (ex: inspecionar o influxo de cálcio no *Nó SA* via canais T e L vs. *Epicárdio Ventricular* via RyR e SERCA).
+* [ ] **Desacoplamento e Reestruturação das Sanfonas do Menu Esquerdo**:
+  - **Sanfona 0**: Dedicada exclusivamente aos modos de osciloscópio (rolling, sweep, paged, single-shot) e às ferramentas de captura da Onda Fantasma.
+  - **Nova Sanfona (Células & Camadas Ativas)**: Controle independente de quais subtipos celulares estão ativos no CH-01 de potenciais de ação.
+  - **Nova Sanfona (Canais Iônicos & Cinética)**: Checkboxes coloridos para habilitar correntes individuais ($I_{Na}$, $I_{Ca,L}$, $I_f$, $I_{Kr}$, $I_{Ks}$, $I_{K1}$, $[Ca^{2+}]_{SR}$).
+  - **Nova Sanfona (Mecânica Respiratória & Espirometria)**: Controles ventilatórios e disparos de manobras pulmonares.
+
+### Fase 12: Mecânica Respiratória, Espirometria e Acoplamento Cardiorrespiratório
+* [ ] **Modelagem Matemática de Volumes e Capacidades Pulmonares Estáticos e Dinâmicos**:
+  - **Volume Corrente ($V_T$ ~500 mL)**: Volume ventilado na respiração tranquila de repouso.
+  - **Volume de Reserva Inspiratório ($VRI$ ~3.000 mL)**: Volume máximo adicional inspirado pós-eupneia.
+  - **Volume de Reserva Expiratório ($VRE$ ~1.100 mL)**: Volume máximo expelido pós-expiração normal.
+  - **Volume Residual ($VR$ ~1.200 mL — *o ar que fica*)**: Volume de gás que permanece obrigatoriamente retido nos alvéolos mesmo após expiração forçada máxima, impedindo o colapso pulmonar.
+  - Cálculo contínuo das capacidades:
+    - **Capacidade Vital Forçada ($CVF = V_T + VRI + VRE$ ~4.600 mL)**
+    - **Capacidade Residual Funcional ($CRF = VRE + VR$ ~2.300 mL — repouso elástico torácico)**
+    - **Capacidade Pulmonar Total ($CPT = CVF + VR$ ~5.800 mL)**
+* [ ] **Manobra de Espirometria Forçada e Gráficos Respiratórios**:
+  - Botão de disparo `[ 🫁 MANOBRA DE ESPIROMETRIA (CVF) ]` no menu lateral.
+  - **Espirograma Dinâmico ($V \times t$)**: Curva de volume no tempo com mensuração automática de **$VEF_1$** (Volume Expiratório Forçado no 1º segundo) e do **Índice de Tiffeneau** ($VEF_1 / CVF$, ~75–80% fisiológico).
+  - **Alça Fluxo-Volume ($\dot{V} \times V$ em Plano de Fase 2D)**: Traçado bidimensional com identificação do Pico de Fluxo Expiratório (PFE/PEF) e padrão diagnóstico morfológico de distúrbios obstrutivos (asma/DPOC com concavidade expiratória) e restritivos (alça estreita).
+* [ ] **Acoplamento Cardiorrespiratório e Pressão Pleural**:
+  - Dinâmica da **Pressão Intrapleural ($P_{pl}$)** oscilando entre $-5\text{ cmH}_2\text{O}$ e $-8\text{ cmH}_2\text{O}$ (e variações sob esforço).
+  - **Arritmia Sinusal Respiratória (RSA)**: Modulação autonômica do Nó Sinoatrial pela respiração (taquicardia transitória na inspiração por inibição vagal; bradicardia na expiração por eferência parassimpática).
+  - Gráfico de **Tacograma $RR$** (intervalos $RR$ em ms batimento a batimento) evidenciando a variabilidade da frequência cardíaca (VFC) respiratória.
+
+### Fase 13: Hemodinâmica Avançada, Ciclo de Wiggers e Alça Pressão-Volume ($P \times V$)
 * [ ] **Diagrama de Wiggers Completo e Alça Pressão-Volume ($P \times V$)**:
   - Cálculo contínuo de volumes ventriculares: Volume Diastólico Final (VDF), Volume Sistólico Final (VSF), Volume Sistólico e Fração de Ejeção ($FE = VS / VDF$).
-  - Novo traçado ou painel gráfico bidimensional exibindo a alça $P \times V$ dinâmica em tempo real (resposta direta à contratilidade e pré/pós-carga).
+  - Novo traçado bidimensional em plano de fase exibindo a alça $P \times V$ dinâmica em tempo real (resposta direta à contratilidade via ESPVR, complacência via EDPVR, pré-carga e pós-carga).
 * [ ] **Mecânica e Pressão Atrial**: Ondas *a* (contração atrial ativa), *c* (protrusão valvar) e *v* (enchimento passivo ventricular).
 * [ ] **Patologias Valvares e Desafios Hemodinâmicos**:
   - Modelagem de Estenose Aórtica (gradiente transvalvar patológico e sobrecarga pressórica).
   - Insuficiência Aórtica (regurgitação diastólica, colapso de pressão de pulso e ausência de incisura dicrótica).
   - Estenose e Insuficiência Mitral com repercussão volumétrica retrógrada.
 
-### Fase 11: Acoplamento Cardiorrespiratório e Mecânica Torácica
-* [ ] **Dinâmica da Pressão Intrapleural ($P_{pl}$)**: Oscilações cíclicas respiratórias ($-5\text{ cmH}_2\text{O}$ a $-8\text{ cmH}_2\text{O}$) acopladas ao retorno venoso e à pré-carga das câmaras direitas.
-* [ ] **Arritmia Sinusal Respiratória (RSA)**: Modulação autonômica cronotrópica do Nó Sinoatrial vinculada ao ciclo respiratório (aumento fisiológico de FC na inspiração e desaceleração vagal na expiração).
-* [ ] **Desdobramento Fisiológico da Segunda Bulha ($B_2$)**: Separação acústica temporal entre o fechamento da valva aórtica ($A_2$) e pulmonar ($P_2$) durante a inspiração profunda.
-
-### Fase 12: Expansão Espacial (Monodomínio 2D / 3D)
+### Fase 14: Expansão Espacial (Monodomínio 2D / 3D)
 * [ ] Substituição do modelo 0D acoplado por malha bidimensional de diferenças finitas (matriz de 100x100 a 200x200 miócitos).
 * [ ] Difusão tecidual contínua com tensor de condutividade anisotrópica.
 * [ ] Visualização topográfica de frentes de onda, espirais arritmogênicas (*rotor waves*), fibrilação ventricular e despolarizações fracionadas.
 
-### Fase 13: Modelação Farmacológica Avançada e Novos Protocolos Clínicos
+### Fase 15: Modelação Farmacológica Avançada e Novos Protocolos Clínicos
 * [ ] Implementação de novos fármacos e toxinas (ex.: digitalina, bloqueadores específicos de $I_{Kr}$, agentes parassimpaticomiméticos).
 * [ ] Painel interativo de casos clínicos e cenários patológicos pré-configurados para auxílio diagnóstico e ensino médico.
 
-### Fase 14: Arquitetura de Interface Mobile-First e Responsividade Nativa (Caminho 2)
+### Fase 16: Arquitetura de Interface Mobile-First e Responsividade Nativa
 * [ ] **Layout Responsivo Adaptativo para Smartphones (Modo Retrato / Mobile UI)**:
   - Divisão vertical da tela (*Split-Screen Mobile*): osciloscópio multicanal dinâmico no topo (40–45% da altura de visualização).
   - Gaveta de controles inferior colapsável (*Bottom Sheet Drawer*) operável por gestos de deslize (*swipe up/down*).
-  - Sistema de abas horizontais de acesso rápido por domínio de controle: *1. Modos de Tela / 2. Eletrofisiologia Celular / 3. Farmacologia / 4. Hemodinâmica*.
-  - Otimização ergonômica de sliders, seletores e botões para zonas de alcance do polegar (*thumb-friendly hit targets* >= 48px).
-  - Detecção inteligente e transição fluida entre modo retrato (bottom sheet) e modo paisagem (painel de instrumentação estendido).
+  - Sistema de abas horizontais de acesso rápido por domínio de controle.
+  - Otimização ergonômica de sliders, seletores e botões para zonas de alcance do polegar (*hit targets* >= 48px).
 
 ---
 
