@@ -865,4 +865,35 @@ impl HeartSystem {
             co,
         }
     }
+
+    pub fn set_valvopathy_params(
+        &mut self,
+        aortic_stenosis: f64,
+        aortic_regurg: f64,
+        mitral_stenosis: f64,
+        mitral_regurg: f64,
+    ) {
+        self.hemo.set_valvopathies(
+            aortic_stenosis,
+            aortic_regurg,
+            mitral_stenosis,
+            mitral_regurg,
+        );
+    }
+
+    pub fn get_aortic_stenosis(&self) -> f64 {
+        self.hemo.aortic_stenosis
+    }
+
+    pub fn get_aortic_regurgitation(&self) -> f64 {
+        self.hemo.aortic_regurgitation
+    }
+
+    pub fn get_mitral_stenosis(&self) -> f64 {
+        self.hemo.mitral_stenosis
+    }
+
+    pub fn get_mitral_regurgitation(&self) -> f64 {
+        self.hemo.mitral_regurgitation
+    }
 }

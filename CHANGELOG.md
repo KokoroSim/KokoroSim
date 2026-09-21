@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Features
+  - (hemo) modelar valvopatias aorticas e mitrais (closes #8)
   - (hemo) rastrear volumes sistolicos e calibrar pressao atrial de wiggers (closes #7)
   - (ui) implementar espacos de trabalho cardio e pulmo com osciloscopios dedicados (closes #4)
   - (ui) adicionar estilos das abas de laboratorio e painel de espirometria (closes #3)

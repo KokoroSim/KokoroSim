@@ -32,11 +32,17 @@ pub struct HemodynamicsModel {
     e_max_base: f64,   // Elastância sistólica máxima basal (mmHg/mL) ~2.4
     c_ao: f64,         // Complacência aórtica (mL/mmHg) ~1.0
     r_tpr_base: f64,   // Resistência vascular periférica total (mmHg*ms/mL) ~1.0 s -> 1000 ms
-    r_valve_in: f64,   // Resistência da valva mitral aberta (mmHg*ms/mL) ~10.0
-    r_valve_out: f64,  // Resistência da valva aórtica aberta (mmHg*ms/mL) ~8.0
+    r_valve_in: f64,   // Resistência da valva mitral aberta (mmHg*ms/mL) ~7.5
+    r_valve_out: f64,  // Resistência da valva aórtica aberta (mmHg*ms/mL) ~3.8
     
     // Memória interna para detecção de flanco
     prev_v_endo: f64,
+
+    // Parâmetros de valvopatias [0.0 = normal, 1.0 = patologia severa]
+    pub aortic_stenosis: f64,
+    pub aortic_regurgitation: f64,
+    pub mitral_stenosis: f64,
+    pub mitral_regurgitation: f64,
 }
 
 impl HemodynamicsModel {
@@ -65,7 +71,24 @@ impl HemodynamicsModel {
             r_valve_in: 7.5,
             r_valve_out: 3.8,
             prev_v_endo: -85.0,
+            aortic_stenosis: 0.0,
+            aortic_regurgitation: 0.0,
+            mitral_stenosis: 0.0,
+            mitral_regurgitation: 0.0,
         }
+    }
+
+    pub fn set_valvopathies(
+        &mut self,
+        aortic_stenosis: f64,
+        aortic_regurg: f64,
+        mitral_stenosis: f64,
+        mitral_regurg: f64,
+    ) {
+        self.aortic_stenosis = aortic_stenosis.clamp(0.0, 1.0);
+        self.aortic_regurgitation = aortic_regurg.clamp(0.0, 1.0);
+        self.mitral_stenosis = mitral_stenosis.clamp(0.0, 1.0);
+        self.mitral_regurgitation = mitral_regurg.clamp(0.0, 1.0);
     }
 
     pub fn step(
@@ -108,7 +131,9 @@ impl HemodynamicsModel {
         self.f_active = (self.f_active + df * dt).clamp(0.0, 1.0);
 
         // 3. Modulação Inotrópica Autonômica da Elastância Sistólica
-        let inotropy = 1.0 + (symp * 1.15) - (parasymp * 0.30);
+        // Efeito Anrep: autorregulação miocárdica em resposta ao aumento abrupto de pós-carga (estenose aórtica)
+        let anrep = 1.0 + self.aortic_stenosis * 0.40;
+        let inotropy = (1.0 + (symp * 1.15) - (parasymp * 0.30)) * anrep;
         let e_max = self.e_max_base * inotropy;
         
         // Elastância passiva não-linear (EDPVR com rigidez elástica progressiva acima de 115 mL)
@@ -117,11 +142,13 @@ impl HemodynamicsModel {
         let elastance = e_diast + (e_max - e_diast) * self.f_active;
 
         // 4. Pressão Atrial Esquerda (LAP) - Curva fisiológica do Diagrama de Wiggers
-        // Linha de base diastólica (~7 mmHg com venoconstrição sob simpático)
-        let p_la_base = 7.0 + (symp * 3.5);
+        // Linha de base diastólica (~7 mmHg com venoconstrição sob simpático e estase na estenose mitral)
+        let ms_backlog = self.mitral_stenosis * 15.0;
+        let p_la_base = 7.0 + (symp * 3.5) + ms_backlog;
         
-        // Onda 'a' (contração atrial ativa / sístole atrial pós-onda P)
-        let atrial_kick = if v_atrium > -20.0 { 6.5 } else { 0.0 };
+        // Onda 'a' (contração atrial ativa / sístole atrial pós-onda P, hipertrofiada na estenose mitral)
+        let a_gain = 1.0 + self.mitral_stenosis * 0.6;
+        let atrial_kick = if v_atrium > -20.0 { 6.5 * a_gain } else { 0.0 };
         
         // Onda 'c' (protrusão valvar no início da sístole isovolumétrica ventricular)
         let c_wave = if !self.mitral_open && !self.aortic_open && self.f_active > 0.15 && self.f_active < 0.70 {
@@ -130,9 +157,20 @@ impl HemodynamicsModel {
             0.0
         };
         
-        // Onda 'v' (enchimento venoso pulmonar passivo com a valva mitral fechada)
+        // 5. Pressão Isovolumétrica Ventricular preliminar para fluxos
+        let p_iso = elastance * (self.v_lv - self.v0).max(0.0);
+
+        // Regurgitação sistólica mitral (Insuficiência Mitral)
+        let q_regurg_mi = if !self.mitral_open && self.mitral_regurgitation > 0.0 && p_iso > self.p_la {
+            (p_iso - self.p_la) * (self.mitral_regurgitation * 0.025)
+        } else {
+            0.0
+        };
+
+        // Onda 'v' (enchimento venoso pulmonar passivo com a valva mitral fechada + jato de refluxo na insuficiência mitral)
         if !self.mitral_open {
-            self.v_la_filling = (self.v_la_filling + 0.015 * dt).min(5.0);
+            let mr_jet = q_regurg_mi * 15.0;
+            self.v_la_filling = (self.v_la_filling + (0.015 + mr_jet) * dt).min(35.0);
         } else {
             // Descenso 'y' rápido quando a valva mitral abre e esvazia no ventrículo
             self.v_la_filling = (self.v_la_filling - 0.06 * dt).max(0.0);
@@ -140,15 +178,14 @@ impl HemodynamicsModel {
         
         self.p_la = p_la_base + atrial_kick + c_wave + self.v_la_filling;
 
-        // 5. Pressão Isovolumétrica Ventricular
-        let p_iso = elastance * (self.v_lv - self.v0).max(0.0);
-
-        // 6. Dinâmica Valvar e Fluxos com histerese (Mitral e Aórtica)
+        // 6. Dinâmica Valvar e Fluxos com histerese e valvopatias
         let mut q_in = 0.0;
         let mut q_out = 0.0;
 
         // --- Valva Mitral ---
-        let r_in_eff = self.r_valve_in / (1.0 + symp * 0.6);
+        let r_in_stenotic = self.r_valve_in * (1.0 + 5.0 * self.mitral_stenosis);
+        let r_in_eff = r_in_stenotic / (1.0 + symp * 0.6);
+
         if !self.mitral_open {
             if !self.aortic_open && self.f_active < 0.04 && p_iso < self.p_la {
                 self.mitral_open = true;
@@ -168,9 +205,11 @@ impl HemodynamicsModel {
         }
 
         // --- Valva Aórtica ---
+        let r_out_stenotic = self.r_valve_out * (1.0 + 7.0 * self.aortic_stenosis);
+
         if p_iso > self.p_ao && !self.mitral_open && self.f_active > 0.15 {
             self.aortic_open = true;
-            q_out = (p_iso - self.p_ao) / self.r_valve_out;
+            q_out = (p_iso - self.p_ao) / r_out_stenotic;
         } else if self.aortic_open && p_iso <= self.p_ao {
             // Aórtica fecha no início do relaxamento isovolumétrico -> B2!
             self.aortic_open = false;
@@ -183,19 +222,25 @@ impl HemodynamicsModel {
             }
         }
 
+        // Regurgitação diastólica aórtica (Insuficiência Aórtica)
+        let q_regurg_ao = if !self.aortic_open && self.aortic_regurgitation > 0.0 && self.p_ao > p_iso {
+            (self.p_ao - p_iso) * (self.aortic_regurgitation * 0.035)
+        } else {
+            0.0
+        };
+
         // 7. Atualização do Volume Ventricular Esquerdo
-        let dv = q_in - q_out;
-        self.v_lv = (self.v_lv + dv * dt).clamp(30.0, 150.0);
+        let dv = (q_in + q_regurg_ao) - (q_out + q_regurg_mi);
+        self.v_lv = (self.v_lv + dv * dt).clamp(25.0, 220.0);
 
         // Pressão ventricular efetiva
         self.p_lv = p_iso;
 
         // 8. Modelo Arterial Windkessel de 3 Elementos para a Pressão Aórtica
-        // dP_ao/dt = Q_out / C_ao - (P_ao - P_venous) / (R_tpr * C_ao)
-        // No exercício simpático, a vasodilatação muscular periférica reduz TPR, acomodando o débito aumentado
+        // dP_ao/dt = (Q_out - Q_regurg_ao) / C_ao - (P_ao - P_venous) / (R_tpr * C_ao)
         let p_venous = 4.0;
         let r_tpr = self.r_tpr_base * (1.0 - (symp * 0.25) + (parasymp * 0.15));
-        let dp_ao = (q_out / self.c_ao) - ((self.p_ao - p_venous) / (r_tpr * self.c_ao));
-        self.p_ao = (self.p_ao + dp_ao * dt).clamp(30.0, 220.0);
+        let dp_ao = ((q_out - q_regurg_ao) / self.c_ao) - ((self.p_ao - p_venous) / (r_tpr * self.c_ao));
+        self.p_ao = (self.p_ao + dp_ao * dt).clamp(20.0, 260.0);
     }
 }
