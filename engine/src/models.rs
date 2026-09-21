@@ -67,6 +67,11 @@ pub struct HudMetrics {
     pub qt: f64,
     pub v_rest: f64,
     pub pr_rr: f64,
+    pub edv: f64,
+    pub esv: f64,
+    pub sv: f64,
+    pub ef: f64,
+    pub co: f64,
 }
 
 #[wasm_bindgen]
@@ -582,6 +587,12 @@ impl HeartSystem {
     pub fn get_lvp(&self) -> f64 { self.hemo.p_lv }
     pub fn get_aop(&self) -> f64 { self.hemo.p_ao }
     pub fn get_lvv(&self) -> f64 { self.hemo.v_lv }
+    pub fn get_hemo_edv(&self) -> f64 { self.hemo.v_edv }
+    pub fn get_hemo_esv(&self) -> f64 { self.hemo.v_esv }
+    pub fn get_hemo_sv(&self) -> f64 { self.hemo.stroke_volume }
+    pub fn get_hemo_ef(&self) -> f64 { self.hemo.ejection_fraction }
+    pub fn get_hemo_co(&self) -> f64 { (self.bpm * self.hemo.stroke_volume) / 1000.0 }
+    pub fn get_hemo_lap(&self) -> f64 { self.hemo.p_la }
     pub fn get_time(&self) -> f64 { self.time }
 
     pub fn trigger_spirometry(&mut self) {
@@ -839,6 +850,7 @@ impl HeartSystem {
     }
 
     pub fn get_hud_metrics(&self) -> HudMetrics {
+        let co = (self.bpm * self.hemo.stroke_volume) / 1000.0;
         HudMetrics {
             bpm: self.bpm,
             pr: self.pr,
@@ -846,6 +858,11 @@ impl HeartSystem {
             qt: self.qt,
             v_rest: self.v_rest,
             pr_rr: self.pr_rr,
+            edv: self.hemo.v_edv,
+            esv: self.hemo.v_esv,
+            sv: self.hemo.stroke_volume,
+            ef: self.hemo.ejection_fraction,
+            co,
         }
     }
 }
