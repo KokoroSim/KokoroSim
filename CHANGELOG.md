@@ -2,11 +2,36 @@
 
 ## [Unreleased]
 
+- Routine maintenance, documentation updates, and operational improvements.
+
+## Previous Releases
+
+### [v2.1.0] - Otimização de Interface e Controle Eletrofisiológico
+
 ### Features
   - (ui) iniciar sanfonas fechadas com abertura exclusiva e compactar visualizacao
   - (ui,docs) padronizar subtitulo, metatags e banner com safe zone 4:3
   - (ui,docs) otimizar banner de compartilhamento social com safe zone e metatags
   - (ui) simplificar camadas ativas por padrao e humanizar marcadores de hemodinamica
+  - (ui) implementar tipografia kokor心sim, telemetria bilingue e estetica retro-futurista no simulador
+  - (assets,style) adicionar logo/icone oficiais e implementar paleta neon carmesim com estetica otomo
+  - (ui,docs) reestruturar navegacao com home em sobre, mover simulador para app.html e consolidar marca KokoroSim
+  - (ui,ci) publicar documentacao em HTML no GitHub Pages e abrir manual em nova aba
+  - (ui) implementar sincronização bio-disparada RR da onda fantasma e linha sólida esmaecida anti-fadiga
+  - (ui) implementar congelamento da simulação, onda fantasma sincronizada e reset limpo no gatilho automático
+  - (ui) implementar 5 modos de osciloscópio, captura de onda fantasma e marcadores acústicos multicanal
+  - (engine) adicionar evento de disparo da Fase 0 do Nó SA ao fluxo de dados em lote
+  - (ui) calibrar sons cardíacos para alto-falantes de celular e fixar orçamento de cálculo em 1x tempo real
+  - (engine) otimizar integração numérica com método híbrido de Rush-Larsen para dispositivos móveis e hardware modesto
+  - (ui) adicionar sintetizador Web Audio para bip de UTI e bulhas B1/B2, gráfico hemodinâmico de Wiggers e compressão temporal
+  - (engine) implementar acoplamento eletromecânico, elastância variável no tempo e hemodinâmica Windkessel de 3 elementos
+  - (ui) adicionar controle deslizante de fibrose miocárdica e visualização de fibroblastos
+  - (engine) implementar modelo de fibroblasto cardíaco de MacCannell et al. (2007) e acoplamento eletrotônico miocitário
+  - (ui) exibir potenciais de ação ventriculares transmurais e traçado de ECG dipolar
+  - (engine) implementar dromotropismo dinâmico na condução AV e heterogeneidade ventricular transmural (Epi, M-cell, Endo)
+  - (engine,ui) integrar modelo de células de Purkinje humanas de Stewart et al. (2009) à cadeia de condução
+  - (dev) adicionar monitoramento de arquivos, livereload e rodapé de versão no ambiente local
+  - (ui/engine) adiciona sistema de plotagem em tempo real e modelo de força mecânica
 
 ### Bug Fixes
   - (ci) corrigir resolucao do caminho dist e adicionar validacao de index.html no deploy
@@ -14,8 +39,8 @@
   - (engine) calibrar potencial de repouso despolarizado do fibroblasto maccannell
   - (engine) adaptar conducao e no sa para evitar travamento sob variacao de parametros
   - (engine) equilibrar potencial de repouso de purkinje e adicionar testes biofisicos
-
-## Previous Releases
+  - (dev) isolar injecao do livereload no server.py e limpar htmls estaticos de producao
+  - (engine) corrigir dissincronia ventricular e implementar condução fisiológica por pulsos
 
 ### [v2.0.0-dev]
 
