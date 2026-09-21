@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Features
+  - (engine) integrar acoplamento RSA e expandir telemetria para 15 canais (closes #2)
   - (resp) implementar modelo biofisico de mecanica respiratoria e espirometria (closes #1)
   - (ui) modulariza sanfonas e adiciona seletor de ion e celula no ch-03
   - (ui) adicionar suporte a multiplas derivacoes de ECG e grade milimetrada

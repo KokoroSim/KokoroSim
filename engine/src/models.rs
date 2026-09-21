@@ -5,6 +5,7 @@ pub mod tentusscher;
 pub mod purkinje;
 pub mod fibroblast;
 pub mod hemodynamics;
+pub mod respiratory;
 
 // Aqui ficará o gerenciador de estado global que orquestra as 4 células
 use wasm_bindgen::prelude::*;
@@ -79,6 +80,7 @@ pub struct HeartSystem {
     vent_epi: tentusscher::VentricleCell,
     fibroblast: fibroblast::FibroblastCell,
     hemo: hemodynamics::HemodynamicsModel,
+    resp: respiratory::RespiratorySystem,
     acc_r_peak: bool,
     acc_b1: bool,
     acc_b2: bool,
@@ -119,6 +121,7 @@ pub struct HeartSystem {
     prev_v_m: f64,
     pub ion_cell: usize,
     pub ion_var: usize,
+    pub rsa_enabled: bool,
 
     // Current smoothed metrics
     pub bpm: f64,
@@ -129,8 +132,14 @@ pub struct HeartSystem {
     pub pr_rr: f64,
 }
 
+pub const BATCH_CHUNK_SIZE: usize = 15;
+
 #[wasm_bindgen]
 impl HeartSystem {
+    pub fn get_chunk_size() -> usize {
+        BATCH_CHUNK_SIZE
+    }
+
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
         Self {
@@ -143,6 +152,7 @@ impl HeartSystem {
             vent_epi: tentusscher::VentricleCell::new_with_type(tentusscher::VentricleCellType::Epicardial),
             fibroblast: fibroblast::FibroblastCell::default(),
             hemo: hemodynamics::HemodynamicsModel::new(),
+            resp: respiratory::RespiratorySystem::new(),
             acc_r_peak: false,
             acc_b1: false,
             acc_b2: false,
@@ -177,6 +187,7 @@ impl HeartSystem {
             prev_v_m: -85.0,
             ion_cell: 4, // Endocárdio como padrão
             ion_var: 0,  // [Ca2+]_i como padrão
+            rsa_enabled: false,
             bpm: 75.0,
             pr: 160.0,
             qrs: 90.0,
@@ -275,9 +286,22 @@ impl HeartSystem {
         }
 
         // Passo de Integração (Forward Euler)
+        // 1. Dinâmica Respiratória & Acoplamento Cardiorrespiratório (RSA)
+        self.resp.step(dt);
+        let mut eff_pharm_sa = self.pharm;
+        if self.rsa_enabled && self.time > 1000.0 {
+            if self.resp.f_rsa > 0.0 {
+                // Inspiração: leve inibição vagal acelerando sutilmente o Nó SA
+                eff_pharm_sa.symp = (eff_pharm_sa.symp + self.resp.f_rsa * 3.0).clamp(0.0, 100.0);
+            } else {
+                // Expiração: leve eferência vagal desacelerando sutilmente o Nó SA
+                eff_pharm_sa.parasymp = (eff_pharm_sa.parasymp - self.resp.f_rsa * 2.5).clamp(0.0, 100.0);
+            }
+        }
+
         // O nó SA (Severi) e Nó AV (Inada) foram modelados no artigo original em SEGUNDOS
         let dt_sec = dt / 1000.0;
-        self.sa_node.step(dt_sec, &self.pharm);
+        self.sa_node.step(dt_sec, &eff_pharm_sa);
         self.av_node.step(dt_sec, &self.pharm);
         
         // O Átrio (Courtemanche), Purkinje (Stewart) e Ventrículo Transmural (Ten Tusscher) em MILISSEGUNDOS
@@ -511,7 +535,7 @@ impl HeartSystem {
 
     // Roda um lote completo de cálculos no lado do Rust e retorna um array f64 achatado!
     pub fn run_batch(&mut self, dt: f64, steps: usize, downsample: usize) -> Vec<f64> {
-        let chunk_size = 12;
+        let chunk_size = 15;
         let mut batch = Vec::with_capacity((steps / downsample) * chunk_size);
         for i in 0..steps {
             self.step(dt);
@@ -537,6 +561,9 @@ impl HeartSystem {
                 batch.push(self.hemo.p_ao);        // 9: Pressão Aórtica (AoP, mmHg)
                 batch.push(self.compute_ecg());    // 10: ECG Dipolar Transmural
                 batch.push(sound_code);            // 11: Eventos Acústicos (Bitmask)
+                batch.push(self.resp.vol);         // 12: Volume Pulmonar (L)
+                batch.push(self.resp.flow);        // 13: Fluxo Aéreo Instantâneo (L/s)
+                batch.push(self.resp.p_pl);        // 14: Pressão Intrapleural (cmH2O)
             }
         }
         batch
@@ -556,6 +583,33 @@ impl HeartSystem {
     pub fn get_aop(&self) -> f64 { self.hemo.p_ao }
     pub fn get_lvv(&self) -> f64 { self.hemo.v_lv }
     pub fn get_time(&self) -> f64 { self.time }
+
+    pub fn trigger_spirometry(&mut self) {
+        self.resp.trigger_spirometry();
+    }
+
+    pub fn set_respiratory_params(&mut self, rate: f64, raw: f64, c_rs: f64) {
+        self.resp.resp_rate = rate;
+        self.resp.raw = raw;
+        self.resp.c_rs = c_rs;
+    }
+
+    pub fn get_resp_vol(&self) -> f64 { self.resp.vol }
+    pub fn get_resp_flow(&self) -> f64 { self.resp.flow }
+    pub fn get_resp_ppl(&self) -> f64 { self.resp.p_pl }
+    pub fn get_vef1(&self) -> f64 { self.resp.vef1 }
+    pub fn get_cvf(&self) -> f64 { self.resp.cvf }
+    pub fn get_tiffeneau(&self) -> f64 { self.resp.tiffeneau }
+    pub fn get_pef(&self) -> f64 { self.resp.pef }
+    pub fn is_in_spirometry(&self) -> bool { self.resp.maneuver_state != respiratory::ManeuverState::Idle }
+
+    pub fn set_rsa_enabled(&mut self, enabled: bool) {
+        self.rsa_enabled = enabled;
+    }
+
+    pub fn get_rsa_enabled(&self) -> bool {
+        self.rsa_enabled
+    }
 
     pub fn set_ion_cell(&mut self, cell: usize) {
         self.ion_cell = cell % 8;

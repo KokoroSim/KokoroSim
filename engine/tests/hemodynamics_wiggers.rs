@@ -69,7 +69,7 @@ fn test_heart_sound_events_in_batch() {
     // Roda 4 segundos em lotes (como o Dioxus faz)
     for _ in 0..250 {
         let batch = system.run_batch(dt, steps_per_frame, downsample);
-        let chunk_size = 12;
+        let chunk_size = engine::models::BATCH_CHUNK_SIZE;
         for i in 0..(batch.len() / chunk_size) {
             let sound_code = batch[i * chunk_size + 11] as usize;
             if (sound_code & 1) != 0 { r_peak_count += 1; }
