@@ -57,6 +57,8 @@ fn App() -> Element {
     let mut is_paused = use_signal(|| false);
     let mut ghost_status_str = use_signal(|| "📸 Capturar".to_string());
     let mut ecg_lead_idx = use_signal(|| 1usize);
+    let mut ion_cell_idx = use_signal(|| 4usize); // Endocárdio por padrão
+    let mut ion_var_idx = use_signal(|| 0usize);  // [Ca2+]_i por padrão
 
     // Dynamic HUD metrics state
     let mut bpm = use_signal(|| 75.0);
@@ -186,6 +188,8 @@ fn App() -> Element {
                     s_symp, s_parasymp, s_isch, s_fibrosis
                 );
                 system.write().set_ecg_lead(ecg_lead_idx());
+                system.write().set_ion_cell(ion_cell_idx());
+                system.write().set_ion_var(ion_var_idx());
                 
                 // 2. Step Engine
                 // Amostragem compacta: 1 ponto a cada 5.0ms (downsample=500 com dt=0.01ms)
@@ -298,9 +302,20 @@ fn App() -> Element {
             ecg_plotter.draw(-0.5, 1.5, "#00f2fe", true, ghost, uti_m, bulhas_m, true, None);
             ecg_plotter.draw_scales(-0.5, 1.5, true, "+1.5 mV", "0.0 mV", "-0.5 mV");
 
-            // CH-03: Transiente de Cálcio Livre
-            ch3_plotter.draw(0.0, 0.002, "#a29bfe", true, ghost, uti_m, bulhas_m, false, None);
-            ch3_plotter.draw_scales(0.0, 0.002, false, "2.0 µM", "1.0 µM", "0.0 µM");
+            // CH-03: Variável Iônica / Cinética Celular Dinâmica
+            let (min_ch3, max_ch3, color_ch3, top_l, mid_l, bot_l) = match ion_var_idx() {
+                0 => (0.0, 2.0, "#a29bfe", "2.0 µM", "1.0 µM", "0.0 µM"),
+                1 => (0.0, 25.0, "#f1c40f", "25 mM", "12.5 mM", "0 mM"),
+                2 => (100.0, 160.0, "#e74c3c", "160 mM", "130 mM", "100 mM"),
+                3 => (0.0, 5.0, "#00cec9", "5.0 mM", "2.5 mM", "0.0 mM"),
+                4 => (-16.0, 2.0, "#fdcb6e", "+2 pA/pF", "-7 pA/pF", "-16 pA/pF"),
+                5 => (-80.0, 10.0, "#e17055", "+10 pA/pF", "-35 pA/pF", "-80 pA/pF"),
+                6 => (-1.0, 5.0, "#0984e3", "+5.0 pA/pF", "+2.0 pA/pF", "-1.0 pA/pF"),
+                7 => (-6.0, 1.0, "#00b894", "+1.0 pA/pF", "-2.5 pA/pF", "-6.0 pA/pF"),
+                _ => (0.0, 2.0, "#a29bfe", "2.0 µM", "1.0 µM", "0.0 µM"),
+            };
+            ch3_plotter.draw(min_ch3, max_ch3, color_ch3, true, ghost, uti_m, bulhas_m, false, None);
+            ch3_plotter.draw_scales(min_ch3, max_ch3, false, top_l, mid_l, bot_l);
             
             // CH-04: Hemodinâmica: LVP e AoP sobrepostas (0 a 140 mmHg) com marcadores verticais
             hemo_plotter_lvp.draw(0.0, 140.0, "#00f2fe", true, ghost, uti_m, bulhas_m, false, None);
@@ -441,7 +456,7 @@ fn App() -> Element {
                     }
                 }
 
-                Accordion { index: 0, label: "0. 画面表示 // Visualização".to_string(), active_accordion,
+                Accordion { index: 0, label: "0. 画面表示 // Osciloscópio & Fantasma".to_string(), active_accordion,
                     div { style: "margin-bottom: 6px;",
                         div { class: "slider-header", style: "margin-bottom: 3px;",
                             span { style: "color: var(--neon-cyan); font-weight: bold; font-size: 1.4vh;", "Modo do Osciloscópio:" }
@@ -482,11 +497,12 @@ fn App() -> Element {
                             "{ghost_status_str}"
                         }
                     }
+                }
 
-                    div { class: "slider-header", style: "margin-bottom: 4px; margin-top: 2px;",
-                        span { style: "color: var(--neon-yellow); font-size: 1.4vh;", "Camadas / Células Ativas:" }
+                Accordion { index: 1, label: "1. 細胞層 // Células & Camadas Ativas".to_string(), active_accordion,
+                    div { class: "slider-header", style: "margin-bottom: 6px;",
+                        span { style: "color: var(--neon-yellow); font-size: 1.35vh;", "Sobreposição de Potenciais no CH-01:" }
                     }
-
                     Checkbox { label: "Nó SA (Gatilho)".to_string(), color: "#e74c3c".to_string(), checked: show_sa, compact: true }
                     Checkbox { label: "Átrio (Contração)".to_string(), color: "#3498db".to_string(), checked: show_atrium, compact: true }
                     Checkbox { label: "Nó AV (Condução)".to_string(), color: "#f1c40f".to_string(), checked: show_av, compact: true }
@@ -496,7 +512,53 @@ fn App() -> Element {
                     Checkbox { label: "Fibroblasto (Eletrotônico)".to_string(), color: "#a29bfe".to_string(), checked: show_fibroblast, compact: true }
                 }
 
-                Accordion { index: 1, label: "1. 電解質 // Íons e Eletrólitos".to_string(), active_accordion,
+                Accordion { index: 2, label: "2. イオン動態 // Cinética Iônica & Célula".to_string(), active_accordion,
+                    div { style: "margin-bottom: 6px;",
+                        div { class: "slider-header", style: "margin-bottom: 3px;",
+                            span { style: "color: var(--neon-cyan); font-weight: bold; font-size: 1.35vh;", "Célula Inspecionada (CH-03):" }
+                        }
+                        select {
+                            style: "width: 100%; padding: 4px 6px; border-radius: 4px; background: #161616; color: var(--text-main); border: 1px solid var(--neon-cyan); font-size: 1.3vh; cursor: pointer; margin-bottom: 6px;",
+                            value: "{ion_cell_idx()}",
+                            onchange: move |e| {
+                                if let Ok(idx) = e.value().parse::<usize>() {
+                                    ion_cell_idx.set(idx);
+                                }
+                            },
+                            option { value: "4", selected: ion_cell_idx() == 4, "Endocárdio Ventricular (TP06)" }
+                            option { value: "5", selected: ion_cell_idx() == 5, "Célula M Ventricular (TP06)" }
+                            option { value: "6", selected: ion_cell_idx() == 6, "Epicárdio Ventricular (TP06)" }
+                            option { value: "0", selected: ion_cell_idx() == 0, "Nó Sinoatrial (SA - Severi)" }
+                            option { value: "1", selected: ion_cell_idx() == 1, "Músculo Atrial (Courtemanche)" }
+                            option { value: "2", selected: ion_cell_idx() == 2, "Nó Atrioventricular (AV - Inada)" }
+                            option { value: "3", selected: ion_cell_idx() == 3, "Fibras de Purkinje (Stewart)" }
+                            option { value: "7", selected: ion_cell_idx() == 7, "Fibroblasto Cardíaco (MacCannell)" }
+                        }
+
+                        div { class: "slider-header", style: "margin-bottom: 3px;",
+                            span { style: "color: var(--neon-yellow); font-weight: bold; font-size: 1.35vh;", "Fluxo / Concentração Iônica:" }
+                        }
+                        select {
+                            style: "width: 100%; padding: 4px 6px; border-radius: 4px; background: #161616; color: var(--text-main); border: 1px solid var(--neon-yellow); font-size: 1.3vh; cursor: pointer;",
+                            value: "{ion_var_idx()}",
+                            onchange: move |e| {
+                                if let Ok(idx) = e.value().parse::<usize>() {
+                                    ion_var_idx.set(idx);
+                                }
+                            },
+                            option { value: "0", selected: ion_var_idx() == 0, "[Ca²⁺]ᵢ Cálcio Citosólico (µM)" }
+                            option { value: "1", selected: ion_var_idx() == 1, "[Na⁺]ᵢ Sódio Citosólico (mM)" }
+                            option { value: "2", selected: ion_var_idx() == 2, "[K⁺]ᵢ Potássio Citosólico (mM)" }
+                            option { value: "3", selected: ion_var_idx() == 3, "[Ca²⁺]ₛᵣ Cálcio no Retículo (mM)" }
+                            option { value: "4", selected: ion_var_idx() == 4, "I_CaL Corrente de Cálcio L (pA/pF)" }
+                            option { value: "5", selected: ion_var_idx() == 5, "I_Na Corrente Rápida de Sódio (pA/pF)" }
+                            option { value: "6", selected: ion_var_idx() == 6, "I_K Corrente de Potássio (pA/pF)" }
+                            option { value: "7", selected: ion_var_idx() == 7, "I_f Corrente Marcapasso Funny (pA/pF)" }
+                        }
+                    }
+                }
+
+                Accordion { index: 3, label: "3. 電解質 // Íons e Eletrólitos".to_string(), active_accordion,
                     Slider {
                         label: "Potássio [K+]_o".to_string(),
                         min: 2.0, max: 8.5, step: 0.1, default_val: 5.4, unit: " mEq/L".to_string(),
@@ -517,7 +579,7 @@ fn App() -> Element {
                     }
                 }
 
-                Accordion { index: 2, label: "2. 自律神経 // Sistema Nervoso Autônomo".to_string(), active_accordion,
+                Accordion { index: 4, label: "4. 自律神経 // Sistema Nervoso Autônomo".to_string(), active_accordion,
                     Slider {
                         label: "Tônus Simpático".to_string(),
                         min: 0.0, max: 100.0, step: 1.0, default_val: 0.0, unit: "%".to_string(),
@@ -532,7 +594,7 @@ fn App() -> Element {
                     }
                 }
 
-                Accordion { index: 3, label: "3. 抗不整脈薬 // Fármacos Antiarrítmicos".to_string(), active_accordion,
+                Accordion { index: 5, label: "5. 抗不整脈薬 // Fármacos Antiarrítmicos".to_string(), active_accordion,
                     Slider {
                         label: "Bloq. Na+ (Lidocaína)".to_string(),
                         min: 0.0, max: 100.0, step: 1.0, default_val: 0.0, unit: "%".to_string(),
@@ -559,7 +621,7 @@ fn App() -> Element {
                     }
                 }
 
-                Accordion { index: 4, label: "4. 病態生理 // Condições Patológicas".to_string(), active_accordion,
+                Accordion { index: 6, label: "6. 病態生理 // Condições Patológicas".to_string(), active_accordion,
                     Slider {
                         label: "Nível de Isquemia".to_string(),
                         min: 0.0, max: 100.0, step: 1.0, default_val: 0.0, unit: "%".to_string(),
@@ -574,7 +636,7 @@ fn App() -> Element {
                     }
                 }
 
-                Accordion { index: 5, label: "5. 生体音響 // Monitorização & Áudio".to_string(), active_accordion,
+                Accordion { index: 7, label: "7. 生体音響 // Monitorização & Áudio".to_string(), active_accordion,
                     Checkbox { label: "🔊 Bip de Monitor (UTI - Onda R)".to_string(), color: "#2ecc71".to_string(), checked: sound_uti }
                     Checkbox { label: "🩺 Bulhas Cardíacas (B1 / B2)".to_string(), color: "#e74c3c".to_string(), checked: sound_bulhas }
                 }
@@ -613,7 +675,43 @@ fn App() -> Element {
                     canvas { id: "canvas-ecg" }
                 }
                 div { class: "canvas-wrapper",
-                    div { class: "canvas-label", "CH-03 [ カルシウム動態 // TRANSIENTE DE CÁLCIO (Ca²⁺) ]" }
+                    div { class: "canvas-label",
+                        span { "CH-03 [ イオン動態 // " }
+                        select {
+                            value: "{ion_cell_idx()}",
+                            onchange: move |evt| {
+                                if let Ok(idx) = evt.value().parse::<usize>() {
+                                    ion_cell_idx.set(idx);
+                                }
+                            },
+                            option { value: "4", selected: ion_cell_idx() == 4, "Endocárdio (TP06)" }
+                            option { value: "5", selected: ion_cell_idx() == 5, "Célula M (TP06)" }
+                            option { value: "6", selected: ion_cell_idx() == 6, "Epicárdio (TP06)" }
+                            option { value: "0", selected: ion_cell_idx() == 0, "Nó SA (Severi)" }
+                            option { value: "1", selected: ion_cell_idx() == 1, "Átrio (Courtemanche)" }
+                            option { value: "2", selected: ion_cell_idx() == 2, "Nó AV (Inada)" }
+                            option { value: "3", selected: ion_cell_idx() == 3, "Purkinje (Stewart)" }
+                            option { value: "7", selected: ion_cell_idx() == 7, "Fibroblasto (MacCannell)" }
+                        }
+                        span { " ➔ " }
+                        select {
+                            value: "{ion_var_idx()}",
+                            onchange: move |evt| {
+                                if let Ok(idx) = evt.value().parse::<usize>() {
+                                    ion_var_idx.set(idx);
+                                }
+                            },
+                            option { value: "0", selected: ion_var_idx() == 0, "[Ca²⁺]ᵢ Cálcio (µM)" }
+                            option { value: "1", selected: ion_var_idx() == 1, "[Na⁺]ᵢ Sódio (mM)" }
+                            option { value: "2", selected: ion_var_idx() == 2, "[K⁺]ᵢ Potássio (mM)" }
+                            option { value: "3", selected: ion_var_idx() == 3, "[Ca²⁺]ₛᵣ Retículo (mM)" }
+                            option { value: "4", selected: ion_var_idx() == 4, "I_CaL Cálcio L (pA/pF)" }
+                            option { value: "5", selected: ion_var_idx() == 5, "I_Na Sódio (pA/pF)" }
+                            option { value: "6", selected: ion_var_idx() == 6, "I_K Potássio (pA/pF)" }
+                            option { value: "7", selected: ion_var_idx() == 7, "I_f Funny (pA/pF)" }
+                        }
+                        span { " ]" }
+                    }
                     canvas { id: "canvas-ch3" }
                 }
                 div { class: "canvas-wrapper",

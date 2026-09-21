@@ -117,6 +117,8 @@ pub struct HeartSystem {
     t_t_wave: f64,
     ecg_lead: usize,
     prev_v_m: f64,
+    pub ion_cell: usize,
+    pub ion_var: usize,
 
     // Current smoothed metrics
     pub bpm: f64,
@@ -173,6 +175,8 @@ impl HeartSystem {
             t_t_wave: -1.0,
             ecg_lead: 1, // DII como derivação padrão
             prev_v_m: -85.0,
+            ion_cell: 4, // Endocárdio como padrão
+            ion_var: 0,  // [Ca2+]_i como padrão
             bpm: 75.0,
             pr: 160.0,
             qrs: 90.0,
@@ -528,7 +532,7 @@ impl HeartSystem {
                 batch.push(self.vent_endo.v);      // 4: Endocárdio
                 batch.push(self.vent_epi.v);       // 5: Epicárdio
                 batch.push(self.fibroblast.v);     // 6: Fibroblasto (MacCannell 2007)
-                batch.push(self.vent_endo.ca_i);   // 7: Transiente de Cálcio
+                batch.push(self.compute_selected_ion()); // 7: Variável Iônica / Corrente Celular Selecionada
                 batch.push(self.hemo.p_lv);        // 8: Pressão Ventricular Esquerda (LVP, mmHg)
                 batch.push(self.hemo.p_ao);        // 9: Pressão Aórtica (AoP, mmHg)
                 batch.push(self.compute_ecg());    // 10: ECG Dipolar Transmural
@@ -552,6 +556,128 @@ impl HeartSystem {
     pub fn get_aop(&self) -> f64 { self.hemo.p_ao }
     pub fn get_lvv(&self) -> f64 { self.hemo.v_lv }
     pub fn get_time(&self) -> f64 { self.time }
+
+    pub fn set_ion_cell(&mut self, cell: usize) {
+        self.ion_cell = cell % 8;
+    }
+
+    pub fn get_ion_cell(&self) -> usize {
+        self.ion_cell
+    }
+
+    pub fn set_ion_var(&mut self, var: usize) {
+        self.ion_var = var % 8;
+    }
+
+    pub fn get_ion_var(&self) -> usize {
+        self.ion_var
+    }
+
+    pub fn compute_selected_ion(&self) -> f64 {
+        match self.ion_var {
+            0 => {
+                // [Ca2+]_i em micromolar (µM)
+                match self.ion_cell {
+                    0 => self.sa_node.s[1] * 1000.0,
+                    1 => self.atrium.ca_i * 1000.0,
+                    2 => self.av_node.cai * 1000.0,
+                    3 => self.purkinje.ca_i * 1000.0,
+                    4 => self.vent_endo.ca_i * 1000.0,
+                    5 => self.vent_m.ca_i * 1000.0,
+                    6 => self.vent_epi.ca_i * 1000.0,
+                    _ => 0.1, // Fibroblasto basal
+                }
+            }
+            1 => {
+                // [Na+]_i em millimolar (mM)
+                match self.ion_cell {
+                    0 => self.sa_node.s[2],
+                    1 => self.atrium.na_i,
+                    2 => self.av_node.nai,
+                    3 => self.purkinje.na_i,
+                    4 => self.vent_endo.na_i,
+                    5 => self.vent_m.na_i,
+                    6 => self.vent_epi.na_i,
+                    _ => 8.55,
+                }
+            }
+            2 => {
+                // [K+]_i em millimolar (mM)
+                match self.ion_cell {
+                    0 => self.sa_node.s[3],
+                    1 => self.atrium.k_i,
+                    2 => self.av_node.ki,
+                    3 => self.purkinje.k_i,
+                    4 => self.vent_endo.k_i,
+                    5 => self.vent_m.k_i,
+                    6 => self.vent_epi.k_i,
+                    _ => 140.0,
+                }
+            }
+            3 => {
+                // [Ca2+]_SR em millimolar (mM)
+                match self.ion_cell {
+                    0 => self.sa_node.s[23],
+                    1 => self.atrium.ca_rel,
+                    2 => self.av_node.ca_rel,
+                    3 => self.purkinje.ca_sr,
+                    4 => self.vent_endo.ca_sr,
+                    5 => self.vent_m.ca_sr,
+                    6 => self.vent_epi.ca_sr,
+                    _ => 0.0,
+                }
+            }
+            4 => {
+                // Corrente I_CaL estimada (pA/pF)
+                match self.ion_cell {
+                    0 => -self.sa_node.a[72].abs() * 0.1,
+                    1 => -12.0 * self.atrium.d * self.atrium.f * ((self.atrium.v - 65.0) / 60.0).clamp(-1.0, 1.0),
+                    2 => -8.0 * self.av_node.d_gate * self.av_node.f_gate * ((self.av_node.v - 60.0) / 60.0).clamp(-1.0, 1.0),
+                    3 => -14.0 * self.purkinje.d * self.purkinje.f * ((self.purkinje.v - 65.0) / 60.0).clamp(-1.0, 1.0),
+                    4 => -15.0 * self.vent_endo.d * self.vent_endo.f * ((self.vent_endo.v - 65.0) / 60.0).clamp(-1.0, 1.0),
+                    5 => -15.0 * self.vent_m.d * self.vent_m.f * ((self.vent_m.v - 65.0) / 60.0).clamp(-1.0, 1.0),
+                    6 => -15.0 * self.vent_epi.d * self.vent_epi.f * ((self.vent_epi.v - 65.0) / 60.0).clamp(-1.0, 1.0),
+                    _ => 0.0,
+                }
+            }
+            5 => {
+                // Corrente I_Na estimada (pA/pF)
+                match self.ion_cell {
+                    0 => -self.sa_node.a[68].abs() * 0.05,
+                    1 => -60.0 * self.atrium.m.powi(3) * self.atrium.h * self.atrium.j * ((self.atrium.v - 70.0) / 70.0).clamp(-1.0, 1.0),
+                    2 => -20.0 * self.av_node.m_gate.powi(3) * self.av_node.h1_gate * ((self.av_node.v - 65.0) / 65.0).clamp(-1.0, 1.0),
+                    3 => -75.0 * self.purkinje.m.powi(3) * self.purkinje.h * self.purkinje.j * ((self.purkinje.v - 70.0) / 70.0).clamp(-1.0, 1.0),
+                    4 => -70.0 * self.vent_endo.m.powi(3) * self.vent_endo.h * self.vent_endo.j * ((self.vent_endo.v - 70.0) / 70.0).clamp(-1.0, 1.0),
+                    5 => -70.0 * self.vent_m.m.powi(3) * self.vent_m.h * self.vent_m.j * ((self.vent_m.v - 70.0) / 70.0).clamp(-1.0, 1.0),
+                    6 => -70.0 * self.vent_epi.m.powi(3) * self.vent_epi.h * self.vent_epi.j * ((self.vent_epi.v - 70.0) / 70.0).clamp(-1.0, 1.0),
+                    _ => 0.0,
+                }
+            }
+            6 => {
+                // Corrente I_K repolarizante estimada (pA/pF)
+                match self.ion_cell {
+                    0 => self.sa_node.a[76] * 0.2,
+                    1 => 2.5 * self.atrium.xr * ((self.atrium.v + 85.0) / 85.0).clamp(0.0, 2.0),
+                    2 => 2.0 * self.av_node.paf_gate * ((self.av_node.v + 85.0) / 85.0).clamp(0.0, 2.0),
+                    3 => 3.0 * self.purkinje.xr1 * self.purkinje.xr2 * ((self.purkinje.v + 85.0) / 85.0).clamp(0.0, 2.0),
+                    4 => 3.2 * self.vent_endo.xr1 * self.vent_endo.xr2 * ((self.vent_endo.v + 85.0) / 85.0).clamp(0.0, 2.0),
+                    5 => 3.2 * self.vent_m.xr1 * self.vent_m.xr2 * ((self.vent_m.v + 85.0) / 85.0).clamp(0.0, 2.0),
+                    6 => 3.2 * self.vent_epi.xr1 * self.vent_epi.xr2 * ((self.vent_epi.v + 85.0) / 85.0).clamp(0.0, 2.0),
+                    _ => 0.2,
+                }
+            }
+            7 => {
+                // Corrente Funny I_f (pA/pF)
+                match self.ion_cell {
+                    0 => -self.sa_node.a[65].abs() * 0.15,
+                    2 => -3.5 * self.av_node.y_gate * ((self.av_node.v + 20.0) / 70.0).clamp(0.0, 1.5),
+                    3 => -4.0 * self.purkinje.y * ((self.purkinje.v + 20.0) / 70.0).clamp(0.0, 1.5),
+                    _ => 0.0, // Células ventriculares e atriais não possuem I_f significativo
+                }
+            }
+            _ => 0.0,
+        }
+    }
 
     pub fn set_ecg_lead(&mut self, lead: usize) {
         self.ecg_lead = lead % 12;
