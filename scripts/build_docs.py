@@ -590,6 +590,12 @@ DOCS_MAP = [
         "dest": "roteiro.html",
         "title": "Guia Didático e Roteiro de Aulas Práticas",
         "active": "roteiro"
+    },
+    {
+        "src": "docs/terminologia_kanji.md",
+        "dest": "terminologia.html",
+        "title": "Terminologia Médica em Kanji e Guia Bilíngue",
+        "active": "terminologia"
     }
 ]
 
@@ -652,6 +658,7 @@ def main():
         raw_text = raw_text.replace("docs/modelos.md", "./modelos.html")
         raw_text = raw_text.replace("docs/roteiro_aulas_praticas.md", "./roteiro.html")
         raw_text = raw_text.replace("docs/identidade_visual.md", "./identidade.html")
+        raw_text = raw_text.replace("docs/terminologia_kanji.md", "./terminologia.html")
         raw_text = raw_text.replace("ROADMAP.md", "./roadmap.html")
         raw_text = raw_text.replace("ARCHITECTURE.md", "./arquitetura.html")
         raw_text = raw_text.replace("README.md", "./index.html")
