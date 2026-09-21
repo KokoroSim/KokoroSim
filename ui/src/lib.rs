@@ -60,6 +60,21 @@ fn App() -> Element {
     let mut ion_cell_idx = use_signal(|| 4usize); // Endocárdio por padrão
     let mut ion_var_idx = use_signal(|| 0usize);  // [Ca2+]_i por padrão
 
+    // Seletor de Especialidade / Abas de Laboratório
+    let mut active_tab = use_signal(|| "cardio".to_string()); // "cardio" ou "pulmo"
+
+    // Parâmetros e Métricas Respiratórias
+    let mut resp_rate = use_signal(|| 15.0); // irpm
+    let mut resp_raw = use_signal(|| 1.5);   // cmH2O/(L/s)
+    let mut resp_crs = use_signal(|| 0.10);  // L/cmH2O
+    let mut rsa_toggle = use_signal(|| true); // Arritmia Sinusal Respiratória
+    let mut trigger_spiro = use_signal(|| false);
+    let mut spiro_vef1 = use_signal(|| 3.80);
+    let mut spiro_cvf = use_signal(|| 4.60);
+    let mut spiro_tiff = use_signal(|| 82.6);
+    let mut spiro_pef = use_signal(|| 8.50);
+    let mut is_in_spiro = use_signal(|| false);
+
     // Dynamic HUD metrics state
     let mut bpm = use_signal(|| 75.0);
     let mut pr = use_signal(|| 160.0);
@@ -82,9 +97,15 @@ fn App() -> Element {
         let mut pa_plotter_epi = Plotter::new("canvas-pa", buffer_capacity); // Verde Menta para Epicárdio
         let mut pa_plotter_fib = Plotter::new("canvas-pa", buffer_capacity); // Lilás para Fibroblasto
         let mut ecg_plotter = Plotter::new("canvas-ecg", buffer_capacity); // Neon Cyan para ECG Dipolar
-        let mut ch3_plotter = Plotter::new("canvas-ch3", buffer_capacity); // Cálcio
+        let mut ch3_plotter = Plotter::new("canvas-ch3", buffer_capacity); // Cálcio / Íons
         let mut hemo_plotter_lvp = Plotter::new("canvas-ch4", buffer_capacity); // LVP Ventricular (Ciano)
         let mut hemo_plotter_aop = Plotter::new("canvas-ch4", buffer_capacity); // AoP Aórtica (Coral)
+
+        // Plotters Respiratórios Dedicados (Pulmo Lab)
+        let mut resp_plotter_vol = Plotter::new("canvas-resp-vol", buffer_capacity);   // Espirograma V x t (Turquesa)
+        let mut resp_plotter_flow = Plotter::new("canvas-resp-flow", buffer_capacity); // Fluxo V̇ x t (Amarelo)
+        let mut resp_plotter_ppl = Plotter::new("canvas-resp-ppl", buffer_capacity);   // Pressão Intrapleural (Coral)
+        let mut resp_plotter_rsa = Plotter::new("canvas-resp-rsa", buffer_capacity);   // Acoplamento Cardiorrespiratório RSA (Carmine)
 
         let mut audio = audio::AudioManager::new();
 
@@ -104,6 +125,10 @@ fn App() -> Element {
             ch3_plotter.set_mode(current_mode);
             hemo_plotter_lvp.set_mode(current_mode);
             hemo_plotter_aop.set_mode(current_mode);
+            resp_plotter_vol.set_mode(current_mode);
+            resp_plotter_flow.set_mode(current_mode);
+            resp_plotter_ppl.set_mode(current_mode);
+            resp_plotter_rsa.set_mode(current_mode);
 
             if trigger_clear_ghost() {
                 pa_plotter_sa.clear_ghost();
@@ -117,6 +142,10 @@ fn App() -> Element {
                 ch3_plotter.clear_ghost();
                 hemo_plotter_lvp.clear_ghost();
                 hemo_plotter_aop.clear_ghost();
+                resp_plotter_vol.clear_ghost();
+                resp_plotter_flow.clear_ghost();
+                resp_plotter_ppl.clear_ghost();
+                resp_plotter_rsa.clear_ghost();
                 trigger_clear_ghost.set(false);
                 ghost_status_str.set("📸 Capturar".to_string());
             }
@@ -133,6 +162,10 @@ fn App() -> Element {
                 ch3_plotter.capture_ghost();
                 hemo_plotter_lvp.capture_ghost();
                 hemo_plotter_aop.capture_ghost();
+                resp_plotter_vol.capture_ghost();
+                resp_plotter_flow.capture_ghost();
+                resp_plotter_ppl.capture_ghost();
+                resp_plotter_rsa.capture_ghost();
                 trigger_capture_ghost.set(false);
                 ghost_status_str.set("⏳ Aguardando Nó SA...".to_string());
             }
@@ -168,6 +201,10 @@ fn App() -> Element {
                 ch3_plotter.arm_single();
                 hemo_plotter_lvp.arm_single();
                 hemo_plotter_aop.arm_single();
+                resp_plotter_vol.arm_single();
+                resp_plotter_flow.arm_single();
+                resp_plotter_ppl.arm_single();
+                resp_plotter_rsa.arm_single();
                 trigger_arm_single.set(false);
             }
             
@@ -190,6 +227,14 @@ fn App() -> Element {
                 system.write().set_ecg_lead(ecg_lead_idx());
                 system.write().set_ion_cell(ion_cell_idx());
                 system.write().set_ion_var(ion_var_idx());
+
+                // Parâmetros e Gatilhos Respiratórios
+                if trigger_spiro() {
+                    system.write().trigger_spirometry();
+                    trigger_spiro.set(false);
+                }
+                system.write().set_respiratory_params(resp_rate(), resp_raw(), resp_crs());
+                system.write().set_rsa_enabled(rsa_toggle());
                 
                 // 2. Step Engine
                 // Amostragem compacta: 1 ponto a cada 5.0ms (downsample=500 com dt=0.01ms)
@@ -201,10 +246,10 @@ fn App() -> Element {
                 let downsample = 500; // 5ms por ponto amostrado (500 * 0.01ms = 5.0ms)
                 let batch = system.write().run_batch(dt, steps, downsample);
                 
-                // Batch achatado de 12 canais: [sa, av, atr, purk, endo, epi, fib, cai, lvp, aop, ecg, sound_events]
-                let chunk_size = 12;
+                // Batch achatado de 15 canais: [sa, av, atr, purk, endo, epi, fib, cai, lvp, aop, ecg, sound_events, vol, flow, p_pl]
+                let chunk_size = 15;
                 for chunk in batch.chunks(chunk_size) {
-                    if chunk.len() == 12 {
+                    if chunk.len() == 15 {
                         let sa = chunk[0];
                         let av = chunk[1];
                         let atrium = chunk[2];
@@ -218,6 +263,9 @@ fn App() -> Element {
                         let ecg = chunk[10];
                         let sound_code = chunk[11] as u32;
                         let is_sa_fire = (sound_code & 8) != 0;
+                        let vol = chunk[12];
+                        let flow = chunk[13];
+                        let ppl = chunk[14];
                         
                         pa_plotter_sa.push(sa, sound_code, is_sa_fire);
                         pa_plotter_av.push(av, sound_code, is_sa_fire);
@@ -231,6 +279,12 @@ fn App() -> Element {
                         ch3_plotter.push(cai, sound_code, is_sa_fire);
                         hemo_plotter_lvp.push(lvp, sound_code, is_sa_fire);
                         hemo_plotter_aop.push(aop, sound_code, is_sa_fire);
+
+                        // Traçados do Pulmo Lab
+                        resp_plotter_vol.push(vol, sound_code, is_sa_fire);
+                        resp_plotter_flow.push(flow, sound_code, is_sa_fire);
+                        resp_plotter_ppl.push(ppl, sound_code, is_sa_fire);
+                        resp_plotter_rsa.push(sa, sound_code, is_sa_fire);
 
                         // Disparo dos eventos acústicos de acordo com as checkboxes ativas
                         if (sound_code & 1) != 0 && sound_uti() {
@@ -247,80 +301,99 @@ fn App() -> Element {
             }
 
             // 3. Draw to Canvas
-            // Flags de visibilidade das camadas celulares
-            let any_epi = show_epi();
-            let any_endo = show_endo();
-            let any_purk = show_purkinje();
-            let any_atrium = show_atrium();
-            let any_av = show_av();
-            let any_sa = show_sa();
-            let any_fib = show_fibroblast();
-
             let ghost = show_ghost();
             let uti_m = sound_uti();
             let bulhas_m = sound_bulhas();
 
-            // O primeiro traçado a ser desenhado limpa o canvas e plota as linhas verticais de áudio
-            let mut cleared = false;
+            if active_tab() == "cardio" {
+                // Flags de visibilidade das camadas celulares
+                let any_epi = show_epi();
+                let any_endo = show_endo();
+                let any_purk = show_purkinje();
+                let any_atrium = show_atrium();
+                let any_av = show_av();
+                let any_sa = show_sa();
+                let any_fib = show_fibroblast();
 
-            if any_sa {
-                pa_plotter_sa.draw(-90.0, 50.0, "#e74c3c", !cleared, ghost, uti_m, bulhas_m, false, None); // Nó SA: Vermelho (#e74c3c)
-                cleared = true;
-            }
-            if any_atrium {
-                pa_plotter_atrium.draw(-90.0, 50.0, "#3498db", !cleared, ghost, uti_m, bulhas_m, false, None); // Átrio: Azul (#3498db)
-                cleared = true;
-            }
-            if any_av {
-                pa_plotter_av.draw(-90.0, 50.0, "#f1c40f", !cleared, ghost, uti_m, bulhas_m, false, None); // Nó AV: Amarelo (#f1c40f)
-                cleared = true;
-            }
-            if any_purk {
-                pa_plotter_purk.draw(-90.0, 50.0, "#e67e22", !cleared, ghost, uti_m, bulhas_m, false, None); // Purkinje: Laranja (#e67e22)
-                cleared = true;
-            }
-            if any_endo {
-                pa_plotter_endo.draw(-90.0, 50.0, "#2ecc71", !cleared, ghost, uti_m, bulhas_m, false, None); // Endocárdio: Verde Clínico (#2ecc71)
-                cleared = true;
-            }
-            if any_epi {
-                pa_plotter_epi.draw(-90.0, 50.0, "#1abc9c", !cleared, ghost, uti_m, bulhas_m, false, None); // Epicárdio: Verde Menta (#1abc9c)
-                cleared = true;
-            }
-            if any_fib {
-                pa_plotter_fib.draw(-90.0, 50.0, "#a29bfe", !cleared, ghost, uti_m, bulhas_m, false, None); // Fibroblasto: Lilás (#a29bfe)
-                cleared = true;
-            }
+                // O primeiro traçado a ser desenhado limpa o canvas e plota as linhas verticais de áudio
+                let mut cleared = false;
 
-            // Se nenhuma camada estiver ativa, limpa a tela e plota os marcadores
-            if !cleared {
-                pa_plotter_endo.draw(-90.0, 50.0, "#000000", true, false, uti_m, bulhas_m, false, None);
-            }
-            pa_plotter_endo.draw_scales(-90.0, 50.0, false, "+50 mV", "-20 mV", "-90 mV");
-            
-            // CH-02: ECG Calibrado em mV com Grade Isotrópica (40ms x 0.1mV)
-            ecg_plotter.draw(-0.5, 1.5, "#00f2fe", true, ghost, uti_m, bulhas_m, true, None);
-            ecg_plotter.draw_scales(-0.5, 1.5, true, "+1.5 mV", "0.0 mV", "-0.5 mV");
+                if any_sa {
+                    pa_plotter_sa.draw(-90.0, 50.0, "#e74c3c", !cleared, ghost, uti_m, bulhas_m, false, None); // Nó SA: Vermelho (#e74c3c)
+                    cleared = true;
+                }
+                if any_atrium {
+                    pa_plotter_atrium.draw(-90.0, 50.0, "#3498db", !cleared, ghost, uti_m, bulhas_m, false, None); // Átrio: Azul (#3498db)
+                    cleared = true;
+                }
+                if any_av {
+                    pa_plotter_av.draw(-90.0, 50.0, "#f1c40f", !cleared, ghost, uti_m, bulhas_m, false, None); // Nó AV: Amarelo (#f1c40f)
+                    cleared = true;
+                }
+                if any_purk {
+                    pa_plotter_purk.draw(-90.0, 50.0, "#e67e22", !cleared, ghost, uti_m, bulhas_m, false, None); // Purkinje: Laranja (#e67e22)
+                    cleared = true;
+                }
+                if any_endo {
+                    pa_plotter_endo.draw(-90.0, 50.0, "#2ecc71", !cleared, ghost, uti_m, bulhas_m, false, None); // Endocárdio: Verde Clínico (#2ecc71)
+                    cleared = true;
+                }
+                if any_epi {
+                    pa_plotter_epi.draw(-90.0, 50.0, "#1abc9c", !cleared, ghost, uti_m, bulhas_m, false, None); // Epicárdio: Verde Menta (#1abc9c)
+                    cleared = true;
+                }
+                if any_fib {
+                    pa_plotter_fib.draw(-90.0, 50.0, "#a29bfe", !cleared, ghost, uti_m, bulhas_m, false, None); // Fibroblasto: Lilás (#a29bfe)
+                    cleared = true;
+                }
 
-            // CH-03: Variável Iônica / Cinética Celular Dinâmica
-            let (min_ch3, max_ch3, color_ch3, top_l, mid_l, bot_l) = match ion_var_idx() {
-                0 => (0.0, 2.0, "#a29bfe", "2.0 µM", "1.0 µM", "0.0 µM"),
-                1 => (0.0, 25.0, "#f1c40f", "25 mM", "12.5 mM", "0 mM"),
-                2 => (100.0, 160.0, "#e74c3c", "160 mM", "130 mM", "100 mM"),
-                3 => (0.0, 5.0, "#00cec9", "5.0 mM", "2.5 mM", "0.0 mM"),
-                4 => (-16.0, 2.0, "#fdcb6e", "+2 pA/pF", "-7 pA/pF", "-16 pA/pF"),
-                5 => (-80.0, 10.0, "#e17055", "+10 pA/pF", "-35 pA/pF", "-80 pA/pF"),
-                6 => (-1.0, 5.0, "#0984e3", "+5.0 pA/pF", "+2.0 pA/pF", "-1.0 pA/pF"),
-                7 => (-6.0, 1.0, "#00b894", "+1.0 pA/pF", "-2.5 pA/pF", "-6.0 pA/pF"),
-                _ => (0.0, 2.0, "#a29bfe", "2.0 µM", "1.0 µM", "0.0 µM"),
-            };
-            ch3_plotter.draw(min_ch3, max_ch3, color_ch3, true, ghost, uti_m, bulhas_m, false, None);
-            ch3_plotter.draw_scales(min_ch3, max_ch3, false, top_l, mid_l, bot_l);
-            
-            // CH-04: Hemodinâmica: LVP e AoP sobrepostas (0 a 140 mmHg) com marcadores verticais
-            hemo_plotter_lvp.draw(0.0, 140.0, "#00f2fe", true, ghost, uti_m, bulhas_m, false, None);
-            hemo_plotter_aop.draw(0.0, 140.0, "#ff1754", false, ghost, uti_m, bulhas_m, false, None);
-            hemo_plotter_aop.draw_scales(0.0, 140.0, false, "140 mmHg", "70 mmHg", "0 mmHg");
+                // Se nenhuma camada estiver ativa, limpa a tela e plota os marcadores
+                if !cleared {
+                    pa_plotter_endo.draw(-90.0, 50.0, "#000000", true, false, uti_m, bulhas_m, false, None);
+                }
+                pa_plotter_endo.draw_scales(-90.0, 50.0, false, "+50 mV", "-20 mV", "-90 mV");
+                
+                // CH-02: ECG Calibrado em mV com Grade Isotrópica (40ms x 0.1mV)
+                ecg_plotter.draw(-0.5, 1.5, "#00f2fe", true, ghost, uti_m, bulhas_m, true, None);
+                ecg_plotter.draw_scales(-0.5, 1.5, true, "+1.5 mV", "0.0 mV", "-0.5 mV");
+
+                // CH-03: Variável Iônica / Cinética Celular Dinâmica
+                let (min_ch3, max_ch3, color_ch3, top_l, mid_l, bot_l) = match ion_var_idx() {
+                    0 => (0.0, 2.0, "#a29bfe", "2.0 µM", "1.0 µM", "0.0 µM"),
+                    1 => (0.0, 25.0, "#f1c40f", "25 mM", "12.5 mM", "0 mM"),
+                    2 => (100.0, 160.0, "#e74c3c", "160 mM", "130 mM", "100 mM"),
+                    3 => (0.0, 5.0, "#00cec9", "5.0 mM", "2.5 mM", "0.0 mM"),
+                    4 => (-16.0, 2.0, "#fdcb6e", "+2 pA/pF", "-7 pA/pF", "-16 pA/pF"),
+                    5 => (-80.0, 10.0, "#e17055", "+10 pA/pF", "-35 pA/pF", "-80 pA/pF"),
+                    6 => (-1.0, 5.0, "#0984e3", "+5.0 pA/pF", "+2.0 pA/pF", "-1.0 pA/pF"),
+                    7 => (-6.0, 1.0, "#00b894", "+1.0 pA/pF", "-2.5 pA/pF", "-6.0 pA/pF"),
+                    _ => (0.0, 2.0, "#a29bfe", "2.0 µM", "1.0 µM", "0.0 µM"),
+                };
+                ch3_plotter.draw(min_ch3, max_ch3, color_ch3, true, ghost, uti_m, bulhas_m, false, None);
+                ch3_plotter.draw_scales(min_ch3, max_ch3, false, top_l, mid_l, bot_l);
+                
+                // CH-04: Hemodinâmica: LVP e AoP sobrepostas (0 a 140 mmHg) com marcadores verticais
+                hemo_plotter_lvp.draw(0.0, 140.0, "#00f2fe", true, ghost, uti_m, bulhas_m, false, None);
+                hemo_plotter_aop.draw(0.0, 140.0, "#ff1754", false, ghost, uti_m, bulhas_m, false, None);
+                hemo_plotter_aop.draw_scales(0.0, 140.0, false, "140 mmHg", "70 mmHg", "0 mmHg");
+            } else {
+                // PULMO LAB:
+                // CH-01: Volume Pulmonar (V x t) de 0.0 a 7.0 L
+                resp_plotter_vol.draw(0.0, 7.0, "#00f2fe", true, ghost, uti_m, bulhas_m, false, None);
+                resp_plotter_vol.draw_scales(0.0, 7.0, false, "7.0 L (CPT)", "2.8 L (CRF)", "0.0 L");
+
+                // CH-02: Fluxo Aéreo (V̇ x t) de -8.0 a 12.0 L/s
+                resp_plotter_flow.draw(-8.0, 12.0, "#f1c40f", true, ghost, uti_m, bulhas_m, false, None);
+                resp_plotter_flow.draw_scales(-8.0, 12.0, false, "+10 L/s (PEF)", "0.0 L/s", "-6.0 L/s");
+
+                // CH-03: Pressão Intrapleural (P_pl x t) de -30.0 a 35.0 cmH2O
+                resp_plotter_ppl.draw(-30.0, 35.0, "#ff7675", true, ghost, uti_m, bulhas_m, false, None);
+                resp_plotter_ppl.draw_scales(-30.0, 35.0, false, "+30 cmH₂O", "0 cmH₂O", "-25 cmH₂O");
+
+                // CH-04: Acoplamento Cardiorrespiratório RSA (Disparo Sinusal guiado pela Respiração)
+                resp_plotter_rsa.draw(-90.0, 50.0, "#a29bfe", true, ghost, uti_m, bulhas_m, false, None);
+                resp_plotter_rsa.draw_scales(-90.0, 50.0, false, "+50 mV (Nó SA)", "-20 mV", "-90 mV");
+            }
 
             // 4. Update HUD metrics at ~10 Hz (every 6 frames)
             if !is_paused() {
@@ -333,6 +406,12 @@ fn App() -> Element {
                     qt.set(metrics.qt);
                     v_rest.set(metrics.v_rest);
                     pr_rr.set(metrics.pr_rr);
+
+                    spiro_vef1.set(system.read().get_vef1());
+                    spiro_cvf.set(system.read().get_cvf());
+                    spiro_tiff.set(system.read().get_tiffeneau());
+                    spiro_pef.set(system.read().get_pef());
+                    is_in_spiro.set(system.read().is_in_spirometry());
                 }
             }
         }
@@ -368,6 +447,11 @@ fn App() -> Element {
         trigger_arm_single.set(false);
         is_paused.set(false);
         ghost_status_str.set("📸 Capturar".to_string());
+        resp_rate.set(15.0);
+        resp_raw.set(1.5);
+        resp_crs.set(0.10);
+        rsa_toggle.set(true);
+        trigger_spiro.set(false);
         system.set(HeartSystem::new());
         active_accordion.set(None);
     };
@@ -422,13 +506,34 @@ fn App() -> Element {
                         span { class: "hud-sim", "sim" }
                     }
                 }
+                div { class: "lab-tabs",
+                    button {
+                        class: if active_tab() == "cardio" { "lab-tab active" } else { "lab-tab" },
+                        onclick: move |_| active_tab.set("cardio".to_string()),
+                        "💓 CARDIO LAB"
+                    }
+                    button {
+                        class: if active_tab() == "pulmo" { "lab-tab active pulmo" } else { "lab-tab" },
+                        onclick: move |_| active_tab.set("pulmo".to_string()),
+                        "🫁 PULMO LAB"
+                    }
+                }
                 div { class: "hud-metrics",
-                    div { class: "hud-item", "心拍数 // FC: ", span { id: "hud-bpm", "{bpm_str} BPM" } }
-                    div { class: "hud-item", "PR間隔 // PR: ", span { id: "hud-pr", "{pr_str}" } }
-                    div { class: "hud-item", "QRS幅 // QRS: ", span { id: "hud-qrs", "{qrs_str}" } }
-                    div { class: "hud-item", "QT間隔 // QT: ", span { id: "hud-qt", "{qt_str}" } }
-                    div { class: "hud-item", "静止電位 // V.Rep: ", span { id: "hud-vrest", "{vrest_str}" } }
-                    div { class: "hud-item", "PR/RR: ", span { id: "hud-pr-rr", "{pr_rr_str}" } }
+                    if active_tab() == "cardio" {
+                        div { class: "hud-item", "心拍数 // FC: ", span { id: "hud-bpm", "{bpm_str} BPM" } }
+                        div { class: "hud-item", "PR間隔 // PR: ", span { id: "hud-pr", "{pr_str}" } }
+                        div { class: "hud-item", "QRS幅 // QRS: ", span { id: "hud-qrs", "{qrs_str}" } }
+                        div { class: "hud-item", "QT間隔 // QT: ", span { id: "hud-qt", "{qt_str}" } }
+                        div { class: "hud-item", "静止電位 // V.Rep: ", span { id: "hud-vrest", "{vrest_str}" } }
+                        div { class: "hud-item", "PR/RR: ", span { id: "hud-pr-rr", "{pr_rr_str}" } }
+                    } else {
+                        div { class: "hud-item", "呼吸数 // FR: ", span { id: "hud-rr", "{resp_rate():.0} irpm" } }
+                        div { class: "hud-item", "一秒量 // VEF₁: ", span { id: "hud-vef1", "{spiro_vef1():.2} L" } }
+                        div { class: "hud-item", "肺活量 // CVF: ", span { id: "hud-cvf", "{spiro_cvf():.2} L" } }
+                        div { class: "hud-item", "ティフノー // VEF₁/CVF: ", span { id: "hud-tiff", "{spiro_tiff():.1}%" } }
+                        div { class: "hud-item", "最大呼気 // PEF: ", span { id: "hud-pef", "{spiro_pef():.1} L/s" } }
+                        div { class: "hud-item", "気道抵抗 // Raw: ", span { id: "hud-raw", "{resp_raw():.1} cmH₂O" } }
+                    }
                 }
             }
 
@@ -456,7 +561,8 @@ fn App() -> Element {
                     }
                 }
 
-                Accordion { index: 0, label: "0. 画面表示 // Osciloscópio & Fantasma".to_string(), active_accordion,
+                if active_tab() == "cardio" {
+                    Accordion { index: 0, label: "0. 画面表示 // Osciloscópio & Fantasma".to_string(), active_accordion,
                     div { style: "margin-bottom: 6px;",
                         div { class: "slider-header", style: "margin-bottom: 3px;",
                             span { style: "color: var(--neon-cyan); font-weight: bold; font-size: 1.4vh;", "Modo do Osciloscópio:" }
@@ -640,97 +746,223 @@ fn App() -> Element {
                     Checkbox { label: "🔊 Bip de Monitor (UTI - Onda R)".to_string(), color: "#2ecc71".to_string(), checked: sound_uti }
                     Checkbox { label: "🩺 Bulhas Cardíacas (B1 / B2)".to_string(), color: "#e74c3c".to_string(), checked: sound_bulhas }
                 }
+                } else {
+                    Accordion { index: 10, label: "1. 換気力学 // Mecânica Ventilatória".to_string(), active_accordion,
+                            Slider {
+                                label: "Frequência Respiratória".to_string(),
+                                min: 6.0, max: 40.0, step: 1.0, default_val: 15.0, unit: " irpm".to_string(),
+                                help: Some("Frequência dos ciclos ventilatórios espontâneos (eupneia de repouso: 12-16 irpm).".to_string()),
+                                val: resp_rate
+                            }
+                            Slider {
+                                label: "Resistência Aérea (Raw)".to_string(),
+                                min: 0.5, max: 12.0, step: 0.1, default_val: 1.5, unit: " cmH₂O/(L/s)".to_string(),
+                                help: Some("Resistência friccional das vias aéreas traqueobrônquicas. Na asma e DPOC, Raw eleva-se (> 4-6 cmH₂O/(L/s)), retardando o esvaziamento alveolar e reduzindo VEF1 e Tiffeneau.".to_string()),
+                                val: resp_raw
+                            }
+                            Slider {
+                                label: "Complacência do Sistema (Crs)".to_string(),
+                                min: 0.02, max: 0.25, step: 0.01, default_val: 0.10, unit: " L/cmH₂O".to_string(),
+                                help: Some("Distensibilidade elástica pulmonar e da caixa torácica (Normal: ~0.10 L/cmH₂O). Reduzida na fibrose pulmonar e SDRA (< 0.05 L/cmH₂O); aumentada no enfisema (> 0.15 L/cmH₂O).".to_string()),
+                                val: resp_crs
+                            }
+                            Checkbox {
+                                label: "🫀 Modulação Autonômica RSA (Nó SA)".to_string(),
+                                color: "#2ecc71".to_string(),
+                                checked: rsa_toggle
+                            }
+                        }
+
+                        Accordion { index: 11, label: "2. スパイロメトリー // Espirometria Forçada".to_string(), active_accordion,
+                            button {
+                                class: if is_in_spiro() { "btn-spiro-trigger active" } else { "btn-spiro-trigger" },
+                                onclick: move |_| trigger_spiro.set(true),
+                                if is_in_spiro() { "⏳ EXECUTANDO MANOBRA FORÇADA..." } else { "💨 INICIAR MANOBRA DE ESPIROMETRIA" }
+                            }
+
+                            div { class: "spiro-results-grid",
+                                div { class: "spiro-card",
+                                    span { class: "spiro-card-title", "VEF₁ (Volume 1º s)" }
+                                    span { class: "spiro-card-val", "{spiro_vef1():.2} L" }
+                                }
+                                div { class: "spiro-card",
+                                    span { class: "spiro-card-title", "CVF (Capacidade Vital)" }
+                                    span { class: "spiro-card-val", "{spiro_cvf():.2} L" }
+                                }
+                                div { class: "spiro-card",
+                                    span { class: "spiro-card-title", "VEF₁ / CVF (Tiffeneau)" }
+                                    span {
+                                        class: "spiro-card-val",
+                                        style: if spiro_tiff() < 70.0 { "color: var(--neon-carmine);" } else { "color: #2ecc71;" },
+                                        "{spiro_tiff():.1} %"
+                                    }
+                                }
+                                div { class: "spiro-card",
+                                    span { class: "spiro-card-title", "PEF (Pico Expiratório)" }
+                                    span { class: "spiro-card-val", "{spiro_pef():.1} L/s" }
+                                }
+                            }
+
+                            if spiro_tiff() < 70.0 {
+                                div { class: "spiro-diag obstrutivo",
+                                    "⚠️ DISTÚRBIO VENTILATÓRIO OBSTRUTIVO (Índice de Tiffeneau < 70%). Compatível com Asma Brônquica ou DPOC."
+                                }
+                            } else if spiro_cvf() < 3.5 {
+                                div { class: "spiro-diag restritivo",
+                                    "⚠️ SUGESTÃO DE PADRÃO RESTRITIVO (CVF reduzida com Tiffeneau preservado). Necessita CPT para confirmação (ex: Fibrose)."
+                                }
+                            } else {
+                                div { class: "spiro-diag normal",
+                                    "✅ ESPIROMETRIA DENTRO DOS LIMITES DA NORMALIDADE (Relação VEF₁/CVF normal ≥ 70%)."
+                                }
+                            }
+                        }
+
+                        Accordion { index: 12, label: "3. 肺気量 // Volumes e Capacidades".to_string(), active_accordion,
+                            table { class: "spiro-vol-table",
+                                tbody {
+                                    tr {
+                                        td { "Volume Corrente (Vt):" }
+                                        td { "0.50 L" }
+                                    }
+                                    tr {
+                                        td { "Vol. Reserva Insp. (VRI):" }
+                                        td { "3.00 L" }
+                                    }
+                                    tr {
+                                        td { "Vol. Reserva Exp. (VRE):" }
+                                        td { "1.10 L" }
+                                    }
+                                    tr {
+                                        td { "Volume Residual (VR):" }
+                                        td { "1.20 L" }
+                                    }
+                                    tr {
+                                        td { "Cap. Residual Funcional (CRF):" }
+                                        td { "2.30 L" }
+                                    }
+                                    tr {
+                                        td { "Capacidade Vital (CV):" }
+                                        td { "4.60 L" }
+                                    }
+                                    tr {
+                                        td { "Capacidade Pulmonar Total (CPT):" }
+                                        td { "5.80 L" }
+                                    }
+                                }
+                            }
+                        }
+                }
             }
 
             main {
-                div { class: "canvas-wrapper",
-                    div { class: "canvas-label", "CH-01 [ 活動電位 // POTENCIAIS DE AÇÃO CELULAR ]" }
-                    canvas { id: "canvas-pa" }
-                }
-                div { class: "canvas-wrapper",
-                    div { class: "canvas-label",
-                        span { "CH-02 [ 心電図 // ECG: " }
-                        select {
-                            value: "{ecg_lead_idx()}",
-                            onchange: move |evt| {
-                                if let Ok(idx) = evt.value().parse::<usize>() {
-                                    ecg_lead_idx.set(idx);
+                if active_tab() == "cardio" {
+                    div { class: "canvas-wrapper",
+                            div { class: "canvas-label", "CH-01 [ 活動電位 // POTENCIAIS DE AÇÃO CELULAR ]" }
+                            canvas { id: "canvas-pa" }
+                        }
+                        div { class: "canvas-wrapper",
+                            div { class: "canvas-label",
+                                span { "CH-02 [ 心電図 // ECG: " }
+                                select {
+                                    value: "{ecg_lead_idx()}",
+                                    onchange: move |evt| {
+                                        if let Ok(idx) = evt.value().parse::<usize>() {
+                                            ecg_lead_idx.set(idx);
+                                        }
+                                    },
+                                    option { value: "1", selected: ecg_lead_idx() == 1, "DII (Padrão de Monitor)" }
+                                    option { value: "0", selected: ecg_lead_idx() == 0, "DI (Bipolar Frontal)" }
+                                    option { value: "2", selected: ecg_lead_idx() == 2, "DIII (Bipolar Frontal)" }
+                                    option { value: "3", selected: ecg_lead_idx() == 3, "aVR (Unipolar Aumentada)" }
+                                    option { value: "4", selected: ecg_lead_idx() == 4, "aVL (Unipolar Aumentada)" }
+                                    option { value: "5", selected: ecg_lead_idx() == 5, "aVF (Unipolar Aumentada)" }
+                                    option { value: "6", selected: ecg_lead_idx() == 6, "V1 (Precordial Direita)" }
+                                    option { value: "7", selected: ecg_lead_idx() == 7, "V2 (Precordial Anterosseptal)" }
+                                    option { value: "8", selected: ecg_lead_idx() == 8, "V3 (Precordial Transicional)" }
+                                    option { value: "9", selected: ecg_lead_idx() == 9, "V4 (Precordial Anterior)" }
+                                    option { value: "10", selected: ecg_lead_idx() == 10, "V5 (Precordial Lateral Baixa)" }
+                                    option { value: "11", selected: ecg_lead_idx() == 11, "V6 (Precordial Lateral Baixa)" }
                                 }
-                            },
-                            option { value: "1", selected: ecg_lead_idx() == 1, "DII (Padrão de Monitor)" }
-                            option { value: "0", selected: ecg_lead_idx() == 0, "DI (Bipolar Frontal)" }
-                            option { value: "2", selected: ecg_lead_idx() == 2, "DIII (Bipolar Frontal)" }
-                            option { value: "3", selected: ecg_lead_idx() == 3, "aVR (Unipolar Aumentada)" }
-                            option { value: "4", selected: ecg_lead_idx() == 4, "aVL (Unipolar Aumentada)" }
-                            option { value: "5", selected: ecg_lead_idx() == 5, "aVF (Unipolar Aumentada)" }
-                            option { value: "6", selected: ecg_lead_idx() == 6, "V1 (Precordial Direita)" }
-                            option { value: "7", selected: ecg_lead_idx() == 7, "V2 (Precordial Anterosseptal)" }
-                            option { value: "8", selected: ecg_lead_idx() == 8, "V3 (Precordial Transicional)" }
-                            option { value: "9", selected: ecg_lead_idx() == 9, "V4 (Precordial Anterior)" }
-                            option { value: "10", selected: ecg_lead_idx() == 10, "V5 (Precordial Lateral Baixa)" }
-                            option { value: "11", selected: ecg_lead_idx() == 11, "V6 (Precordial Lateral Baixa)" }
+                                span { " ]" }
+                            }
+                            canvas { id: "canvas-ecg" }
                         }
-                        span { " ]" }
-                    }
-                    canvas { id: "canvas-ecg" }
-                }
-                div { class: "canvas-wrapper",
-                    div { class: "canvas-label",
-                        span { "CH-03 [ イオン動態 // " }
-                        select {
-                            value: "{ion_cell_idx()}",
-                            onchange: move |evt| {
-                                if let Ok(idx) = evt.value().parse::<usize>() {
-                                    ion_cell_idx.set(idx);
+                        div { class: "canvas-wrapper",
+                            div { class: "canvas-label",
+                                span { "CH-03 [ イオン動態 // " }
+                                select {
+                                    value: "{ion_cell_idx()}",
+                                    onchange: move |evt| {
+                                        if let Ok(idx) = evt.value().parse::<usize>() {
+                                            ion_cell_idx.set(idx);
+                                        }
+                                    },
+                                    option { value: "4", selected: ion_cell_idx() == 4, "Endocárdio (TP06)" }
+                                    option { value: "5", selected: ion_cell_idx() == 5, "Célula M (TP06)" }
+                                    option { value: "6", selected: ion_cell_idx() == 6, "Epicárdio (TP06)" }
+                                    option { value: "0", selected: ion_cell_idx() == 0, "Nó SA (Severi)" }
+                                    option { value: "1", selected: ion_cell_idx() == 1, "Átrio (Courtemanche)" }
+                                    option { value: "2", selected: ion_cell_idx() == 2, "Nó AV (Inada)" }
+                                    option { value: "3", selected: ion_cell_idx() == 3, "Purkinje (Stewart)" }
+                                    option { value: "7", selected: ion_cell_idx() == 7, "Fibroblasto (MacCannell)" }
                                 }
-                            },
-                            option { value: "4", selected: ion_cell_idx() == 4, "Endocárdio (TP06)" }
-                            option { value: "5", selected: ion_cell_idx() == 5, "Célula M (TP06)" }
-                            option { value: "6", selected: ion_cell_idx() == 6, "Epicárdio (TP06)" }
-                            option { value: "0", selected: ion_cell_idx() == 0, "Nó SA (Severi)" }
-                            option { value: "1", selected: ion_cell_idx() == 1, "Átrio (Courtemanche)" }
-                            option { value: "2", selected: ion_cell_idx() == 2, "Nó AV (Inada)" }
-                            option { value: "3", selected: ion_cell_idx() == 3, "Purkinje (Stewart)" }
-                            option { value: "7", selected: ion_cell_idx() == 7, "Fibroblasto (MacCannell)" }
-                        }
-                        span { " ➔ " }
-                        select {
-                            value: "{ion_var_idx()}",
-                            onchange: move |evt| {
-                                if let Ok(idx) = evt.value().parse::<usize>() {
-                                    ion_var_idx.set(idx);
+                                span { " ➔ " }
+                                select {
+                                    value: "{ion_var_idx()}",
+                                    onchange: move |evt| {
+                                        if let Ok(idx) = evt.value().parse::<usize>() {
+                                            ion_var_idx.set(idx);
+                                        }
+                                    },
+                                    option { value: "0", selected: ion_var_idx() == 0, "[Ca²⁺]ᵢ Cálcio (µM)" }
+                                    option { value: "1", selected: ion_var_idx() == 1, "[Na⁺]ᵢ Sódio (mM)" }
+                                    option { value: "2", selected: ion_var_idx() == 2, "[K⁺]ᵢ Potássio (mM)" }
+                                    option { value: "3", selected: ion_var_idx() == 3, "[Ca²⁺]ₛᵣ Retículo (mM)" }
+                                    option { value: "4", selected: ion_var_idx() == 4, "I_CaL Cálcio L (pA/pF)" }
+                                    option { value: "5", selected: ion_var_idx() == 5, "I_Na Sódio (pA/pF)" }
+                                    option { value: "6", selected: ion_var_idx() == 6, "I_K Potássio (pA/pF)" }
+                                    option { value: "7", selected: ion_var_idx() == 7, "I_f Funny (pA/pF)" }
                                 }
-                            },
-                            option { value: "0", selected: ion_var_idx() == 0, "[Ca²⁺]ᵢ Cálcio (µM)" }
-                            option { value: "1", selected: ion_var_idx() == 1, "[Na⁺]ᵢ Sódio (mM)" }
-                            option { value: "2", selected: ion_var_idx() == 2, "[K⁺]ᵢ Potássio (mM)" }
-                            option { value: "3", selected: ion_var_idx() == 3, "[Ca²⁺]ₛᵣ Retículo (mM)" }
-                            option { value: "4", selected: ion_var_idx() == 4, "I_CaL Cálcio L (pA/pF)" }
-                            option { value: "5", selected: ion_var_idx() == 5, "I_Na Sódio (pA/pF)" }
-                            option { value: "6", selected: ion_var_idx() == 6, "I_K Potássio (pA/pF)" }
-                            option { value: "7", selected: ion_var_idx() == 7, "I_f Funny (pA/pF)" }
+                                span { " ]" }
+                            }
+                            canvas { id: "canvas-ch3" }
                         }
-                        span { " ]" }
-                    }
-                    canvas { id: "canvas-ch3" }
-                }
-                div { class: "canvas-wrapper",
-                    div { class: "canvas-label",
-                        span { "CH-04 [ 左室圧迫曲線 // HEMODINÂMICA: " }
-                        span { 
-                            style: "display: inline-flex; align-items: center; gap: 4px;",
-                            span { style: "display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #00f2fe; box-shadow: 0 0 6px #00f2fe;" }
-                            span { style: "color: #00f2fe;", "LVP" }
+                        div { class: "canvas-wrapper",
+                            div { class: "canvas-label",
+                                span { "CH-04 [ 左室圧迫曲線 // HEMODINÂMICA: " }
+                                span { 
+                                    style: "display: inline-flex; align-items: center; gap: 4px;",
+                                    span { style: "display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #00f2fe; box-shadow: 0 0 6px #00f2fe;" }
+                                    span { style: "color: #00f2fe;", "LVP" }
+                                }
+                                span { "&" }
+                                span { 
+                                    style: "display: inline-flex; align-items: center; gap: 4px;",
+                                    span { style: "display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #ff1754; box-shadow: 0 0 6px #ff1754;" }
+                                    span { style: "color: #ff1754;", "AoP" }
+                                }
+                                span { "]" }
+                            }
+                            canvas { id: "canvas-ch4" }
                         }
-                        span { "&" }
-                        span { 
-                            style: "display: inline-flex; align-items: center; gap: 4px;",
-                            span { style: "display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #ff1754; box-shadow: 0 0 6px #ff1754;" }
-                            span { style: "color: #ff1754;", "AoP" }
+                } else {
+                        div { class: "canvas-wrapper",
+                            div { class: "canvas-label", "CH-01 [ 呼吸気量 // ESPIROGRAMA CONTÍNUO (Volume x Tempo em Litros) ]" }
+                            canvas { id: "canvas-resp-vol" }
                         }
-                        span { "]" }
-                    }
-                    canvas { id: "canvas-ch4" }
+                        div { class: "canvas-wrapper",
+                            div { class: "canvas-label", "CH-02 [ 気流速度 // FLUXO AÉREO INSTANTÂNEO (V̇ x Tempo em L/s) ]" }
+                            canvas { id: "canvas-resp-flow" }
+                        }
+                        div { class: "canvas-wrapper",
+                            div { class: "canvas-label", "CH-03 [ 胸腔内圧 // PRESSÃO INTRAPLEURAL (P_pl x Tempo em cmH₂O) ]" }
+                            canvas { id: "canvas-resp-ppl" }
+                        }
+                        div { class: "canvas-wrapper",
+                            div { class: "canvas-label", "CH-04 [ 心肺カップリング // ACOPLAMENTO CARDIORRESPIRATÓRIO (RSA & Nó SA) ]" }
+                            canvas { id: "canvas-resp-rsa" }
+                        }
                 }
             }
 

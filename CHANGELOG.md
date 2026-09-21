@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Features
+  - (ui) implementar espacos de trabalho cardio e pulmo com osciloscopios dedicados (closes #4)
   - (ui) adicionar estilos das abas de laboratorio e painel de espirometria (closes #3)
   - (engine) integrar acoplamento RSA e expandir telemetria para 15 canais (closes #2)
   - (resp) implementar modelo biofisico de mecanica respiratoria e espirometria (closes #1)
