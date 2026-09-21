@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Features
+  - (ui) adicionar estilos das abas de laboratorio e painel de espirometria (closes #3)
   - (engine) integrar acoplamento RSA e expandir telemetria para 15 canais (closes #2)
   - (resp) implementar modelo biofisico de mecanica respiratoria e espirometria (closes #1)
   - (ui) modulariza sanfonas e adiciona seletor de ion e celula no ch-03

@@ -117,6 +117,171 @@ header {
     font-weight: 700;
 }
 
+/* Seletor de Especialidades / Abas de Laboratório */
+.lab-tabs {
+    display: flex;
+    gap: 6px;
+    background: rgba(8, 10, 15, 0.7);
+    padding: 3px 6px;
+    border-radius: 6px;
+    border: 1px solid var(--border-tech);
+    margin: 0 1vw;
+}
+
+.lab-tab {
+    background: #131722;
+    color: #8392a5;
+    border: 1px solid #23293a;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 1.3vh;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'Chakra Petch', sans-serif;
+}
+
+.lab-tab:hover {
+    background: #1c2233;
+    color: #ffffff;
+    border-color: var(--neon-cyan);
+}
+
+.lab-tab.active {
+    background: rgba(0, 242, 254, 0.15);
+    color: var(--neon-cyan);
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 10px rgba(0, 242, 254, 0.25);
+}
+
+.lab-tab.active.pulmo {
+    background: rgba(46, 204, 113, 0.15);
+    color: #2ecc71;
+    border-color: #2ecc71;
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.25);
+}
+
+/* Pulmo Lab e Espirometria */
+.btn-spiro-trigger {
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.2) 0%, rgba(0, 242, 254, 0.2) 100%);
+    border: 1px solid #2ecc71;
+    color: #2ecc71;
+    padding: 0.8vh 1vw;
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 700;
+    font-size: 1.4vh;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-shadow: 0 0 6px rgba(46, 204, 113, 0.4);
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.15);
+    width: 100%;
+    margin-bottom: 1vh;
+}
+
+.btn-spiro-trigger:hover {
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.4) 0%, rgba(0, 242, 254, 0.4) 100%);
+    color: #ffffff;
+    box-shadow: 0 0 15px rgba(46, 204, 113, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-spiro-trigger.active {
+    background: rgba(255, 23, 84, 0.25);
+    border-color: var(--neon-carmine);
+    color: var(--neon-carmine);
+    animation: spiroPulse 1s infinite alternate;
+}
+
+@keyframes spiroPulse {
+    from { box-shadow: 0 0 4px rgba(255, 23, 84, 0.4); }
+    to { box-shadow: 0 0 16px rgba(255, 23, 84, 0.8); }
+}
+
+.spiro-results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 0.8vh;
+}
+
+.spiro-card {
+    background: #0d1117;
+    border: 1px solid var(--border-tech);
+    padding: 6px 8px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.spiro-card-title {
+    font-size: 1.2vh;
+    color: var(--text-muted);
+    font-family: 'Chakra Petch', sans-serif;
+}
+
+.spiro-card-val {
+    font-size: 1.6vh;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: var(--neon-cyan);
+}
+
+.spiro-diag {
+    padding: 8px 10px;
+    border-radius: 4px;
+    font-size: 1.25vh;
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-top: 4px;
+}
+
+.spiro-diag.normal {
+    background: rgba(46, 204, 113, 0.12);
+    border: 1px solid #2ecc71;
+    color: #2ecc71;
+}
+
+.spiro-diag.obstrutivo {
+    background: rgba(255, 23, 84, 0.15);
+    border: 1px solid var(--neon-carmine);
+    color: #ff6b81;
+}
+
+.spiro-diag.restritivo {
+    background: rgba(255, 211, 42, 0.12);
+    border: 1px solid var(--neon-amber);
+    color: #ffd32a;
+}
+
+.spiro-vol-table {
+    width: 100%;
+    font-size: 1.25vh;
+    font-family: 'JetBrains Mono', monospace;
+    border-collapse: collapse;
+    margin-top: 4px;
+}
+
+.spiro-vol-table tr {
+    border-bottom: 1px solid #161b22;
+}
+
+.spiro-vol-table td {
+    padding: 4px 6px;
+}
+
+.spiro-vol-table td:last-child {
+    text-align: right;
+    color: var(--neon-cyan);
+    font-weight: bold;
+}
+
 .hud-badge {
     font-size: 1.1vh;
     font-family: 'JetBrains Mono', monospace;
