@@ -321,6 +321,8 @@ fn App() -> Element {
     let vrest_str = format!("{:.0}mV", v_rest());
     let pr_rr_str = if pr_rr() > 0.0 { format!("{:.2}", pr_rr()) } else { "---".to_string() };
 
+    let mut active_accordion = use_signal(|| None::<usize>);
+
     let mut reset_all = move || {
         ko.set(5.4);
         cao.set(2.0);
@@ -343,6 +345,7 @@ fn App() -> Element {
         is_paused.set(false);
         ghost_status_str.set("📸 Capturar".to_string());
         system.set(HeartSystem::new());
+        active_accordion.set(None);
     };
 
     rsx! {
@@ -429,13 +432,13 @@ fn App() -> Element {
                     }
                 }
 
-                Accordion { label: "0. 画面表示 // Visualização e Modos de Tela".to_string(), open: true,
-                    div { style: "margin-bottom: 12px;",
-                        div { class: "slider-header", style: "margin-bottom: 6px;",
-                            span { style: "color: var(--neon-cyan); font-weight: bold; font-size: 1.7vh;", "Modo do Osciloscópio:" }
+                Accordion { index: 0, label: "0. 画面表示 // Visualização".to_string(), active_accordion,
+                    div { style: "margin-bottom: 6px;",
+                        div { class: "slider-header", style: "margin-bottom: 3px;",
+                            span { style: "color: var(--neon-cyan); font-weight: bold; font-size: 1.4vh;", "Modo do Osciloscópio:" }
                         }
                         select {
-                            style: "width: 100%; padding: 7px; border-radius: 4px; background: #161616; color: var(--text-main); border: 1px solid var(--neon-cyan); font-size: 1.5vh; cursor: pointer;",
+                            style: "width: 100%; padding: 4px 6px; border-radius: 4px; background: #161616; color: var(--text-main); border: 1px solid var(--neon-cyan); font-size: 1.35vh; cursor: pointer;",
                             value: "{view_mode}",
                             onchange: move |e| view_mode.set(e.value()),
                             option { value: "rolling", "Fita Deslizante (Fluxo Contínuo) [Padrão]" }
@@ -449,19 +452,19 @@ fn App() -> Element {
                     if view_mode() == "triggered_single" {
                         button {
                             class: "icon-btn",
-                            style: "width: 100%; padding: 8px; margin-bottom: 12px; background: var(--neon-yellow); color: #000; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; font-size: 1.5vh; box-shadow: 0 0 8px rgba(241, 196, 15, 0.4);",
+                            style: "width: 100%; padding: 6px; margin-bottom: 6px; background: var(--neon-yellow); color: #000; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; font-size: 1.35vh; box-shadow: 0 0 8px rgba(241, 196, 15, 0.4);",
                             onclick: move |_| trigger_arm_single.set(true),
                             "⚡ DISPARAR / ARMAR PRÓXIMO CICLO"
                         }
                     }
 
-                    div { style: "display: flex; gap: 8px; align-items: center; margin-bottom: 14px; background: #111; padding: 6px 8px; border-radius: 4px; border: 1px solid #333;",
+                    div { style: "display: flex; gap: 6px; align-items: center; margin-bottom: 6px; background: #111; padding: 4px 6px; border-radius: 4px; border: 1px solid #333;",
                         div { style: "flex: 1;",
-                            Checkbox { label: "Onda Fantasma (Histórico)".to_string(), color: "#ffffff".to_string(), checked: show_ghost }
+                            Checkbox { label: "Onda Fantasma (Histórico)".to_string(), color: "#ffffff".to_string(), checked: show_ghost, compact: true }
                         }
                         button {
                             class: "icon-btn",
-                            style: "padding: 6px 10px; background: #222; color: var(--neon-cyan); border: 1px solid var(--neon-cyan); border-radius: 4px; cursor: pointer; font-size: 1.4vh; white-space: nowrap;",
+                            style: "padding: 4px 8px; background: #222; color: var(--neon-cyan); border: 1px solid var(--neon-cyan); border-radius: 4px; cursor: pointer; font-size: 1.25vh; white-space: nowrap;",
                             title: "Captura snapshot de 1 ciclo cardíaco completo ancorado na Fase 0 do Nó SA",
                             onclick: move |_| {
                                 show_ghost.set(true);
@@ -471,20 +474,20 @@ fn App() -> Element {
                         }
                     }
 
-                    div { class: "slider-header", style: "margin-bottom: 6px; margin-top: 4px;",
-                        span { style: "color: var(--neon-yellow); font-size: 1.6vh;", "Camadas / Células Ativas:" }
+                    div { class: "slider-header", style: "margin-bottom: 4px; margin-top: 2px;",
+                        span { style: "color: var(--neon-yellow); font-size: 1.4vh;", "Camadas / Células Ativas:" }
                     }
 
-                    Checkbox { label: "Nó SA (Gatilho)".to_string(), color: "#e74c3c".to_string(), checked: show_sa }
-                    Checkbox { label: "Átrio (Contração)".to_string(), color: "#3498db".to_string(), checked: show_atrium }
-                    Checkbox { label: "Nó AV (Condução)".to_string(), color: "#f1c40f".to_string(), checked: show_av }
-                    Checkbox { label: "Purkinje (Feixe de His)".to_string(), color: "#e67e22".to_string(), checked: show_purkinje }
-                    Checkbox { label: "Endocárdio (Subendocárdico)".to_string(), color: "#2ecc71".to_string(), checked: show_endo }
-                    Checkbox { label: "Epicárdio (Subepicárdico)".to_string(), color: "#1abc9c".to_string(), checked: show_epi }
-                    Checkbox { label: "Fibroblasto (Eletrotônico)".to_string(), color: "#a29bfe".to_string(), checked: show_fibroblast }
+                    Checkbox { label: "Nó SA (Gatilho)".to_string(), color: "#e74c3c".to_string(), checked: show_sa, compact: true }
+                    Checkbox { label: "Átrio (Contração)".to_string(), color: "#3498db".to_string(), checked: show_atrium, compact: true }
+                    Checkbox { label: "Nó AV (Condução)".to_string(), color: "#f1c40f".to_string(), checked: show_av, compact: true }
+                    Checkbox { label: "Purkinje (Feixe de His)".to_string(), color: "#e67e22".to_string(), checked: show_purkinje, compact: true }
+                    Checkbox { label: "Endocárdio (Subendocárdico)".to_string(), color: "#2ecc71".to_string(), checked: show_endo, compact: true }
+                    Checkbox { label: "Epicárdio (Subepicárdico)".to_string(), color: "#1abc9c".to_string(), checked: show_epi, compact: true }
+                    Checkbox { label: "Fibroblasto (Eletrotônico)".to_string(), color: "#a29bfe".to_string(), checked: show_fibroblast, compact: true }
                 }
 
-                Accordion { label: "1. 電解質 // Íons e Eletrólitos".to_string(), open: false,
+                Accordion { index: 1, label: "1. 電解質 // Íons e Eletrólitos".to_string(), active_accordion,
                     Slider {
                         label: "Potássio [K+]_o".to_string(),
                         min: 2.0, max: 8.5, step: 0.1, default_val: 5.4, unit: " mEq/L".to_string(),
@@ -505,7 +508,7 @@ fn App() -> Element {
                     }
                 }
 
-                Accordion { label: "2. 自律神経 // Sistema Nervoso Autônomo".to_string(), open: false,
+                Accordion { index: 2, label: "2. 自律神経 // Sistema Nervoso Autônomo".to_string(), active_accordion,
                     Slider {
                         label: "Tônus Simpático".to_string(),
                         min: 0.0, max: 100.0, step: 1.0, default_val: 0.0, unit: "%".to_string(),
@@ -520,7 +523,7 @@ fn App() -> Element {
                     }
                 }
 
-                Accordion { label: "3. 抗不整脈薬 // Fármacos Antiarrítmicos".to_string(), open: false,
+                Accordion { index: 3, label: "3. 抗不整脈薬 // Fármacos Antiarrítmicos".to_string(), active_accordion,
                     Slider {
                         label: "Bloq. Na+ (Lidocaína)".to_string(),
                         min: 0.0, max: 100.0, step: 1.0, default_val: 0.0, unit: "%".to_string(),
@@ -547,7 +550,7 @@ fn App() -> Element {
                     }
                 }
 
-                Accordion { label: "4. 病態生理 // Condições Patológicas".to_string(), open: false,
+                Accordion { index: 4, label: "4. 病態生理 // Condições Patológicas".to_string(), active_accordion,
                     Slider {
                         label: "Nível de Isquemia".to_string(),
                         min: 0.0, max: 100.0, step: 1.0, default_val: 0.0, unit: "%".to_string(),
@@ -562,7 +565,7 @@ fn App() -> Element {
                     }
                 }
 
-                Accordion { label: "5. 生体音響 // Monitorização & Áudio".to_string(), open: true,
+                Accordion { index: 5, label: "5. 生体音響 // Monitorização & Áudio".to_string(), active_accordion,
                     Checkbox { label: "🔊 Bip de Monitor (UTI - Onda R)".to_string(), color: "#2ecc71".to_string(), checked: sound_uti }
                     Checkbox { label: "🩺 Bulhas Cardíacas (B1 / B2)".to_string(), color: "#e74c3c".to_string(), checked: sound_bulhas }
                 }
@@ -617,18 +620,30 @@ fn App() -> Element {
 }
 
 #[component]
-fn Accordion(label: String, open: bool, children: Element) -> Element {
+fn Accordion(index: usize, label: String, mut active_accordion: Signal<Option<usize>>, children: Element) -> Element {
+    let is_open = active_accordion() == Some(index);
+    let summary_color = if is_open { "var(--neon-cyan)" } else { "var(--neon-yellow)" };
+    let summary_style = format!("cursor: pointer; user-select: none; font-weight: bold; color: {}; font-size: 1.65vh; padding: 0.8vh 0.8vw;", summary_color);
     rsx! {
         details {
             class: "control-group",
-            open: "{open}",
+            "name": "sidebar-accordions",
+            open: is_open,
             summary {
-                style: "cursor: pointer; user-select: none; font-weight: bold; color: var(--neon-yellow); font-size: 2vh; padding: 0.8vh 0;",
+                style: "{summary_style}",
+                prevent_default: "onclick",
+                onclick: move |_| {
+                    if active_accordion() == Some(index) {
+                        active_accordion.set(None);
+                    } else {
+                        active_accordion.set(Some(index));
+                    }
+                },
                 "{label}"
             }
             div {
                 class: "accordion-content",
-                style: "display: flex; flex-direction: column; margin-top: 10px;",
+                style: "display: flex; flex-direction: column; margin-top: 6px;",
                 {children}
             }
         }
@@ -732,22 +747,36 @@ fn Slider(
 }
 
 #[component]
-fn Checkbox(label: String, color: String, checked: Signal<bool>) -> Element {
+fn Checkbox(
+    label: String,
+    color: String,
+    checked: Signal<bool>,
+    #[props(default = false)] compact: bool,
+) -> Element {
+    let container_style = if compact {
+        "display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 0.35vh 0.4vw; margin-bottom: 0.3vh; border-bottom: none;"
+    } else {
+        "display: flex; align-items: center; gap: 10px; cursor: pointer; margin-bottom: 1.2vh;"
+    };
+    let font_size = if compact { "1.35vh" } else { "1.8vh" };
+    let input_size = if compact { "1.4vh" } else { "1.8vh" };
+    let dot_size = if compact { "8px" } else { "12px" };
+
     rsx! {
         div {
-            class: "slider-container",
-            style: "display: flex; align-items: center; gap: 10px; cursor: pointer; margin-bottom: 1.2vh;",
+            class: if compact { "slider-container compact-checkbox" } else { "slider-container" },
+            style: "{container_style}",
             onclick: move |_| checked.set(!checked()),
             input {
                 r#type: "checkbox",
                 checked: "{checked}",
-                style: "pointer-events: none; width: 1.8vh; height: 1.8vh;"
+                style: "pointer-events: none; width: {input_size}; height: {input_size}; cursor: pointer;"
             }
             div {
-                style: "width: 12px; height: 12px; border-radius: 50%; background-color: {color}; box-shadow: 0 0 5px {color};"
+                style: "width: {dot_size}; height: {dot_size}; border-radius: 50%; background-color: {color}; box-shadow: 0 0 5px {color}; flex-shrink: 0;"
             }
             span {
-                style: "font-size: 1.8vh; color: var(--text-main);",
+                style: "font-size: {font_size}; color: var(--text-main);",
                 "{label}"
             }
         }

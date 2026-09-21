@@ -80,6 +80,10 @@ test.describe('KokoroSim — Testes E2E do Simulador Web (Wasm + Dioxus)', () =>
   });
 
   test('deve capturar a Onda Fantasma bio-sincronizada', async ({ page }) => {
+    // Abre a sanfona de Visualização
+    const visAccordion = page.locator('summary', { hasText: /Visualização/ });
+    await visAccordion.click();
+
     const ghostCaptureBtn = page.locator('button', { hasText: /Capturar/ });
     await expect(ghostCaptureBtn).toBeVisible();
 
@@ -95,6 +99,10 @@ test.describe('KokoroSim — Testes E2E do Simulador Web (Wasm + Dioxus)', () =>
   });
 
   test('deve alternar para modo Single-Shot e exibir botão de disparo único', async ({ page }) => {
+    // Abre a sanfona de Visualização
+    const visAccordion = page.locator('summary', { hasText: /Visualização/ });
+    await visAccordion.click();
+
     const modeSelect = page.locator('select').first();
     await expect(modeSelect).toBeVisible();
 
@@ -127,6 +135,10 @@ test.describe('KokoroSim — Testes E2E do Simulador Web (Wasm + Dioxus)', () =>
   });
 
   test('deve exibir padrão limpo de 3 camadas ativas no gráfico de PA e legenda humanizada na hemodinâmica', async ({ page }) => {
+    // Abre a sanfona de Visualização
+    const visAccordion = page.locator('summary', { hasText: /Visualização/ });
+    await visAccordion.click();
+
     // 1. Valida checkboxes das camadas celulares no painel
     const saCheckbox = page.locator('.slider-container', { hasText: /Nó SA/ }).locator('input[type="checkbox"]');
     const atriumCheckbox = page.locator('.slider-container', { hasText: /Átrio/ }).locator('input[type="checkbox"]');
@@ -155,6 +167,33 @@ test.describe('KokoroSim — Testes E2E do Simulador Web (Wasm + Dioxus)', () =>
     expect(labelText).toContain('AOP');
     expect(labelText).not.toContain('#00F2FE');
     expect(labelText).not.toContain('#FF1754');
+
+    expect(jsErrors).toHaveLength(0);
+  });
+
+  test('deve iniciar com todas as sanfonas fechadas e permitir apenas uma aberta por vez', async ({ page }) => {
+    const accordions = page.locator('details.control-group');
+    await expect(accordions).toHaveCount(6);
+
+    // 1. Todas iniciam fechadas
+    for (let i = 0; i < 6; i++) {
+      await expect(accordions.nth(i)).not.toHaveAttribute('open');
+    }
+
+    // 2. Abre a primeira sanfona (Visualização)
+    const summary0 = accordions.nth(0).locator('summary');
+    await summary0.click();
+    await expect(accordions.nth(0)).toHaveAttribute('open');
+
+    // 3. Abre a segunda sanfona (Íons e Eletrólitos) -> a primeira deve fechar automaticamente
+    const summary1 = accordions.nth(1).locator('summary');
+    await summary1.click();
+    await expect(accordions.nth(1)).toHaveAttribute('open');
+    await expect(accordions.nth(0)).not.toHaveAttribute('open');
+
+    // 4. Clica novamente na segunda sanfona -> ela deve fechar
+    await summary1.click();
+    await expect(accordions.nth(1)).not.toHaveAttribute('open');
 
     expect(jsErrors).toHaveLength(0);
   });

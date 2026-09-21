@@ -354,6 +354,16 @@ aside::-webkit-scrollbar-thumb:hover {
     border-bottom: none;
 }
 
+.compact-checkbox {
+    border-bottom: none !important;
+    transition: background 0.15s ease;
+    border-radius: 2px;
+}
+
+.compact-checkbox:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
 .slider-header {
     display: flex;
     justify-content: space-between;
