@@ -353,7 +353,29 @@ impl Plotter {
                     // Parâmetros da grade milimetrada isotrópica (40ms x 0.1mV)
                     // Janela de 500 amostras a cada 5ms = 2500ms totais (62.5 quadradinhos de 40ms)
                     let s = width / 62.5; // Tamanho de 1 quadradinho em pixels
-                    let y_zero = height - ((0.0 - min_y) / range_y) * height;
+
+                    // Posição da isoline (0 mV) no canvas.
+                    // Em modo ECG isotrópico, y_zero é calculado para garantir que os picos caibam:
+                    // - Pico positivo máximo esperado: ~1.10 mV (R em V5 com kr=1.45 × 0.75)
+                    // - Pico negativo máximo esperado: ~0.25 mV (S em V1 com ks=1.30 × 0.17)
+                    // - Margem: 10% de 's' em cada lado
+                    let y_zero = if is_ecg_grid {
+                        let peak_pos_mv = 1.15_f64; // mV acima da isoline (headroom positivo)
+                        let peak_neg_mv = 0.30_f64; // mV abaixo da isoline (headroom negativo)
+                        let margin_px = s * 0.5;    // margem extra em pixels (0.5 quadradinhos)
+                        let px_above = peak_pos_mv * 10.0 * s + margin_px;
+                        let px_below = peak_neg_mv * 10.0 * s + margin_px;
+                        let total_px = px_above + px_below;
+                        if total_px <= height {
+                            // Há espaço suficiente: posiciona a isoline exatamente
+                            px_above
+                        } else {
+                            // Canvas muito pequeno: escala para caber (mantém proporção acima/abaixo)
+                            height * (px_above / total_px)
+                        }
+                    } else {
+                        height - ((0.0 - min_y) / range_y) * height
+                    };
 
                     // Mapeamento vertical de voltagem -> pixel
                     let val_to_y = |val: f64| -> f64 {
@@ -375,11 +397,18 @@ impl Plotter {
 
                             // Offset horizontal da grade para rolar junto com o traçado.
                             // 1 quadradinho = 8 amostras (40ms a 5ms/amostra).
-                            // O offset em pixels avança 1 'dx' por amostra, com período de 's' pixels.
+                            // A grade SÓ começa a rolar quando o buffer está cheio e samples
+                            // começam a ser descartados (pushed > capacity). Antes disso, fica parada.
                             let grid_offset_x = match self.mode {
                                 ViewMode::Rolling => {
-                                    // No modo Rolling, a grade rola com o total de amostras recebidas
-                                    (self.total_pushed as f64 * dx).rem_euclid(s)
+                                    if self.total_pushed <= self.capacity as u64 {
+                                        // Buffer ainda enchendo: grade estática
+                                        0.0
+                                    } else {
+                                        // Buffer cheio: cada sample extra desloca a grade
+                                        let overflow = self.total_pushed - self.capacity as u64;
+                                        (overflow as f64 * dx).rem_euclid(s)
+                                    }
                                 }
                                 ViewMode::Sweep | ViewMode::TriggeredAuto | ViewMode::TriggeredSingle => {
                                     // Nos modos com caneta, ancora a grade na posição atual da caneta
@@ -391,19 +420,25 @@ impl Plotter {
                                 }
                             };
 
-                            // 1. Linhas verticais isotrópicas de tempo (a cada s = 40ms)
-                            // Começamos em x negativo para cobrir a borda esquerda com o offset
-                            let start_x = -s + (s - grid_offset_x).rem_euclid(s);
-                            let mut x = start_x;
-                            // Índice relativo para determinar quadratão (200ms = 5 quadradinhos)
-                            // A conta de "qual múltiplo" usa total_pushed para manter coerência
+                            // phase_count para determinar qual linha é quadratão (200ms)
                             let phase_count = match self.mode {
-                                ViewMode::Rolling => self.total_pushed,
+                                ViewMode::Rolling => {
+                                    if self.total_pushed <= self.capacity as u64 {
+                                        0u64
+                                    } else {
+                                        self.total_pushed - self.capacity as u64
+                                    }
+                                }
                                 _ => self.head_idx as u64,
                             };
                             // k_base: quantos quadradinhos inteiros foram "consumidos" até o início da janela
                             let k_base_offset = ((phase_count as f64 * dx / s).floor() as i64).rem_euclid(5) as usize;
                             let mut k_rel = 0usize;
+
+                            // 1. Linhas verticais isotrópicas de tempo (a cada s = 40ms)
+                            // Começamos em x negativo para cobrir a borda esquerda com o offset
+                            let start_x = -s + (s - grid_offset_x).rem_euclid(s);
+                            let mut x = start_x;
                             while x <= width + 1.0 {
                                 ctx.begin_path();
                                 // k_mod: posição relativa no ciclo de 5 quadradinhos (0 = quadratão)

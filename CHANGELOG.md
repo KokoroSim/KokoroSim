@@ -6,6 +6,7 @@
   - (ui) adicionar suporte a multiplas derivacoes de ECG e grade milimetrada
 
 ### Bug Fixes
+  - (ecg) ajusta margem de picos, rolagem de grade e novo icone com zona segura
   - (ecg) corrige amplitude e grade dinamica do ecg
 
 ## Previous Releases
