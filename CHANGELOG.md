@@ -2,7 +2,8 @@
 
 ## [Unreleased]
 
-- Routine maintenance, documentation updates, and operational improvements.
+### Features
+  - (ui) adicionar suporte a multiplas derivacoes de ECG e grade milimetrada
 
 ## Previous Releases
 

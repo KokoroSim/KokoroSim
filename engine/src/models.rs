@@ -114,6 +114,9 @@ pub struct HeartSystem {
     t_ap_start: f64,
     ap_v_peak: f64,
     v_min_cycle: f64,
+    t_t_wave: f64,
+    ecg_lead: usize,
+    prev_v_m: f64,
 
     // Current smoothed metrics
     pub bpm: f64,
@@ -167,6 +170,9 @@ impl HeartSystem {
             t_ap_start: 0.0,
             ap_v_peak: 0.0,
             v_min_cycle: -85.0,
+            t_t_wave: -1.0,
+            ecg_lead: 1, // DII como derivação padrão
+            prev_v_m: -85.0,
             bpm: 75.0,
             pr: 160.0,
             qrs: 90.0,
@@ -197,6 +203,7 @@ impl HeartSystem {
     pub fn step(&mut self, dt: f64) {
         let prev_v_vent = self.vent_endo.v;
         let prev_v_atr = self.atrium.v;
+        let prev_v_m = self.prev_v_m;
 
         // Acoplamento eletrotônico miócito-fibroblasto (MacCannell et al., 2007)
         // Condutância juncional proporcional à fibrose (0.0 a 4.0 nS)
@@ -433,6 +440,7 @@ impl HeartSystem {
             // Início do Potencial de Ação Ventricular
             self.in_ap = true;
             self.t_ap_start = self.time;
+            self.t_t_wave = -1.0;
             self.ap_v_peak = v_vent;
             self.v_rest = self.v_min_cycle;
             self.v_min_cycle = 0.0;
@@ -443,6 +451,12 @@ impl HeartSystem {
             if self.vent_m.v > self.ap_v_peak {
                 self.ap_v_peak = self.vent_m.v;
             }
+
+            // Gatilho biofísico da onda T: Fase 3 de repolarização ao cruzar -10mV descendente
+            if prev_v_m >= -10.0 && self.vent_m.v < -10.0 {
+                self.t_t_wave = self.time;
+            }
+
             let time_in_ap = self.time - self.t_ap_start;
             // Critério APD90: retorno a 90% do repouso em relação ao pico
             let repol_threshold = self.v_rest + 0.10 * (self.ap_v_peak - self.v_rest);
@@ -487,6 +501,8 @@ impl HeartSystem {
         } else {
             self.pr_rr = 0.0;
         }
+
+        self.prev_v_m = self.vent_m.v;
     }
 
     // Roda um lote completo de cálculos no lado do Rust e retorna um array f64 achatado!
@@ -537,10 +553,109 @@ impl HeartSystem {
     pub fn get_lvv(&self) -> f64 { self.hemo.v_lv }
     pub fn get_time(&self) -> f64 { self.time }
 
+    pub fn set_ecg_lead(&mut self, lead: usize) {
+        self.ecg_lead = lead % 12;
+    }
+
+    pub fn get_ecg_lead(&self) -> usize {
+        self.ecg_lead
+    }
+
     pub fn compute_ecg(&self) -> f64 {
-        let p_wave = (self.atrium.v + 80.0) * 0.15;
-        let transmural = (self.vent_endo.v - self.vent_epi.v) * 0.55 + (self.vent_m.v - self.vent_epi.v) * 0.25;
-        p_wave + transmural
+        self.compute_ecg_lead(self.ecg_lead)
+    }
+
+    pub fn compute_ecg_lead(&self, lead_idx: usize) -> f64 {
+        let t_ms = self.time;
+        let b_na = self.pharm.block_na.max(0.15);
+        let b_k = self.pharm.block_k.max(0.2);
+        let k_ratio = (self.pharm.ko / 5.4).clamp(0.4, 2.5);
+        let isch = self.pharm.isch.clamp(0.0, 1.0);
+
+        // 1. Onda P (Ativação Atrial, envelope suave senoidal de ~80ms)
+        let mut p_wave = 0.0;
+        if self.t_last_atr_beat > 0.0 {
+            let dt_atr = t_ms - self.t_last_atr_beat;
+            let p_width = 80.0;
+            if dt_atr >= 0.0 && dt_atr < p_width {
+                let phase = dt_atr / p_width;
+                // Na hipercalemia grave, a onda P se achata e desaparece
+                let p_amp = 0.15 * (2.2 - k_ratio).clamp(0.0, 1.0);
+                p_wave = (phase * std::f64::consts::PI).sin() * p_amp;
+            }
+        }
+
+        // 2. Complexo QRS (Ativação Ventricular)
+        let mut q_wave = 0.0;
+        let mut r_wave = 0.0;
+        let mut s_wave = 0.0;
+        let mut in_st = false;
+        // Bloqueadores de sódio alargam o complexo QRS
+        let qrs_width = 85.0 / b_na;
+
+        if self.t_last_vent_beat > 0.0 {
+            let dt_vent = t_ms - self.t_last_vent_beat;
+            if dt_vent >= 0.0 && dt_vent < qrs_width {
+                let phase = dt_vent / qrs_width;
+                if phase < 0.15 {
+                    // Onda Q (deflexão septal negativa)
+                    let p_q = phase / 0.15;
+                    q_wave = -(p_q * std::f64::consts::PI).sin() * 0.12;
+                } else if phase < 0.60 {
+                    // Onda R (ativação transmural endocárdio -> epicárdio)
+                    let p_r = (phase - 0.15) / 0.45;
+                    r_wave = (p_r * std::f64::consts::PI).sin() * 1.25;
+                } else {
+                    // Onda S (despolarização basal tardia)
+                    let p_s = (phase - 0.60) / 0.40;
+                    s_wave = -(p_s * std::f64::consts::PI).sin() * 0.28;
+                }
+            } else if dt_vent >= qrs_width && self.in_ap {
+                in_st = true;
+            }
+        }
+
+        // Segmento ST: Linha de base isoelétrica com elevação sob isquemia miocárdica (STEMI)
+        let st_shift = if in_st {
+            isch * 0.28
+        } else {
+            0.0
+        };
+
+        // 3. Onda T (Repolarização Ventricular Assimétrica)
+        let mut t_wave = 0.0;
+        if self.t_t_wave > 0.0 {
+            let dt_t = t_ms - self.t_t_wave;
+            // Amiodarona (block_k baixo) alarga a onda T; hipercalemia estreita a onda T
+            let t_width = 160.0 / (b_k * k_ratio.sqrt());
+            // Hipercalemia torna a onda T apiculada e alta; isquemia inverte a onda T
+            let t_amp = 0.35 * (k_ratio.powi(2) / b_k.sqrt()) * (1.0 - 1.8 * isch);
+            if dt_t >= 0.0 && dt_t < t_width {
+                let phase = dt_t / t_width;
+                let shape = (phase.powf(0.85) * std::f64::consts::PI).sin();
+                t_wave = shape * t_amp;
+            }
+        }
+
+        // Projeção nas 12 Derivações Clínicas
+        let lead = lead_idx % 12;
+        let (kp, kq, kr, ks, kst, kt) = match lead {
+            0 => (0.7, 0.8, 0.8, 0.6, 0.7, 0.8),         // DI
+            1 => (1.0, 1.0, 1.0, 1.0, 1.0, 1.0),         // DII (Padrão de Monitor)
+            2 => (0.4, 0.5, 0.6, 0.8, 0.5, 0.4),         // DIII
+            3 => (-0.8, -0.6, -0.9, -0.2, -0.8, -0.9),  // aVR (Invertida)
+            4 => (0.4, 0.6, 0.6, 0.4, 0.4, 0.5),         // aVL
+            5 => (0.8, 0.8, 0.9, 0.8, 0.8, 0.7),         // aVF
+            6 => (0.3, 0.0, 0.25, 1.3, 0.3, -0.3),       // V1 (rS profundo)
+            7 => (0.5, 0.0, 0.55, 1.1, 0.5, 0.5),        // V2 (rS transicional)
+            8 => (0.7, 0.3, 0.85, 0.7, 0.7, 0.8),        // V3 (isodifásico)
+            9 => (0.8, 0.5, 1.30, 0.4, 0.9, 1.0),        // V4 (R alto)
+            10 => (0.9, 0.6, 1.45, 0.25, 1.0, 1.0),      // V5 (R proeminente)
+            11 => (0.8, 0.5, 1.20, 0.15, 0.8, 0.85),     // V6 (lateral VE)
+            _ => (1.0, 1.0, 1.0, 1.0, 1.0, 1.0),
+        };
+
+        (p_wave * kp) + (q_wave * kq) + (r_wave * kr) + (s_wave * ks) + (st_shift * kst) + (t_wave * kt)
     }
 
     pub fn get_hud_metrics(&self) -> HudMetrics {

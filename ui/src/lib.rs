@@ -56,6 +56,7 @@ fn App() -> Element {
     let mut trigger_arm_single = use_signal(|| false);
     let mut is_paused = use_signal(|| false);
     let mut ghost_status_str = use_signal(|| "📸 Capturar".to_string());
+    let mut ecg_lead_idx = use_signal(|| 1usize);
 
     // Dynamic HUD metrics state
     let mut bpm = use_signal(|| 75.0);
@@ -184,6 +185,7 @@ fn App() -> Element {
                     b_na, b_k, b_ca, b_nak, 
                     s_symp, s_parasymp, s_isch, s_fibrosis
                 );
+                system.write().set_ecg_lead(ecg_lead_idx());
                 
                 // 2. Step Engine
                 // Amostragem compacta: 1 ponto a cada 5.0ms (downsample=500 com dt=0.01ms)
@@ -258,45 +260,52 @@ fn App() -> Element {
             let mut cleared = false;
 
             if any_sa {
-                pa_plotter_sa.draw(-90.0, 50.0, "#e74c3c", !cleared, ghost, uti_m, bulhas_m); // Nó SA: Vermelho (#e74c3c)
+                pa_plotter_sa.draw(-90.0, 50.0, "#e74c3c", !cleared, ghost, uti_m, bulhas_m, false, None); // Nó SA: Vermelho (#e74c3c)
                 cleared = true;
             }
             if any_atrium {
-                pa_plotter_atrium.draw(-90.0, 50.0, "#3498db", !cleared, ghost, uti_m, bulhas_m); // Átrio: Azul (#3498db)
+                pa_plotter_atrium.draw(-90.0, 50.0, "#3498db", !cleared, ghost, uti_m, bulhas_m, false, None); // Átrio: Azul (#3498db)
                 cleared = true;
             }
             if any_av {
-                pa_plotter_av.draw(-90.0, 50.0, "#f1c40f", !cleared, ghost, uti_m, bulhas_m); // Nó AV: Amarelo (#f1c40f)
+                pa_plotter_av.draw(-90.0, 50.0, "#f1c40f", !cleared, ghost, uti_m, bulhas_m, false, None); // Nó AV: Amarelo (#f1c40f)
                 cleared = true;
             }
             if any_purk {
-                pa_plotter_purk.draw(-90.0, 50.0, "#e67e22", !cleared, ghost, uti_m, bulhas_m); // Purkinje: Laranja (#e67e22)
+                pa_plotter_purk.draw(-90.0, 50.0, "#e67e22", !cleared, ghost, uti_m, bulhas_m, false, None); // Purkinje: Laranja (#e67e22)
                 cleared = true;
             }
             if any_endo {
-                pa_plotter_endo.draw(-90.0, 50.0, "#2ecc71", !cleared, ghost, uti_m, bulhas_m); // Endocárdio: Verde Clínico (#2ecc71)
+                pa_plotter_endo.draw(-90.0, 50.0, "#2ecc71", !cleared, ghost, uti_m, bulhas_m, false, None); // Endocárdio: Verde Clínico (#2ecc71)
                 cleared = true;
             }
             if any_epi {
-                pa_plotter_epi.draw(-90.0, 50.0, "#1abc9c", !cleared, ghost, uti_m, bulhas_m); // Epicárdio: Verde Menta (#1abc9c)
+                pa_plotter_epi.draw(-90.0, 50.0, "#1abc9c", !cleared, ghost, uti_m, bulhas_m, false, None); // Epicárdio: Verde Menta (#1abc9c)
                 cleared = true;
             }
             if any_fib {
-                pa_plotter_fib.draw(-90.0, 50.0, "#a29bfe", !cleared, ghost, uti_m, bulhas_m); // Fibroblasto: Lilás (#a29bfe)
+                pa_plotter_fib.draw(-90.0, 50.0, "#a29bfe", !cleared, ghost, uti_m, bulhas_m, false, None); // Fibroblasto: Lilás (#a29bfe)
                 cleared = true;
             }
 
             // Se nenhuma camada estiver ativa, limpa a tela e plota os marcadores
             if !cleared {
-                pa_plotter_endo.draw(-90.0, 50.0, "#000000", true, false, uti_m, bulhas_m);
+                pa_plotter_endo.draw(-90.0, 50.0, "#000000", true, false, uti_m, bulhas_m, false, None);
             }
+            pa_plotter_endo.draw_scales(-90.0, 50.0, false, "+50 mV", "-20 mV", "-90 mV");
             
-            ecg_plotter.draw(-35.0, 120.0, "#00f2fe", true, ghost, uti_m, bulhas_m); // Neon Cyan (#00f2fe) para DII (ECG Transmural)
-            ch3_plotter.draw(0.0, 0.002, "#a29bfe", true, ghost, uti_m, bulhas_m); // Roxo-Lilás (#a29bfe) para Cálcio
+            // CH-02: ECG Calibrado em mV com Grade Isotrópica (40ms x 0.1mV)
+            ecg_plotter.draw(-0.5, 1.5, "#00f2fe", true, ghost, uti_m, bulhas_m, true, None);
+            ecg_plotter.draw_scales(-0.5, 1.5, true, "+1.5 mV", "0.0 mV", "-0.5 mV");
+
+            // CH-03: Transiente de Cálcio Livre
+            ch3_plotter.draw(0.0, 0.002, "#a29bfe", true, ghost, uti_m, bulhas_m, false, None);
+            ch3_plotter.draw_scales(0.0, 0.002, false, "2.0 µM", "1.0 µM", "0.0 µM");
             
-            // Hemodinâmica: LVP e AoP sobrepostas (0 a 140 mmHg) com marcadores verticais
-            hemo_plotter_lvp.draw(0.0, 140.0, "#00f2fe", true, ghost, uti_m, bulhas_m); // Ciano (#00f2fe) para LVP Ventricular
-            hemo_plotter_aop.draw(0.0, 140.0, "#ff1754", false, ghost, uti_m, bulhas_m); // Carmesim (#ff1754) para Pressão Aórtica (AoP)
+            // CH-04: Hemodinâmica: LVP e AoP sobrepostas (0 a 140 mmHg) com marcadores verticais
+            hemo_plotter_lvp.draw(0.0, 140.0, "#00f2fe", true, ghost, uti_m, bulhas_m, false, None);
+            hemo_plotter_aop.draw(0.0, 140.0, "#ff1754", false, ghost, uti_m, bulhas_m, false, None);
+            hemo_plotter_aop.draw_scales(0.0, 140.0, false, "140 mmHg", "70 mmHg", "0 mmHg");
 
             // 4. Update HUD metrics at ~10 Hz (every 6 frames)
             if !is_paused() {
@@ -577,7 +586,30 @@ fn App() -> Element {
                     canvas { id: "canvas-pa" }
                 }
                 div { class: "canvas-wrapper",
-                    div { class: "canvas-label", "CH-02 [ 心電図 // ECG DERIVAÇÃO II ]" }
+                    div { class: "canvas-label",
+                        span { "CH-02 [ 心電図 // ECG: " }
+                        select {
+                            value: "{ecg_lead_idx()}",
+                            onchange: move |evt| {
+                                if let Ok(idx) = evt.value().parse::<usize>() {
+                                    ecg_lead_idx.set(idx);
+                                }
+                            },
+                            option { value: "1", selected: ecg_lead_idx() == 1, "DII (Padrão de Monitor)" }
+                            option { value: "0", selected: ecg_lead_idx() == 0, "DI (Bipolar Frontal)" }
+                            option { value: "2", selected: ecg_lead_idx() == 2, "DIII (Bipolar Frontal)" }
+                            option { value: "3", selected: ecg_lead_idx() == 3, "aVR (Unipolar Aumentada)" }
+                            option { value: "4", selected: ecg_lead_idx() == 4, "aVL (Unipolar Aumentada)" }
+                            option { value: "5", selected: ecg_lead_idx() == 5, "aVF (Unipolar Aumentada)" }
+                            option { value: "6", selected: ecg_lead_idx() == 6, "V1 (Precordial Direita)" }
+                            option { value: "7", selected: ecg_lead_idx() == 7, "V2 (Precordial Anterosseptal)" }
+                            option { value: "8", selected: ecg_lead_idx() == 8, "V3 (Precordial Transicional)" }
+                            option { value: "9", selected: ecg_lead_idx() == 9, "V4 (Precordial Anterior)" }
+                            option { value: "10", selected: ecg_lead_idx() == 10, "V5 (Precordial Lateral Baixa)" }
+                            option { value: "11", selected: ecg_lead_idx() == 11, "V6 (Precordial Lateral Baixa)" }
+                        }
+                        span { " ]" }
+                    }
                     canvas { id: "canvas-ecg" }
                 }
                 div { class: "canvas-wrapper",

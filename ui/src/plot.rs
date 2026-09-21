@@ -323,6 +323,8 @@ impl Plotter {
         show_ghost: bool,
         show_uti_markers: bool,
         show_bulhas_markers: bool,
+        is_ecg_grid: bool,
+        scale_labels: Option<(&str, &str, &str)>,
     ) {
         let document = match web_sys::window().and_then(|w| w.document()) {
             Some(d) => d,
@@ -342,12 +344,99 @@ impl Plotter {
                 if let Ok(Some(ctx)) = canvas.get_context("2d") {
                     let ctx = ctx.dyn_into::<CanvasRenderingContext2d>().unwrap();
 
-                    // Limpa fundo e desenha linhas verticais dos eventos de áudio (se for o plotter primário do canvas)
+                    let range_y = max_y - min_y;
+                    let dx = width / (self.capacity as f64 - 1.0);
+
+                    // Parâmetros da grade milimetrada isotrópica (40ms x 0.1mV)
+                    // Janela de 500 amostras a cada 5ms = 2500ms totais (62.5 quadradinhos de 40ms)
+                    let s = width / 62.5; // Tamanho de 1 quadradinho em pixels
+                    let y_zero = height - ((0.0 - min_y) / range_y) * height;
+
+                    // Mapeamento vertical de voltagem -> pixel
+                    let val_to_y = |val: f64| -> f64 {
+                        if is_ecg_grid {
+                            y_zero - (val * 10.0 * s)
+                        } else {
+                            height - ((val - min_y) / range_y) * height
+                        }
+                    };
+
+                    // Limpa fundo e desenha linhas da grade e eventos de áudio (se for o plotter primário do canvas)
                     if clear {
                         ctx.set_fill_style_str("#000000");
                         ctx.fill_rect(0.0, 0.0, width, height);
 
-                        let dx = width / (self.capacity as f64 - 1.0);
+                        // Grade Milimetrada Isotrópica de ECG (40ms x 0.1mV)
+                        if is_ecg_grid {
+                            ctx.save();
+
+                            // 1. Linhas verticais isotrópicas de tempo (a cada s = 40ms)
+                            let mut k = 0;
+                            while (k as f64) * s <= width + 1.0 {
+                                let x = (k as f64) * s;
+                                ctx.begin_path();
+                                if k % 5 == 0 {
+                                    // Quadratão de tempo (200ms)
+                                    ctx.set_stroke_style_str("rgba(0, 242, 254, 0.22)");
+                                    ctx.set_line_width(1.0);
+                                } else {
+                                    // Quadradinho pequeno (40ms)
+                                    ctx.set_stroke_style_str("rgba(0, 242, 254, 0.07)");
+                                    ctx.set_line_width(0.5);
+                                }
+                                ctx.move_to(x, 0.0);
+                                ctx.line_to(x, height);
+                                ctx.stroke();
+                                k += 1;
+                            }
+
+                            // 2. Linhas horizontais isotrópicas de voltagem (a cada s = 0.1mV) a partir de y_zero
+                            // Acima da linha de base (voltagens positivas)
+                            let mut j = 0;
+                            while y_zero - (j as f64) * s >= -1.0 {
+                                let y = y_zero - (j as f64) * s;
+                                ctx.begin_path();
+                                if j == 0 {
+                                    // Linha isoelétrica (0.0 mV)
+                                    ctx.set_stroke_style_str("rgba(0, 242, 254, 0.40)");
+                                    ctx.set_line_width(1.2);
+                                } else if j % 5 == 0 {
+                                    // Quadratão de voltagem (0.5 mV)
+                                    ctx.set_stroke_style_str("rgba(0, 242, 254, 0.22)");
+                                    ctx.set_line_width(1.0);
+                                } else {
+                                    // Quadradinho de voltagem (0.1 mV)
+                                    ctx.set_stroke_style_str("rgba(0, 242, 254, 0.07)");
+                                    ctx.set_line_width(0.5);
+                                }
+                                ctx.move_to(0.0, y);
+                                ctx.line_to(width, y);
+                                ctx.stroke();
+                                j += 1;
+                            }
+
+                            // Abaixo da linha de base (voltagens negativas)
+                            let mut j_neg = 1;
+                            while y_zero + (j_neg as f64) * s <= height + 1.0 {
+                                let y = y_zero + (j_neg as f64) * s;
+                                ctx.begin_path();
+                                if j_neg % 5 == 0 {
+                                    ctx.set_stroke_style_str("rgba(0, 242, 254, 0.22)");
+                                    ctx.set_line_width(1.0);
+                                } else {
+                                    ctx.set_stroke_style_str("rgba(0, 242, 254, 0.07)");
+                                    ctx.set_line_width(0.5);
+                                }
+                                ctx.move_to(0.0, y);
+                                ctx.line_to(width, y);
+                                ctx.stroke();
+                                j_neg += 1;
+                            }
+
+                            ctx.restore();
+                        }
+
+                        // Eventos acústicos sincronizados
                         for &(idx, flags) in &self.sound_markers {
                             let x = idx as f64 * dx;
                             // 1. Onda R / Bip da UTI (amarelo tracejado)
@@ -394,9 +483,6 @@ impl Plotter {
                         return;
                     }
 
-                    let dx = width / (self.capacity as f64 - 1.0);
-                    let range_y = max_y - min_y;
-
                     // 1. Desenha Onda Fantasma: Linha contínua sólida esmaecida (sem pontilhado, anti-fadiga visual)
                     if show_ghost && self.ghost_state == GhostCaptureState::Ready && !self.ghost_beat.is_empty() {
                         ctx.save();
@@ -411,7 +497,7 @@ impl Plotter {
                                 for (i, &val) in self.ghost_rolling_buffer.iter().enumerate() {
                                     if !val.is_nan() {
                                         let x = i as f64 * dx;
-                                        let y = height - ((val - min_y) / range_y) * height;
+                                        let y = val_to_y(val);
                                         if first {
                                             ctx.move_to(x, y);
                                             first = false;
@@ -433,7 +519,7 @@ impl Plotter {
                                     };
                                     if !val.is_nan() {
                                         let x = i as f64 * dx;
-                                        let y = height - ((val - min_y) / range_y) * height;
+                                        let y = val_to_y(val);
                                         if first {
                                             ctx.move_to(x, y);
                                             first = false;
@@ -463,7 +549,7 @@ impl Plotter {
                             for (i, &val) in self.buffer.iter().enumerate() {
                                 if !val.is_nan() {
                                     let x = i as f64 * dx;
-                                    let y = height - ((val - min_y) / range_y) * height;
+                                    let y = val_to_y(val);
                                     if first {
                                         ctx.move_to(x, y);
                                         first = false;
@@ -490,7 +576,7 @@ impl Plotter {
                                     let val = self.buffer[i];
                                     if !val.is_nan() {
                                         let x = i as f64 * dx;
-                                        let y = height - ((val - min_y) / range_y) * height;
+                                        let y = val_to_y(val);
                                         if first {
                                             ctx.move_to(x, y);
                                             first = false;
@@ -512,7 +598,7 @@ impl Plotter {
                                     let val = self.buffer[i];
                                     if !val.is_nan() {
                                         let x = i as f64 * dx;
-                                        let y = height - ((val - min_y) / range_y) * height;
+                                        let y = val_to_y(val);
                                         if first {
                                             ctx.move_to(x, y);
                                             first = false;
@@ -552,7 +638,7 @@ impl Plotter {
                                     let val = self.buffer[i];
                                     if !val.is_nan() {
                                         let x = i as f64 * dx;
-                                        let y = height - ((val - min_y) / range_y) * height;
+                                        let y = val_to_y(val);
                                         if first {
                                             ctx.move_to(x, y);
                                             first = false;
@@ -581,7 +667,7 @@ impl Plotter {
                                     let val = self.buffer[i];
                                     if !val.is_nan() {
                                         let x = i as f64 * dx;
-                                        let y = height - ((val - min_y) / range_y) * height;
+                                        let y = val_to_y(val);
                                         if first {
                                             ctx.move_to(x, y);
                                             first = false;
@@ -596,6 +682,89 @@ impl Plotter {
                             }
                         }
                     }
+
+                    // 3. Desenha Escalas Metrológicas Dinâmicas (Y_max, Y_mid, Y_min)
+                    if let Some((top_str, mid_str, bot_str)) = scale_labels {
+                        ctx.save();
+                        ctx.set_font("10px 'Chakra Petch', monospace");
+                        ctx.set_text_align("right");
+
+                        // Topo (Y_max)
+                        ctx.set_fill_style_str("rgba(255, 255, 255, 0.45)");
+                        ctx.set_text_baseline("top");
+                        let _ = ctx.fill_text(top_str, width - 8.0, 6.0);
+
+                        // Centro (Y_mid / Linha de Referência)
+                        let mid_y = if is_ecg_grid {
+                            y_zero
+                        } else {
+                            height * 0.5
+                        };
+                        ctx.set_fill_style_str("rgba(0, 242, 254, 0.50)");
+                        ctx.set_text_baseline("middle");
+                        let _ = ctx.fill_text(mid_str, width - 8.0, mid_y);
+
+                        // Base (Y_min)
+                        ctx.set_fill_style_str("rgba(255, 255, 255, 0.45)");
+                        ctx.set_text_baseline("bottom");
+                        let _ = ctx.fill_text(bot_str, width - 8.0, height - 6.0);
+
+                        ctx.restore();
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn draw_scales(
+        &self,
+        min_y: f64,
+        max_y: f64,
+        is_ecg_grid: bool,
+        top_str: &str,
+        mid_str: &str,
+        bot_str: &str,
+    ) {
+        let document = match web_sys::window().and_then(|w| w.document()) {
+            Some(d) => d,
+            None => return,
+        };
+
+        if let Some(canvas) = document.get_element_by_id(&self.canvas_id) {
+            if let Ok(canvas) = canvas.dyn_into::<HtmlCanvasElement>() {
+                let width = canvas.client_width() as f64;
+                let height = canvas.client_height() as f64;
+
+                if let Ok(Some(ctx)) = canvas.get_context("2d") {
+                    let ctx = ctx.dyn_into::<CanvasRenderingContext2d>().unwrap();
+                    let range_y = max_y - min_y;
+                    let y_zero = height - ((0.0 - min_y) / range_y) * height;
+
+                    ctx.save();
+                    ctx.set_font("10px 'Chakra Petch', monospace");
+                    ctx.set_text_align("right");
+
+                    // Topo (Y_max)
+                    ctx.set_fill_style_str("rgba(255, 255, 255, 0.45)");
+                    ctx.set_text_baseline("top");
+                    let _ = ctx.fill_text(top_str, width - 8.0, 6.0);
+
+                    // Centro (Y_mid / Linha de Referência)
+                    let mid_y = if is_ecg_grid {
+                        y_zero
+                    } else {
+                        height * 0.5
+                    };
+                    ctx.set_fill_style_str("rgba(0, 242, 254, 0.50)");
+                    ctx.set_text_baseline("middle");
+                    let _ = ctx.fill_text(mid_str, width - 8.0, mid_y);
+
+                    // Base (Y_min)
+                    ctx.set_fill_style_str("rgba(255, 255, 255, 0.45)");
+                    ctx.set_text_baseline("bottom");
+                    let _ = ctx.fill_text(bot_str, width - 8.0, height - 6.0);
+
+                    ctx.restore();
                 }
             }
         }
