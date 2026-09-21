@@ -22,7 +22,7 @@ O **KokoroSim** foi planejado para ser utilizado diretamente em computadores, ta
 
 ### 🔬 Procedimento Prático
 1. Clique no botão **`☢ RESETAR`** para restaurar as condições basais fisiológicas ($[K^+]_o = 5.4\text{ mEq/L}$, FC $\approx 75\text{ BPM}$).
-2. Clique no botão **`📸 Capturar`** no Accordion *0. Visualização e Modos de Tela* para congelar a curva basal de referência. Acompanhe a transição de status (`⏳ Aguardando Nó SA...` $\to$ `🔴 Gravando Ciclo...` $\to$ `📸 Capturar`).
+2. Abra o Accordion *0. Visualização* e clique no botão **`📸 Capturar`** para congelar a curva basal de referência. Acompanhe a transição de status (`⏳ Aguardando Nó SA...` $\to$ `🔴 Gravando Ciclo...` $\to$ `📸 Capturar`).
 3. Verifique que a **Onda Fantasma** translúcida se alinha perfeitamente ao traçado ativo em repouso.
 4. Abra o Accordion *1. Íons e Eletrólitos* e altere o slider de **Potássio $[K^+]_o$**:
    * **Etapa A (Normocalemia de transição):** Reduza para $4.0\text{ mEq/L}$. Observe o valor de $V_{rest}$ no HUD superior.
