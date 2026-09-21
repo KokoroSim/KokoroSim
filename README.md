@@ -31,6 +31,7 @@ O **kokor<span style="color: #ff1754;">心</span><span style="color: #00cec9;">s
 * ⚡ **[Abrir Simulador Interativo (Web App)](app.html)**: Aplicação biofísica em tempo real no navegador (Rust + WebAssembly).
 * 🧬 **[Modelos Biofísicos e Referências Científicas](docs/modelos.md)**: Equações detalhadas, formulações de canais iônicos, CellML e adaptações coelho → humano.
 * 🎓 **[Roteiro de Aulas Práticas para Universidades](docs/roteiro_aulas_praticas.md)**: 4 experimentos didáticos completos para Fisiologia e Farmacologia.
+* 🈯 **[Terminologia Médica em Kanji e Guia Bilíngue](docs/terminologia_kanji.md)**: Auditoria filológica, pronúncia e correspondência biofísica exata de cada termo em kanji do simulador.
 * 🏛️ **[Decisões de Arquitetura e Engenharia](ARCHITECTURE.md)**: Justificativas biofísicas, matemáticas e arquiteturais do software.
 * 🗺️ **[Roadmap de Desenvolvimento](ROADMAP.md)**: Fases concluídas da v2.0 e planejamento da expansão espacial para a v2.1+.
 * 🎨 **[Identidade Visual e Conceito do Logotipo](docs/identidade_visual.md)**: O Rotor, o Magatama (勾玉) e a convergência biofísica.
@@ -44,6 +45,7 @@ O **kokor<span style="color: #ff1754;">心</span><span style="color: #00cec9;">s
 * 📺 [Modos de Visualização do Osciloscópio e Onda Fantasma](#modos-de-visualizacao-do-osciloscopio-e-onda-fantasma)
 * 🎛️ [Modulação Farmacológica, Eletrolítica e Patológica](#modulacao-farmacologica-eletrolitica-e-patologica)
 * 🎨 [Identidade Visual e Conceito do Logotipo](#identidade-visual-e-conceito-do-logotipo-o-rotor-magatama)
+* 🈯 [Terminologia Médica em Kanji e Guia Bilíngue](#terminologia-medica-em-kanji-e-guia-bilingue)
 * 💻 [Arquitetura de Software](#arquitetura-de-software)
 * 📖 [Como Citar o KokoroSim (ABNT, Vancouver, BibTeX)](#citacao-academica)
 * 💖 [Agradecimentos e Dedicatória](#agradecimentos-e-dedicatoria)
@@ -178,6 +180,17 @@ A silhueta baseia-se no **magatama** (勾玉) e no elemento dinâmico unitário 
 - A paleta de cores adota o **Carmesim Neon** (`#ff1754` — representando o sangue arterial oxigenado, a pressão aórtica e o calor metabólico) em contraste com o **Ciano Elétrico** (`#00f2fe` — representando a bioeletricidade transmembrana, a polaridade iônica e a convenção anatômica do sangue venoso), montados sobre um fundo escuro com estética de interface tática Mecha/HUD de ficção científica.
 
 > 📖 **Documento Conceitual Completo:** Leia o ensaio ilustrado sobre a semiologia, geometria e fundamentação visual em **[Identidade Visual e Conceito do Logotipo](docs/identidade_visual.md)**.
+
+---
+
+<a id="terminologia-medica-em-kanji-e-guia-bilingue"></a>
+## 🈯 Terminologia Médica em Kanji e Guia Bilíngue [↑](#indice "Voltar ao Índice")
+
+Inspirado nos painéis de telemetria analógica e eletrocardiógrafos hospitalares japoneses dos anos 80 e 90, o **KokoroSim** adota notação bilíngue em todos os seus instrumentos (HUD superior, canais de osciloscópio CRT e módulos do rack de controle lateral). 
+
+Todos os caracteres em **Kanji** e **Katakana** correspondem rigorosamente ao vocabulário médico, fisiológico e biofísico oficial utilizado no Japão (ex: `心拍数` para Frequência Cardíaca, `静止電位` para Potencial de Repouso, `抗不整脈薬` para Fármacos Antiarrítmicos e `活動電位` para Potencial de Ação Celular), com correspondente direto em português e unidades do Sistema Internacional.
+
+> 🈯 **Tabela Completa de Auditoria Filológica:** Para consultar a pronúncia (*rōmaji*), a decomposição morfológica caractere por caractere e a correlação fisiológica detalhada de cada termo presente no simulador, acesse a página de **[Terminologia Médica em Kanji e Guia Bilíngue](docs/terminologia_kanji.md)**.
 
 ---
 
