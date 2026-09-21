@@ -5,6 +5,9 @@
 ### Features
   - (ui) adicionar suporte a multiplas derivacoes de ECG e grade milimetrada
 
+### Bug Fixes
+  - (ecg) corrige amplitude e grade dinamica do ecg
+
 ## Previous Releases
 
 ### [v2.1.0] - Otimização de Interface e Controle Eletrofisiológico

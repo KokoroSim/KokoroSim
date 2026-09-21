@@ -58,6 +58,7 @@ pub struct Plotter {
     paged_frozen: bool,
     single_state: SingleState,
     sound_markers: Vec<(usize, u8)>, // (index, sound_code)
+    total_pushed: u64, // Contador total de amostras recebidas (usado para offset de grade)
 }
 
 impl Plotter {
@@ -77,6 +78,7 @@ impl Plotter {
             paged_frozen: false,
             single_state: SingleState::Armed,
             sound_markers: Vec::new(),
+            total_pushed: 0,
         }
     }
 
@@ -312,6 +314,7 @@ impl Plotter {
                 }
             }
         }
+        self.total_pushed = self.total_pushed.wrapping_add(1);
     }
 
     pub fn draw(
@@ -370,12 +373,42 @@ impl Plotter {
                         if is_ecg_grid {
                             ctx.save();
 
+                            // Offset horizontal da grade para rolar junto com o traçado.
+                            // 1 quadradinho = 8 amostras (40ms a 5ms/amostra).
+                            // O offset em pixels avança 1 'dx' por amostra, com período de 's' pixels.
+                            let grid_offset_x = match self.mode {
+                                ViewMode::Rolling => {
+                                    // No modo Rolling, a grade rola com o total de amostras recebidas
+                                    (self.total_pushed as f64 * dx).rem_euclid(s)
+                                }
+                                ViewMode::Sweep | ViewMode::TriggeredAuto | ViewMode::TriggeredSingle => {
+                                    // Nos modos com caneta, ancora a grade na posição atual da caneta
+                                    (self.head_idx as f64 * dx).rem_euclid(s)
+                                }
+                                ViewMode::Paged => {
+                                    // Paged: grade fixa, ancorada no início da página
+                                    (self.head_idx as f64 * dx).rem_euclid(s)
+                                }
+                            };
+
                             // 1. Linhas verticais isotrópicas de tempo (a cada s = 40ms)
-                            let mut k = 0;
-                            while (k as f64) * s <= width + 1.0 {
-                                let x = (k as f64) * s;
+                            // Começamos em x negativo para cobrir a borda esquerda com o offset
+                            let start_x = -s + (s - grid_offset_x).rem_euclid(s);
+                            let mut x = start_x;
+                            // Índice relativo para determinar quadratão (200ms = 5 quadradinhos)
+                            // A conta de "qual múltiplo" usa total_pushed para manter coerência
+                            let phase_count = match self.mode {
+                                ViewMode::Rolling => self.total_pushed,
+                                _ => self.head_idx as u64,
+                            };
+                            // k_base: quantos quadradinhos inteiros foram "consumidos" até o início da janela
+                            let k_base_offset = ((phase_count as f64 * dx / s).floor() as i64).rem_euclid(5) as usize;
+                            let mut k_rel = 0usize;
+                            while x <= width + 1.0 {
                                 ctx.begin_path();
-                                if k % 5 == 0 {
+                                // k_mod: posição relativa no ciclo de 5 quadradinhos (0 = quadratão)
+                                let k_mod = (k_base_offset + k_rel) % 5;
+                                if k_mod == 0 {
                                     // Quadratão de tempo (200ms)
                                     ctx.set_stroke_style_str("rgba(0, 242, 254, 0.22)");
                                     ctx.set_line_width(1.0);
@@ -387,7 +420,8 @@ impl Plotter {
                                 ctx.move_to(x, 0.0);
                                 ctx.line_to(x, height);
                                 ctx.stroke();
-                                k += 1;
+                                x += s;
+                                k_rel += 1;
                             }
 
                             // 2. Linhas horizontais isotrópicas de voltagem (a cada s = 0.1mV) a partir de y_zero

@@ -580,7 +580,7 @@ impl HeartSystem {
             if dt_atr >= 0.0 && dt_atr < p_width {
                 let phase = dt_atr / p_width;
                 // Na hipercalemia grave, a onda P se achata e desaparece
-                let p_amp = 0.15 * (2.2 - k_ratio).clamp(0.0, 1.0);
+                let p_amp = 0.12 * (2.2 - k_ratio).clamp(0.0, 1.0);
                 p_wave = (phase * std::f64::consts::PI).sin() * p_amp;
             }
         }
@@ -600,15 +600,15 @@ impl HeartSystem {
                 if phase < 0.15 {
                     // Onda Q (deflexão septal negativa)
                     let p_q = phase / 0.15;
-                    q_wave = -(p_q * std::f64::consts::PI).sin() * 0.12;
+                    q_wave = -(p_q * std::f64::consts::PI).sin() * 0.07;
                 } else if phase < 0.60 {
                     // Onda R (ativação transmural endocárdio -> epicárdio)
                     let p_r = (phase - 0.15) / 0.45;
-                    r_wave = (p_r * std::f64::consts::PI).sin() * 1.25;
+                    r_wave = (p_r * std::f64::consts::PI).sin() * 0.75;
                 } else {
                     // Onda S (despolarização basal tardia)
                     let p_s = (phase - 0.60) / 0.40;
-                    s_wave = -(p_s * std::f64::consts::PI).sin() * 0.28;
+                    s_wave = -(p_s * std::f64::consts::PI).sin() * 0.17;
                 }
             } else if dt_vent >= qrs_width && self.in_ap {
                 in_st = true;
@@ -617,7 +617,7 @@ impl HeartSystem {
 
         // Segmento ST: Linha de base isoelétrica com elevação sob isquemia miocárdica (STEMI)
         let st_shift = if in_st {
-            isch * 0.28
+            isch * 0.18
         } else {
             0.0
         };
@@ -629,7 +629,7 @@ impl HeartSystem {
             // Amiodarona (block_k baixo) alarga a onda T; hipercalemia estreita a onda T
             let t_width = 160.0 / (b_k * k_ratio.sqrt());
             // Hipercalemia torna a onda T apiculada e alta; isquemia inverte a onda T
-            let t_amp = 0.35 * (k_ratio.powi(2) / b_k.sqrt()) * (1.0 - 1.8 * isch);
+            let t_amp = 0.22 * (k_ratio.powi(2) / b_k.sqrt()) * (1.0 - 1.8 * isch);
             if dt_t >= 0.0 && dt_t < t_width {
                 let phase = dt_t / t_width;
                 let shape = (phase.powf(0.85) * std::f64::consts::PI).sin();
