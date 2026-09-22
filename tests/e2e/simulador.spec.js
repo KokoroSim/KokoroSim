@@ -37,14 +37,17 @@ test.describe('KokoroSim — Testes E2E do Simulador Web (Wasm + Dioxus)', () =>
     await expect(page.locator('#hud-qrs')).toContainText('ms');
     await expect(page.locator('#hud-qt')).toContainText('ms');
     await expect(page.locator('#hud-vrest')).toContainText('mV');
+    await expect(page.locator('#hud-ef')).toContainText('%');
+    await expect(page.locator('#hud-sv')).toContainText('mL');
+    await expect(page.locator('#hud-co')).toContainText('L/min');
 
     expect(jsErrors).toHaveLength(0);
   });
 
-  test('deve renderizar os 4 canais de osciloscópio (Canvases ativos)', async ({ page }) => {
+  test('deve renderizar os canais de osciloscópio e a alça P x V (Canvases ativos)', async ({ page }) => {
     await page.waitForTimeout(1500);
 
-    const canvasIds = ['#canvas-pa', '#canvas-ecg', '#canvas-ch3', '#canvas-ch4'];
+    const canvasIds = ['#canvas-pa', '#canvas-ecg', '#canvas-ch3', '#canvas-ch4', '#canvas-pv'];
     for (const id of canvasIds) {
       const canvas = page.locator(id);
       await expect(canvas).toBeVisible();
@@ -56,7 +59,7 @@ test.describe('KokoroSim — Testes E2E do Simulador Web (Wasm + Dioxus)', () =>
     }
 
     const totalCanvases = page.locator('.canvas-wrapper canvas');
-    await expect(totalCanvases).toHaveCount(4);
+    await expect(totalCanvases).toHaveCount(5);
 
     expect(jsErrors).toHaveLength(0);
   });
@@ -173,10 +176,10 @@ test.describe('KokoroSim — Testes E2E do Simulador Web (Wasm + Dioxus)', () =>
 
   test('deve iniciar com todas as sanfonas fechadas e permitir apenas uma aberta por vez', async ({ page }) => {
     const accordions = page.locator('details.control-group');
-    await expect(accordions).toHaveCount(8);
+    await expect(accordions).toHaveCount(9);
 
     // 1. Todas iniciam fechadas
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 9; i++) {
       await expect(accordions.nth(i)).not.toHaveAttribute('open');
     }
 
@@ -194,6 +197,38 @@ test.describe('KokoroSim — Testes E2E do Simulador Web (Wasm + Dioxus)', () =>
     // 4. Clica novamente na segunda sanfona -> ela deve fechar
     await summary1.click();
     await expect(accordions.nth(1)).not.toHaveAttribute('open');
+
+    expect(jsErrors).toHaveLength(0);
+  });
+
+  test('deve manipular os controles de valvopatias e manter estabilidade hemodinâmica', async ({ page }) => {
+    // 1. Abre a sanfona de Valvopatias (Sanfona 8)
+    const valvoAccordion = page.locator('details.control-group', { hasText: 'Valvopatias' });
+    await expect(valvoAccordion).toBeVisible();
+    await valvoAccordion.locator('summary').click();
+    await expect(valvoAccordion).toHaveAttribute('open');
+
+    // 2. Valida a presença dos 4 sliders de valvopatias
+    const sliders = valvoAccordion.locator('input[type="range"]');
+    await expect(sliders).toHaveCount(4);
+
+    // 3. Altera a Estenose Aórtica para 80%
+    const eaSlider = sliders.nth(0);
+    await eaSlider.fill('80');
+    await page.waitForTimeout(1500);
+
+    // 4. Valida que a telemetria do HUD permanece responsiva e estável
+    const efLocator = page.locator('#hud-ef');
+    await expect(efLocator).toBeVisible();
+    await expect(efLocator).toContainText('%');
+
+    const coLocator = page.locator('#hud-co');
+    await expect(coLocator).toBeVisible();
+    await expect(coLocator).toContainText('L/min');
+
+    // 5. Canvas da alça P x V continua ativo
+    const pvCanvas = page.locator('#canvas-pv');
+    await expect(pvCanvas).toBeVisible();
 
     expect(jsErrors).toHaveLength(0);
   });
