@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Features
+  - (ui) adicionar controles de valvopatias e telemetria sistolica no hud (closes #10)
   - (ui) implementar plotter 2d em plano de fase para alca p x v (closes #9)
   - (hemo) modelar valvopatias aorticas e mitrais (closes #8)
   - (hemo) rastrear volumes sistolicos e calibrar pressao atrial de wiggers (closes #7)

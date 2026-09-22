@@ -460,9 +460,9 @@ fn App() -> Element {
     let qt_str = if qt() > 0.0 { format!("{:.0}ms", qt()) } else { "---".to_string() };
     let vrest_str = format!("{:.0}mV", v_rest());
     let pr_rr_str = if pr_rr() > 0.0 { format!("{:.2}", pr_rr()) } else { "---".to_string() };
-    let _ef_str = format!("{:.1}", ef());
-    let _sv_str = format!("{:.0}", sv());
-    let _co_str = format!("{:.2}", co());
+    let ef_str = format!("{:.1}", ef());
+    let sv_str = format!("{:.0}", sv());
+    let co_str = format!("{:.2}", co());
 
     let mut active_accordion = use_signal(|| None::<usize>);
 
@@ -570,6 +570,9 @@ fn App() -> Element {
                         div { class: "hud-item", "QT間隔 // QT: ", span { id: "hud-qt", "{qt_str}" } }
                         div { class: "hud-item", "静止電位 // V.Rep: ", span { id: "hud-vrest", "{vrest_str}" } }
                         div { class: "hud-item", "PR/RR: ", span { id: "hud-pr-rr", "{pr_rr_str}" } }
+                        div { class: "hud-item", "駆出率 // FE: ", span { id: "hud-ef", "{ef_str}%" } }
+                        div { class: "hud-item", "一拍拍出量 // VS: ", span { id: "hud-sv", "{sv_str} mL" } }
+                        div { class: "hud-item", "心拍出量 // DC: ", span { id: "hud-co", "{co_str} L/min" } }
                     } else {
                         div { class: "hud-item", "呼吸数 // FR: ", span { id: "hud-rr", "{resp_rate():.0} irpm" } }
                         div { class: "hud-item", "一秒量 // VEF₁: ", span { id: "hud-vef1", "{spiro_vef1():.2} L" } }
@@ -789,6 +792,33 @@ fn App() -> Element {
                 Accordion { index: 7, label: "7. 生体音響 // Monitorização & Áudio".to_string(), active_accordion,
                     Checkbox { label: "🔊 Bip de Monitor (UTI - Onda R)".to_string(), color: "#2ecc71".to_string(), checked: sound_uti }
                     Checkbox { label: "🩺 Bulhas Cardíacas (B1 / B2)".to_string(), color: "#e74c3c".to_string(), checked: sound_bulhas }
+                }
+
+                Accordion { index: 8, label: "8. 弁膜症 // Valvopatias & Dinâmica Valvar".to_string(), active_accordion,
+                    Slider {
+                        label: "Estenose Aórtica".to_string(),
+                        min: 0.0, max: 100.0, step: 1.0, default_val: 0.0, unit: "%".to_string(),
+                        help: Some("Obstrução da via de saída do VE. Gera gradiente pressórico sistólico VE-Aorta e sobrecarga sistólica.".to_string()),
+                        val: aortic_stenosis
+                    }
+                    Slider {
+                        label: "Insuficiência Aórtica".to_string(),
+                        min: 0.0, max: 100.0, step: 1.0, default_val: 0.0, unit: "%".to_string(),
+                        help: Some("Refluxo diastólico da aorta para o VE. Queda acentuada da pressão diastólica aórtica e sobrecarga de volume.".to_string()),
+                        val: aortic_regurg
+                    }
+                    Slider {
+                        label: "Estenose Mitral".to_string(),
+                        min: 0.0, max: 100.0, step: 1.0, default_val: 0.0, unit: "%".to_string(),
+                        help: Some("Resistência ao enchimento ventricular diastólico. Causa congestão e hipertensão no átrio esquerdo.".to_string()),
+                        val: mitral_stenosis
+                    }
+                    Slider {
+                        label: "Insuficiência Mitral".to_string(),
+                        min: 0.0, max: 100.0, step: 1.0, default_val: 0.0, unit: "%".to_string(),
+                        help: Some("Regurgitação sistólica do VE para o átrio esquerdo gerando onda v patológica gigante.".to_string()),
+                        val: mitral_regurg
+                    }
                 }
                 } else {
                     Accordion { index: 10, label: "1. 換気力学 // Mecânica Ventilatória".to_string(), active_accordion,
