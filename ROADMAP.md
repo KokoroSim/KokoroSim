@@ -145,6 +145,9 @@ O desenvolvimento do **KokoroSim** está organizado em grandes marcos arquitetur
   - Insuficiência Aórtica (regurgitação diastólica com colapso de pressão aórtica diastólica < 50 mmHg e sobrecarga volumétrica).
   - Estenose Mitral (hipertensão atrial esquerda > 18 mmHg por retardo de esvaziamento diastólico).
   - Insuficiência Mitral (regurgitação sistólica ventrículo-atrial gerando onda v patológica gigante > 25 mmHg).
+* [x] **Controles Clínicos e Telemetria Sistólica na Interface**:
+  - Nova sanfona no Cardio Lab (`8. 弁膜症 // Valvopatias & Dinâmica Valvar`) com sliders contínuos de Estenose Aórtica, Insuficiência Aórtica, Estenose Mitral e Insuficiência Mitral.
+  - Telemetria no HUD com Fração de Ejeção ($FE$), Volume Sistólico ($VS$) e Débito Cardíaco ($DC$) atualizados ciclo a ciclo.
 
 ### Fase 14: Expansão Espacial (Monodomínio 2D / 3D)
 * [ ] Substituição do modelo 0D acoplado por malha bidimensional de diferenças finitas (matriz de 100x100 a 200x200 miócitos).
