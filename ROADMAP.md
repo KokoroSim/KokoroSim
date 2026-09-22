@@ -148,6 +148,8 @@ O desenvolvimento do **KokoroSim** está organizado em grandes marcos arquitetur
 * [x] **Controles Clínicos e Telemetria Sistólica na Interface**:
   - Nova sanfona no Cardio Lab (`8. 弁膜症 // Valvopatias & Dinâmica Valvar`) com sliders contínuos de Estenose Aórtica, Insuficiência Aórtica, Estenose Mitral e Insuficiência Mitral.
   - Telemetria no HUD com Fração de Ejeção ($FE$), Volume Sistólico ($VS$) e Débito Cardíaco ($DC$) atualizados ciclo a ciclo.
+* [x] **Validação e Suíte de Testes E2E (Playwright)**:
+  - 10 cenários automatizados cobrindo Wiggers, alça $P \times V$, estabilidade hemodinâmica sob valvopatias e persistência em segundo plano.
 
 ### Fase 14: Expansão Espacial (Monodomínio 2D / 3D)
 * [ ] Substituição do modelo 0D acoplado por malha bidimensional de diferenças finitas (matriz de 100x100 a 200x200 miócitos).
