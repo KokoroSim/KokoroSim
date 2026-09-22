@@ -90,3 +90,65 @@ fn test_numerical_stability_no_nan_or_inf() {
         assert!(!ecg.is_nan() && !ecg.is_infinite(), "ECG é NaN/Inf no passo {}", step);
     }
 }
+
+#[test]
+fn test_rsa_long_term_stability_and_normotension() {
+    let mut system = HeartSystem::new();
+    system.set_rsa_enabled(true);
+    let dt = 0.01;
+    let mut last_v_vent = system.get_vent_endo_v();
+    let mut beat_count = 0;
+    let mut last_beat_time = -1.0;
+    let mut min_bpm = 200.0;
+    let mut max_bpm = 0.0;
+
+    // Simula 30 segundos fisiológicos (3.000.000 de passos) sob respiração contínua com RSA
+    for step in 0..3_000_000 {
+        let t = step as f64 * dt;
+        system.step(dt);
+        let v_vent = system.get_vent_endo_v();
+
+        if last_v_vent <= -20.0 && v_vent > -20.0 {
+            beat_count += 1;
+            if last_beat_time > 0.0 {
+                let rr = t - last_beat_time;
+                let inst_bpm = 60000.0 / rr;
+                if inst_bpm < min_bpm { min_bpm = inst_bpm; }
+                if inst_bpm > max_bpm { max_bpm = inst_bpm; }
+
+                // Mesmo com flutuações respiratórias, a FC instantânea nunca deve colapsar (< 65 BPM) nem disparar (> 92 BPM)
+                assert!(
+                    inst_bpm >= 65.0 && inst_bpm <= 92.0,
+                    "Batimento #{} com BPM instantâneo anômalo sob RSA: {:.1} (RR = {:.1} ms em t={:.1}s)",
+                    beat_count, inst_bpm, rr, t / 1000.0
+                );
+            }
+            last_beat_time = t;
+        }
+        last_v_vent = v_vent;
+    }
+
+    // Deve ter produzido entre 35 e 45 batimentos em 30 segundos (~75-80 BPM médio)
+    assert!(
+        beat_count >= 35 && beat_count <= 45,
+        "Total de batimentos em 30s sob RSA fora da faixa fisiológica: {}",
+        beat_count
+    );
+
+    // Métrica do HUD deve estar plenamente na faixa eutrófica
+    let hud = system.get_hud_metrics();
+    assert!(
+        hud.bpm >= 72.0 && hud.bpm <= 84.0,
+        "HUD BPM final em 30s sob RSA fora da faixa esperada: {:.1} BPM",
+        hud.bpm
+    );
+
+    // Estabilidade hemodinâmica preservada (sem hipotensão por bradicardia)
+    let ef = system.get_hemo_ef();
+    let sv = system.get_hemo_sv();
+    let edv = system.get_hemo_edv();
+    assert!(ef >= 50.0 && ef <= 65.0, "Fração de ejeção fora da faixa sob RSA: {:.1}%", ef);
+    assert!(sv >= 60.0 && sv <= 85.0, "Volume sistólico fora da faixa sob RSA: {:.1} mL", sv);
+    assert!(edv >= 115.0 && edv <= 140.0, "VDF fora da faixa sob RSA: {:.1} mL", edv);
+}
+

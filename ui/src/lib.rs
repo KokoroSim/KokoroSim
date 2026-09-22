@@ -576,9 +576,11 @@ fn App() -> Element {
                     } else {
                         div { class: "hud-item", "呼吸数 // FR: ", span { id: "hud-rr", "{resp_rate():.0} irpm" } }
                         div { class: "hud-item", "一秒量 // VEF₁: ", span { id: "hud-vef1", "{spiro_vef1():.2} L" } }
-                        div { class: "hud-item", "肺活量 // CVF: ", span { id: "hud-cvf", "{spiro_cvf():.2} L" } }
-                        div { class: "hud-item", "ティフノー // VEF₁/CVF: ", span { id: "hud-tiff", "{spiro_tiff():.1}%" } }
-                        div { class: "hud-item", "最大呼気 // PEF: ", span { id: "hud-pef", "{spiro_pef():.1} L/s" } }
+                        div { class: "hud-item", "努力肺活量 // CVF: ", span { id: "hud-cvf", "{spiro_cvf():.2} L" } }
+                        div { class: "hud-item", "ティフノー指数 // Tiffeneau: ", span { id: "hud-tiff", "{spiro_tiff():.1}%" } }
+                        div { class: "hud-item", "最大呼気流速 // PEF: ", span { id: "hud-pef", "{spiro_pef():.2} L/s" } }
+                        div { class: "hud-item", "心拍数 // FC: ", span { id: "hud-pulmo-bpm", "{bpm_str}" } }
+                        div { class: "hud-item", "心拍出量 // DC: ", span { id: "hud-pulmo-co", "{co_str} L/min" } }
                         div { class: "hud-item", "気道抵抗 // Raw: ", span { id: "hud-raw", "{resp_raw():.1} cmH₂O" } }
                     }
                 }
@@ -792,6 +794,7 @@ fn App() -> Element {
                 Accordion { index: 7, label: "7. 生体音響 // Monitorização & Áudio".to_string(), active_accordion,
                     Checkbox { label: "🔊 Bip de Monitor (UTI - Onda R)".to_string(), color: "#2ecc71".to_string(), checked: sound_uti }
                     Checkbox { label: "🩺 Bulhas Cardíacas (B1 / B2)".to_string(), color: "#e74c3c".to_string(), checked: sound_bulhas }
+                    Checkbox { label: "🫁 Arritmia Sinusal Respiratória (RSA)".to_string(), color: "#a29bfe".to_string(), checked: rsa_toggle }
                 }
 
                 Accordion { index: 8, label: "8. 弁膜症 // Valvopatias & Dinâmica Valvar".to_string(), active_accordion,
@@ -1029,7 +1032,7 @@ fn App() -> Element {
                             }
                             div { class: "canvas-wrapper",
                                 div { class: "canvas-label",
-                                    span { "CH-PV [ 圧力-容積ループ // ALÇA P × V ]" }
+                                    span { "CH-PV [ 圧力-容積ループ // ALÇA PRESSÃO-VOLUME DO VE ]" }
                                 }
                                 canvas { id: "canvas-pv" }
                             }

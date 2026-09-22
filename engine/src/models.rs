@@ -296,11 +296,9 @@ impl HeartSystem {
         let mut eff_pharm_sa = self.pharm;
         if self.rsa_enabled && self.time > 1000.0 {
             if self.resp.f_rsa > 0.0 {
-                // Inspiração: leve inibição vagal acelerando sutilmente o Nó SA
-                eff_pharm_sa.symp = (eff_pharm_sa.symp + self.resp.f_rsa * 3.0).clamp(0.0, 100.0);
-            } else {
-                // Expiração: leve eferência vagal desacelerando sutilmente o Nó SA
-                eff_pharm_sa.parasymp = (eff_pharm_sa.parasymp - self.resp.f_rsa * 2.5).clamp(0.0, 100.0);
+                // Inspiração: inibição vagal fisiológica com aceleração sinusal transitória (~ +3 a +4 BPM)
+                eff_pharm_sa.symp = (eff_pharm_sa.symp + self.resp.f_rsa * 0.25).clamp(0.0, 100.0);
+                eff_pharm_sa.parasymp = (eff_pharm_sa.parasymp - self.resp.f_rsa * 0.5).max(0.0);
             }
         }
 

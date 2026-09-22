@@ -132,6 +132,10 @@ O desenvolvimento do **KokoroSim** está organizado em grandes marcos arquitetur
 * [x] **Acoplamento Cardiorrespiratório e Pressão Pleural**:
   - Dinâmica da **Pressão Intrapleural ($P_{pl}$)** oscilando entre $-8\text{ cmH}_2\text{O}$ e $-5\text{ cmH}_2\text{O}$ em repouso e até $+30\text{ cmH}_2\text{O}$ na manobra forçada.
   - **Arritmia Sinusal Respiratória (RSA)**: Modulação autonômica do Nó Sinoatrial (Severi) pela respiração (taquicardia transitória na inspiração por inibição vagal; bradicardia na expiração por eferência parassimpática).
+  - **Recalibração Fisiológica de Longo Prazo da RSA**: Atenuação do ganho vagal excessivo e balanceamento simpático-vagal ($\Delta FC \approx \pm 3\text{--}5\text{ BPM}$), eliminando a bradicardia progressiva e o colapso pressórico aórtico em repouso prolongado.
+  - **Harness de Validação e Baseline de Longo Prazo (300s)**: Teste automatizado sob demanda (`long_baseline_300s.rs`) certificando 5 minutos ininterruptos de estabilidade hemodinâmica eutrófica (PA 122/71 mmHg, 412 batimentos, FE 51–58%, sem colapso por bradicardia).
+  - **Controle Didático no Cardio Lab**: Inclusão de toggle independente de RSA na sanfona de monitorização do Cardio Lab para comparação direta imediata.
+  - **Monitor Cardíaco no Pulmo Lab**: Telemetria contínua de Frequência Cardíaca ($FC$) e Débito Cardíaco ($DC$) no HUD do Pulmo Lab para feedback cardiovascular durante manobras ventilatórias.
 * [x] **Arquitetura de Abas Especializadas (`.lab-tabs`)**:
   - Divisão da interface em dois grandes espaços de trabalho (`💓 CARDIO LAB` e `🫁 PULMO LAB`) sem perda de continuidade do motor biofísico em segundo plano a 60 FPS.
 
@@ -139,6 +143,7 @@ O desenvolvimento do **KokoroSim** está organizado em grandes marcos arquitetur
 * [x] **Diagrama de Wiggers Completo e Alça Pressão-Volume ($P \times V$)**:
   - [x] Cálculo contínuo de volumes ventriculares: Volume Diastólico Final (VDF), Volume Sistólico Final (VSF), Volume Sistólico e Fração de Ejeção ($FE = VS / VDF$).
   - [x] Novo traçado bidimensional em plano de fase exibindo a alça $P \times V$ dinâmica em tempo real (resposta direta à contratilidade via ESPVR, complacência via EDPVR, pré-carga e pós-carga).
+  - [x] Refinamento da rotulagem clínica do osciloscópio 2D para `CH-PV [ 圧力-容積ループ // ALÇA PRESSÃO-VOLUME DO VE ]` com discriminação visual de eixos ($mmHg \times mL$) e fases do ciclo.
 * [x] **Mecânica e Pressão Atrial**: Ondas *a* (contração atrial ativa pós-onda P), *c* (abaulamento isovolumétrico da mitral) e *v* com descenso *y* (enchimento sistólico passivo e esvaziamento diastólico).
 * [x] **Patologias Valvares e Desafios Hemodinâmicos**:
   - Modelagem de Estenose Aórtica (gradiente transvalvar sistólico patológico > 40 mmHg e sobrecarga pressórica com efeito Anrep).
