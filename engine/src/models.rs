@@ -137,7 +137,7 @@ pub struct HeartSystem {
     pub pr_rr: f64,
 }
 
-pub const BATCH_CHUNK_SIZE: usize = 15;
+pub const BATCH_CHUNK_SIZE: usize = 17;
 
 #[wasm_bindgen]
 impl HeartSystem {
@@ -540,7 +540,7 @@ impl HeartSystem {
 
     // Roda um lote completo de cálculos no lado do Rust e retorna um array f64 achatado!
     pub fn run_batch(&mut self, dt: f64, steps: usize, downsample: usize) -> Vec<f64> {
-        let chunk_size = 15;
+        let chunk_size = BATCH_CHUNK_SIZE;
         let mut batch = Vec::with_capacity((steps / downsample) * chunk_size);
         for i in 0..steps {
             self.step(dt);
@@ -569,6 +569,8 @@ impl HeartSystem {
                 batch.push(self.resp.vol);         // 12: Volume Pulmonar (L)
                 batch.push(self.resp.flow);        // 13: Fluxo Aéreo Instantâneo (L/s)
                 batch.push(self.resp.p_pl);        // 14: Pressão Intrapleural (cmH2O)
+                batch.push(self.hemo.v_lv);        // 15: Volume Ventricular Esquerdo (mL)
+                batch.push(self.hemo.p_la);        // 16: Pressão Atrial Esquerda (LAP, mmHg)
             }
         }
         batch

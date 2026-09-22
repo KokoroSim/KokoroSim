@@ -5,7 +5,7 @@ use engine::models::HeartSystem;
 use wasm_bindgen::prelude::*;
 
 mod plot;
-use plot::Plotter;
+use plot::{Plotter, PvLoopPlotter};
 
 mod audio;
 
@@ -35,6 +35,12 @@ fn App() -> Element {
     let mut parasymp = use_signal(|| 0.0);
     let mut isch = use_signal(|| 0.0);
     let mut fibrosis = use_signal(|| 0.0);
+    
+    // Valvopatias (0% a 100%)
+    let mut aortic_stenosis = use_signal(|| 0.0);
+    let mut aortic_regurg = use_signal(|| 0.0);
+    let mut mitral_stenosis = use_signal(|| 0.0);
+    let mut mitral_regurg = use_signal(|| 0.0);
     
     let show_sa = use_signal(|| true);
     let show_av = use_signal(|| false);
@@ -82,6 +88,11 @@ fn App() -> Element {
     let mut qt = use_signal(|| 400.0);
     let mut v_rest = use_signal(|| -85.0);
     let mut pr_rr = use_signal(|| 0.20);
+    let mut edv = use_signal(|| 120.0);
+    let mut esv = use_signal(|| 50.0);
+    let mut sv = use_signal(|| 70.0);
+    let mut ef = use_signal(|| 58.3);
+    let mut co = use_signal(|| 4.8);
     let mut show_about = use_signal(|| false);
     
     use_future(move || async move {
@@ -100,6 +111,8 @@ fn App() -> Element {
         let mut ch3_plotter = Plotter::new("canvas-ch3", buffer_capacity); // Cálcio / Íons
         let mut hemo_plotter_lvp = Plotter::new("canvas-ch4", buffer_capacity); // LVP Ventricular (Ciano)
         let mut hemo_plotter_aop = Plotter::new("canvas-ch4", buffer_capacity); // AoP Aórtica (Coral)
+        let mut hemo_plotter_lap = Plotter::new("canvas-ch4", buffer_capacity); // LAP Atrial (Amarelo Âmbar)
+        let mut pv_plotter = PvLoopPlotter::new("canvas-pv", 700);              // Alça P x V 2D em plano de fase
 
         // Plotters Respiratórios Dedicados (Pulmo Lab)
         let mut resp_plotter_vol = Plotter::new("canvas-resp-vol", buffer_capacity);   // Espirograma V x t (Turquesa)
@@ -125,6 +138,7 @@ fn App() -> Element {
             ch3_plotter.set_mode(current_mode);
             hemo_plotter_lvp.set_mode(current_mode);
             hemo_plotter_aop.set_mode(current_mode);
+            hemo_plotter_lap.set_mode(current_mode);
             resp_plotter_vol.set_mode(current_mode);
             resp_plotter_flow.set_mode(current_mode);
             resp_plotter_ppl.set_mode(current_mode);
@@ -142,10 +156,12 @@ fn App() -> Element {
                 ch3_plotter.clear_ghost();
                 hemo_plotter_lvp.clear_ghost();
                 hemo_plotter_aop.clear_ghost();
+                hemo_plotter_lap.clear_ghost();
                 resp_plotter_vol.clear_ghost();
                 resp_plotter_flow.clear_ghost();
                 resp_plotter_ppl.clear_ghost();
                 resp_plotter_rsa.clear_ghost();
+                pv_plotter.reset();
                 trigger_clear_ghost.set(false);
                 ghost_status_str.set("📸 Capturar".to_string());
             }
@@ -162,6 +178,7 @@ fn App() -> Element {
                 ch3_plotter.capture_ghost();
                 hemo_plotter_lvp.capture_ghost();
                 hemo_plotter_aop.capture_ghost();
+                hemo_plotter_lap.capture_ghost();
                 resp_plotter_vol.capture_ghost();
                 resp_plotter_flow.capture_ghost();
                 resp_plotter_ppl.capture_ghost();
@@ -201,6 +218,7 @@ fn App() -> Element {
                 ch3_plotter.arm_single();
                 hemo_plotter_lvp.arm_single();
                 hemo_plotter_aop.arm_single();
+                hemo_plotter_lap.arm_single();
                 resp_plotter_vol.arm_single();
                 resp_plotter_flow.arm_single();
                 resp_plotter_ppl.arm_single();
@@ -224,6 +242,12 @@ fn App() -> Element {
                     b_na, b_k, b_ca, b_nak, 
                     s_symp, s_parasymp, s_isch, s_fibrosis
                 );
+                system.write().set_valvopathy_params(
+                    aortic_stenosis() / 100.0,
+                    aortic_regurg() / 100.0,
+                    mitral_stenosis() / 100.0,
+                    mitral_regurg() / 100.0,
+                );
                 system.write().set_ecg_lead(ecg_lead_idx());
                 system.write().set_ion_cell(ion_cell_idx());
                 system.write().set_ion_var(ion_var_idx());
@@ -246,10 +270,10 @@ fn App() -> Element {
                 let downsample = 500; // 5ms por ponto amostrado (500 * 0.01ms = 5.0ms)
                 let batch = system.write().run_batch(dt, steps, downsample);
                 
-                // Batch achatado de 15 canais: [sa, av, atr, purk, endo, epi, fib, cai, lvp, aop, ecg, sound_events, vol, flow, p_pl]
-                let chunk_size = 15;
+                // Batch achatado de 17 canais: [sa, av, atr, purk, endo, epi, fib, cai, lvp, aop, ecg, sound_events, vol, flow, p_pl, v_lv, p_la]
+                let chunk_size = 17;
                 for chunk in batch.chunks(chunk_size) {
-                    if chunk.len() == 15 {
+                    if chunk.len() == 17 {
                         let sa = chunk[0];
                         let av = chunk[1];
                         let atrium = chunk[2];
@@ -266,6 +290,8 @@ fn App() -> Element {
                         let vol = chunk[12];
                         let flow = chunk[13];
                         let ppl = chunk[14];
+                        let vol_lv = chunk[15];
+                        let lap = chunk[16];
                         
                         pa_plotter_sa.push(sa, sound_code, is_sa_fire);
                         pa_plotter_av.push(av, sound_code, is_sa_fire);
@@ -279,6 +305,8 @@ fn App() -> Element {
                         ch3_plotter.push(cai, sound_code, is_sa_fire);
                         hemo_plotter_lvp.push(lvp, sound_code, is_sa_fire);
                         hemo_plotter_aop.push(aop, sound_code, is_sa_fire);
+                        hemo_plotter_lap.push(lap, sound_code, is_sa_fire);
+                        pv_plotter.push(vol_lv, lvp);
 
                         // Traçados do Pulmo Lab
                         resp_plotter_vol.push(vol, sound_code, is_sa_fire);
@@ -372,10 +400,14 @@ fn App() -> Element {
                 ch3_plotter.draw(min_ch3, max_ch3, color_ch3, true, ghost, uti_m, bulhas_m, false, None);
                 ch3_plotter.draw_scales(min_ch3, max_ch3, false, top_l, mid_l, bot_l);
                 
-                // CH-04: Hemodinâmica: LVP e AoP sobrepostas (0 a 140 mmHg) com marcadores verticais
-                hemo_plotter_lvp.draw(0.0, 140.0, "#00f2fe", true, ghost, uti_m, bulhas_m, false, None);
-                hemo_plotter_aop.draw(0.0, 140.0, "#ff1754", false, ghost, uti_m, bulhas_m, false, None);
-                hemo_plotter_aop.draw_scales(0.0, 140.0, false, "140 mmHg", "70 mmHg", "0 mmHg");
+                // CH-04: Hemodinâmica de Wiggers: LVP (Ciano), AoP (Coral) e LAP (Amarelo Âmbar)
+                hemo_plotter_lvp.draw(0.0, 180.0, "#00f2fe", true, ghost, uti_m, bulhas_m, false, None);
+                hemo_plotter_aop.draw(0.0, 180.0, "#ff1754", false, ghost, uti_m, bulhas_m, false, None);
+                hemo_plotter_lap.draw(0.0, 180.0, "#eab308", false, ghost, uti_m, bulhas_m, false, None);
+                hemo_plotter_aop.draw_scales(0.0, 180.0, false, "180 mmHg", "90 mmHg", "0 mmHg");
+
+                // CH-PV: Alça Pressão-Volume 2D (Plano de Fase)
+                pv_plotter.draw(edv(), esv(), ef(), sv());
             } else {
                 // PULMO LAB:
                 // CH-01: Volume Pulmonar (V x t) de 0.0 a 7.0 L
@@ -406,6 +438,11 @@ fn App() -> Element {
                     qt.set(metrics.qt);
                     v_rest.set(metrics.v_rest);
                     pr_rr.set(metrics.pr_rr);
+                    edv.set(metrics.edv);
+                    esv.set(metrics.esv);
+                    sv.set(metrics.sv);
+                    ef.set(metrics.ef);
+                    co.set(metrics.co);
 
                     spiro_vef1.set(system.read().get_vef1());
                     spiro_cvf.set(system.read().get_cvf());
@@ -423,6 +460,9 @@ fn App() -> Element {
     let qt_str = if qt() > 0.0 { format!("{:.0}ms", qt()) } else { "---".to_string() };
     let vrest_str = format!("{:.0}mV", v_rest());
     let pr_rr_str = if pr_rr() > 0.0 { format!("{:.2}", pr_rr()) } else { "---".to_string() };
+    let _ef_str = format!("{:.1}", ef());
+    let _sv_str = format!("{:.0}", sv());
+    let _co_str = format!("{:.2}", co());
 
     let mut active_accordion = use_signal(|| None::<usize>);
 
@@ -438,6 +478,10 @@ fn App() -> Element {
         parasymp.set(0.0);
         isch.set(0.0);
         fibrosis.set(0.0);
+        aortic_stenosis.set(0.0);
+        aortic_regurg.set(0.0);
+        mitral_stenosis.set(0.0);
+        mitral_regurg.set(0.0);
         sound_uti.set(false);
         sound_bulhas.set(false);
         view_mode.set("rolling".to_string());
@@ -928,23 +972,37 @@ fn App() -> Element {
                             }
                             canvas { id: "canvas-ch3" }
                         }
-                        div { class: "canvas-wrapper",
-                            div { class: "canvas-label",
-                                span { "CH-04 [ 左室圧迫曲線 // HEMODINÂMICA: " }
-                                span { 
-                                    style: "display: inline-flex; align-items: center; gap: 4px;",
-                                    span { style: "display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #00f2fe; box-shadow: 0 0 6px #00f2fe;" }
-                                    span { style: "color: #00f2fe;", "LVP" }
+                        div { class: "canvas-row-split",
+                            div { class: "canvas-wrapper",
+                                div { class: "canvas-label",
+                                    span { "CH-04 [ 左室圧迫曲線 // WIGGERS: " }
+                                    span { 
+                                        style: "display: inline-flex; align-items: center; gap: 4px;",
+                                        span { style: "display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #00f2fe; box-shadow: 0 0 6px #00f2fe;" }
+                                        span { style: "color: #00f2fe;", "LVP" }
+                                    }
+                                    span { "&" }
+                                    span { 
+                                        style: "display: inline-flex; align-items: center; gap: 4px;",
+                                        span { style: "display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #ff1754; box-shadow: 0 0 6px #ff1754;" }
+                                        span { style: "color: #ff1754;", "AoP" }
+                                    }
+                                    span { "&" }
+                                    span { 
+                                        style: "display: inline-flex; align-items: center; gap: 4px;",
+                                        span { style: "display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #eab308; box-shadow: 0 0 6px #eab308;" }
+                                        span { style: "color: #eab308;", "LAP" }
+                                    }
+                                    span { " ]" }
                                 }
-                                span { "&" }
-                                span { 
-                                    style: "display: inline-flex; align-items: center; gap: 4px;",
-                                    span { style: "display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #ff1754; box-shadow: 0 0 6px #ff1754;" }
-                                    span { style: "color: #ff1754;", "AoP" }
-                                }
-                                span { "]" }
+                                canvas { id: "canvas-ch4" }
                             }
-                            canvas { id: "canvas-ch4" }
+                            div { class: "canvas-wrapper",
+                                div { class: "canvas-label",
+                                    span { "CH-PV [ 圧力-容積ループ // ALÇA P × V ]" }
+                                }
+                                canvas { id: "canvas-pv" }
+                            }
                         }
                 } else {
                         div { class: "canvas-wrapper",

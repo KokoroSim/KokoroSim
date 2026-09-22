@@ -22,7 +22,7 @@ fn test_aortic_stenosis_creates_systolic_gradient() {
     // Roda por 3 segundos para capturar os picos sistólicos
     for _ in 0..188 {
         let batch = system.run_batch(dt, steps_per_frame, downsample);
-        let chunk_size = 15;
+        let chunk_size = engine::models::BATCH_CHUNK_SIZE;
         for i in 0..(batch.len() / chunk_size) {
             let lvp = batch[i * chunk_size + 8];
             let aop = batch[i * chunk_size + 9];
@@ -69,7 +69,7 @@ fn test_aortic_regurgitation_causes_diastolic_runoff_and_volume_overload() {
     // Roda por 3 segundos
     for _ in 0..188 {
         let batch = system.run_batch(dt, steps_per_frame, downsample);
-        let chunk_size = 15;
+        let chunk_size = engine::models::BATCH_CHUNK_SIZE;
         for i in 0..(batch.len() / chunk_size) {
             let aop = batch[i * chunk_size + 9];
             if aop < min_aop { min_aop = aop; }

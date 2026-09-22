@@ -852,3 +852,238 @@ fn format_ghost_color(hex: &str) -> String {
     }
     "rgba(180, 180, 180, 0.45)".to_string()
 }
+
+pub struct PvLoopPlotter {
+    canvas_id: String,
+    points: Vec<(f64, f64)>, // (Volume em mL, Pressão em mmHg)
+    capacity: usize,         // ~600 a 800 amostras (cobre ~1.5 a 2 ciclos completos)
+}
+
+impl PvLoopPlotter {
+    pub fn new(canvas_id: &str, capacity: usize) -> Self {
+        Self {
+            canvas_id: canvas_id.to_string(),
+            points: Vec::with_capacity(capacity),
+            capacity,
+        }
+    }
+
+    pub fn push(&mut self, vol: f64, press: f64) {
+        if self.points.len() >= self.capacity {
+            self.points.remove(0);
+        }
+        self.points.push((vol, press));
+    }
+
+    pub fn reset(&mut self) {
+        self.points.clear();
+    }
+
+    pub fn draw(&self, v_edv: f64, v_esv: f64, ef: f64, sv: f64) {
+        let window = match web_sys::window() {
+            Some(w) => w,
+            None => return,
+        };
+        let document = match window.document() {
+            Some(d) => d,
+            None => return,
+        };
+        let canvas = match document.get_element_by_id(&self.canvas_id) {
+            Some(c) => match c.dyn_into::<HtmlCanvasElement>() {
+                Ok(c) => c,
+                Err(_) => return,
+            },
+            None => return,
+        };
+
+        let width = canvas.client_width() as f64;
+        let height = canvas.client_height() as f64;
+
+        if width <= 0.0 || height <= 0.0 {
+            return;
+        }
+
+        if canvas.width() as f64 != width || canvas.height() as f64 != height {
+            canvas.set_width(width as u32);
+            canvas.set_height(height as u32);
+        }
+
+        let ctx = match canvas.get_context("2d") {
+            Ok(Some(c)) => match c.dyn_into::<CanvasRenderingContext2d>() {
+                Ok(c) => c,
+                Err(_) => return,
+            },
+            _ => return,
+        };
+
+        // Escalas do plano de fase (X: 0..200 mL, Y: 0..200 mmHg)
+        let min_v = 0.0;
+        let max_v = 200.0;
+        let min_p = 0.0;
+        let max_p = 200.0;
+
+        let margin_left = 32.0;
+        let margin_right = 10.0;
+        let margin_top = 14.0;
+        let margin_bottom = 22.0;
+
+        let plot_w = (width - margin_left - margin_right).max(10.0);
+        let plot_h = (height - margin_top - margin_bottom).max(10.0);
+
+        let map_x = |v: f64| margin_left + ((v - min_v) / (max_v - min_v)).clamp(0.0, 1.0) * plot_w;
+        let map_y = |p: f64| margin_top + (1.0 - ((p - min_p) / (max_p - min_p)).clamp(0.0, 1.0)) * plot_h;
+
+        // 1. Fundo industrial escuro
+        ctx.set_fill_style_str("#020305");
+        ctx.fill_rect(0.0, 0.0, width, height);
+
+        // 2. Grade fosforescente sutil (50, 100, 150)
+        ctx.set_stroke_style_str("rgba(0, 242, 254, 0.08)");
+        ctx.set_line_width(1.0);
+
+        ctx.begin_path();
+        for v in [50.0, 100.0, 150.0] {
+            let x = map_x(v);
+            ctx.move_to(x, margin_top);
+            ctx.line_to(x, margin_top + plot_h);
+        }
+        for p in [50.0, 100.0, 150.0] {
+            let y = map_y(p);
+            ctx.move_to(margin_left, y);
+            ctx.line_to(margin_left + plot_w, y);
+        }
+        ctx.stroke();
+
+        // 3. Eixos de coordenadas
+        ctx.set_stroke_style_str("rgba(255, 255, 255, 0.25)");
+        ctx.begin_path();
+        ctx.move_to(margin_left, margin_top);
+        ctx.line_to(margin_left, margin_top + plot_h);
+        ctx.line_to(margin_left + plot_w, margin_top + plot_h);
+        ctx.stroke();
+
+        // 4. Rótulos e Ticks numéricos
+        ctx.set_fill_style_str("rgba(255, 255, 255, 0.45)");
+        ctx.set_font("9px 'Chakra Petch', monospace");
+        ctx.set_text_align("right");
+        ctx.set_text_baseline("middle");
+
+        for p in [0.0, 50.0, 100.0, 150.0, 200.0] {
+            let y = map_y(p);
+            let _ = ctx.fill_text(&format!("{:.0}", p), margin_left - 3.0, y);
+        }
+
+        ctx.set_text_align("center");
+        ctx.set_text_baseline("top");
+        for v in [50.0, 100.0, 150.0, 200.0] {
+            let x = map_x(v);
+            let _ = ctx.fill_text(&format!("{:.0}", v), x, margin_top + plot_h + 3.0);
+        }
+
+        // Rótulos de grandezas
+        ctx.set_fill_style_str("rgba(0, 242, 254, 0.70)");
+        ctx.set_text_align("left");
+        ctx.set_text_baseline("top");
+        let _ = ctx.fill_text("P (mmHg)", margin_left + 4.0, margin_top + 2.0);
+
+        ctx.set_text_align("right");
+        ctx.set_text_baseline("bottom");
+        let _ = ctx.fill_text("V (mL)", margin_left + plot_w, margin_top + plot_h - 2.0);
+
+        // 5. Linhas Teóricas ESPVR e EDPVR
+        // ESPVR (Reta de Elastância Sistólica Final: intercepta V0 ~ 15 mL)
+        let v0 = 15.0;
+        let p_top = 175.0;
+        let v_es_top = v0 + (p_top / 2.85);
+        ctx.save();
+        ctx.set_stroke_style_str("rgba(56, 189, 248, 0.35)");
+        ctx.set_line_width(1.0);
+        let _ = ctx.set_line_dash(&js_sys::Array::of2(&wasm_bindgen::JsValue::from_f64(3.0), &wasm_bindgen::JsValue::from_f64(3.0)));
+        ctx.begin_path();
+        ctx.move_to(map_x(v0), map_y(0.0));
+        ctx.line_to(map_x(v_es_top), map_y(p_top));
+        ctx.stroke();
+
+        ctx.set_font("8px 'Chakra Petch', monospace");
+        ctx.set_fill_style_str("rgba(56, 189, 248, 0.55)");
+        ctx.set_text_align("left");
+        let _ = ctx.fill_text("ESPVR", map_x(v_es_top) + 2.0, map_y(p_top));
+        ctx.restore();
+
+        // EDPVR (Curva Diastólica Passiva Não-linear)
+        ctx.save();
+        ctx.set_stroke_style_str("rgba(168, 85, 247, 0.35)");
+        ctx.set_line_width(1.0);
+        let _ = ctx.set_line_dash(&js_sys::Array::of2(&wasm_bindgen::JsValue::from_f64(3.0), &wasm_bindgen::JsValue::from_f64(3.0)));
+        ctx.begin_path();
+        for i in 0..=25 {
+            let v = 20.0 + (i as f64 / 25.0) * 160.0;
+            let v_excess = (v - 112.0).max(0.0);
+            let p_ed = (0.065 + 0.0028 * v_excess) * (v - 15.0).max(0.0);
+            let x = map_x(v);
+            let y = map_y(p_ed);
+            if i == 0 {
+                ctx.move_to(x, y);
+            } else {
+                ctx.line_to(x, y);
+            }
+        }
+        ctx.stroke();
+        ctx.set_font("8px 'Chakra Petch', monospace");
+        ctx.set_fill_style_str("rgba(168, 85, 247, 0.55)");
+        ctx.set_text_align("right");
+        let _ = ctx.fill_text("EDPVR", map_x(180.0), map_y(26.0));
+        ctx.restore();
+
+        // 6. Desenho do Traçado da Alça P x V
+        if self.points.len() > 1 {
+            ctx.save();
+            ctx.set_line_cap("round");
+            ctx.set_line_join("round");
+
+            let n = self.points.len();
+            for i in 0..(n - 1) {
+                let progress = i as f64 / n as f64;
+                let alpha = 0.15 + 0.85 * progress;
+                let color = format!("rgba(46, 204, 113, {:.2})", alpha);
+
+                ctx.set_stroke_style_str(&color);
+                ctx.set_line_width(if progress > 0.85 { 2.2 } else { 1.4 });
+
+                ctx.begin_path();
+                let (v1, p1) = self.points[i];
+                let (v2, p2) = self.points[i + 1];
+                ctx.move_to(map_x(v1), map_y(p1));
+                ctx.line_to(map_x(v2), map_y(p2));
+                ctx.stroke();
+            }
+
+            // Cursor pulsante no ponto instantâneo (V(t), P(t))
+            if let Some(&(cur_v, cur_p)) = self.points.last() {
+                let cx = map_x(cur_v);
+                let cy = map_y(cur_p);
+                ctx.set_fill_style_str("#00f2fe");
+                ctx.set_shadow_color("#00f2fe");
+                ctx.set_shadow_blur(8.0);
+                ctx.begin_path();
+                let _ = ctx.arc(cx, cy, 3.5, 0.0, std::f64::consts::PI * 2.0);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        // 7. Badge de Métricas Sistólicas
+        ctx.save();
+        ctx.set_font("10px 'JetBrains Mono', monospace");
+        ctx.set_text_align("right");
+        ctx.set_text_baseline("top");
+        
+        ctx.set_fill_style_str("rgba(0, 242, 254, 0.90)");
+        let _ = ctx.fill_text(&format!("FE: {:.1}%", ef), width - margin_right - 4.0, margin_top + 4.0);
+
+        ctx.set_fill_style_str("rgba(255, 255, 255, 0.70)");
+        let _ = ctx.fill_text(&format!("VS: {:.0}mL", sv), width - margin_right - 4.0, margin_top + 16.0);
+        let _ = ctx.fill_text(&format!("VDF:{:.0} VSF:{:.0}", v_edv, v_esv), width - margin_right - 4.0, margin_top + 28.0);
+        ctx.restore();
+    }
+}

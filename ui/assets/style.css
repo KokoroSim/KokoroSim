@@ -682,6 +682,14 @@ main {
     height: 100%;
 }
 
+.canvas-row-split {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 1.2vw;
+    min-height: 0;
+    height: 100%;
+}
+
 .canvas-wrapper {
     position: relative;
     background: #020305;

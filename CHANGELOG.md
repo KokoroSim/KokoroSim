@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Features
+  - (ui) implementar plotter 2d em plano de fase para alca p x v (closes #9)
   - (hemo) modelar valvopatias aorticas e mitrais (closes #8)
   - (hemo) rastrear volumes sistolicos e calibrar pressao atrial de wiggers (closes #7)
   - (ui) implementar espacos de trabalho cardio e pulmo com osciloscopios dedicados (closes #4)
