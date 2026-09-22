@@ -135,8 +135,8 @@ O desenvolvimento do **KokoroSim** está organizado em grandes marcos arquitetur
 * [x] **Arquitetura de Abas Especializadas (`.lab-tabs`)**:
   - Divisão da interface em dois grandes espaços de trabalho (`💓 CARDIO LAB` e `🫁 PULMO LAB`) sem perda de continuidade do motor biofísico em segundo plano a 60 FPS.
 
-### Fase 13: Hemodinâmica Avançada, Ciclo de Wiggers e Alça Pressão-Volume ($P \times V$)
-* [ ] **Diagrama de Wiggers Completo e Alça Pressão-Volume ($P \times V$)**:
+### Fase 13: Hemodinâmica Avançada, Ciclo de Wiggers e Alça Pressão-Volume ($P \times V$) ✅ CONCLUÍDO
+* [x] **Diagrama de Wiggers Completo e Alça Pressão-Volume ($P \times V$)**:
   - [x] Cálculo contínuo de volumes ventriculares: Volume Diastólico Final (VDF), Volume Sistólico Final (VSF), Volume Sistólico e Fração de Ejeção ($FE = VS / VDF$).
   - [x] Novo traçado bidimensional em plano de fase exibindo a alça $P \times V$ dinâmica em tempo real (resposta direta à contratilidade via ESPVR, complacência via EDPVR, pré-carga e pós-carga).
 * [x] **Mecânica e Pressão Atrial**: Ondas *a* (contração atrial ativa pós-onda P), *c* (abaulamento isovolumétrico da mitral) e *v* com descenso *y* (enchimento sistólico passivo e esvaziamento diastólico).

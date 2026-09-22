@@ -142,11 +142,35 @@ Modela o acoplamento eletrotônico heterocelular via junções comunicantes (*ga
 
 ### Biofísica e Dinâmica Ventricular
 1. **Acoplamento Excitação-Contração:** A concentração intracelular transitória de cálcio livre ($[Ca^{2+}]_i$) é mapeada dinamicamente na ativação miofilamentar e na função de elastância $E(t)$.
-2. **Pressão Ventricular Esquerda ($LVP$):** Calculada em tempo real pela relação pressão-volume dependente da elastância instantânea.
+2. **Pressão Ventricular Esquerda ($LVP$):** Calculada em tempo real pela relação pressão-volume dependente da elastância instantânea:
+   $$P_{lv}(t) = E(t) \cdot (V_{lv}(t) - V_0) + P_{edpv}(V_{lv})$$
 3. **Pressão Aórtica ($AoP$) e Incisura Dicrótica:** Resolvida pelo modelo arterial de Windkessel de 3 elementos (resistência periférica total $R_p$, complacência arterial $C_a$ e impedância característica da aorta $Z_c$). O fechamento abrupto das cúspides aórticas gera a incisura dicrótica realista.
-4. **Bioacústica das Bulhas Cardíacas:**
+4. **Pressão Atrial Esquerda ($LAP$) e Ondas de Wiggers:**
+   - **Onda $a$:** Contração atrial ativa pré-sistólica sincronizada com o final da onda P do ECG.
+   - **Onda $c$:** Abaulamento isovolumétrico da valva mitral em direção ao átrio no início da contração ventricular.
+   - **Descenso $x$:** Tração do assoalho atrial pela sístole ventricular gerando sucção venosa pulmonar.
+   - **Onda $v$:** Enchimento atrial passivo com valva mitral fechada durante a ejeção ventricular.
+   - **Descenso $y$:** Abertura da mitral e esvaziamento diastólico rápido para o ventrículo.
+5. **Volumes Ventriculares e Métricas Sistólicas:**
+   - **Volume Diastólico Final ($VDF$):** Volume ventricular no instante do fechamento da mitral (B1, ~120 mL).
+   - **Volume Sistólico Final ($VSF$):** Volume ventricular mínimo ao término da ejeção aórtica (B2, ~50 mL).
+   - **Volume Sistólico ($VS$):** $VS = VDF - VSF$ (~70 mL).
+   - **Fração de Ejeção ($FE$):** $FE = \frac{VS}{VDF} \times 100\%$ (~58%).
+   - **Débito Cardíaco ($DC$):** $DC = \frac{FC \times VS}{1000}$ (~5.0 L/min).
+6. **Alça Pressão-Volume 2D ($P \times V$):**
+   - **Fase I (Enchimento Diastólico):** O ventrículo se expande de $VSF$ para $VDF$ ao longo da curva de complacência passiva ($EDPVR$).
+   - **Fase II (Contração Isovolumétrica):** Pressão sobe verticalmente de $LAP$ até a pressão diastólica aórtica com ambas as valvas fechadas ($V = VDF$).
+   - **Fase III (Ejeção Ventricular):** Valva aórtica aberta; o sangue é ejetado na aorta, traçando a trajetória superior até atingir a reta elastância de fim de sístole ($ESPVR$).
+   - **Fase IV (Relaxamento Isovolumétrico):** Valva aórtica fecha; a pressão desaba bruscamente com ambas as valvas fechadas ($V = VSF$).
+   - **Área da Alça:** Representa o Trabalho Sistólico Efetivo (*Stroke Work* $\approx \oint P \, dV$).
+7. **Bioacústica das Bulhas Cardíacas:**
    - **Primeira Bulha (B1):** Disparada acusticamente pelo fechamento de alta energia da valva mitral no início da sístole isovolumétrica ($LVP > LAP$).
    - **Segunda Bulha (B2):** Disparada pelo fechamento das cúspides da valva aórtica no início da diástole isovolumétrica ($AoP > LVP$).
+8. **Fisiopatologia das Valvopatias:**
+   - **Estenose Aórtica:** Obstrução da via de saída gerando gradiente sistólico patológico ($LVP \gg AoP$, podendo superar 180 mmHg) com estreitamento da amplitude aórtica e sobrecarga concêntrica (efeito Anrep).
+   - **Insuficiência Aórtica:** Refluxo diastólico patológico aorta $\to$ VE, gerando colapso da pressão diastólica aórtica ($< 50\text{ mmHg}$), pressão de pulso alargada (pulso em martelo d'água / Corrigan) e sobrecarga volumétrica ventricular ($VDF > 140\text{ mL}$).
+   - **Estenose Mitral:** Resistência aumentada ao fluxo átrio $\to$ ventrículo na diástole, gerando hipertensão atrial esquerda sustentada ($LAP > 18\text{ mmHg}$) e atraso no enchimento ventricular.
+   - **Insuficiência Mitral:** Regurgitação sistólica do VE para o átrio esquerdo através da valva incompetente, deformando a curva de LAP com uma onda $v$ patológica gigante ($> 25\text{ mmHg}$).
 
 ---
 
