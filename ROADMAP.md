@@ -238,8 +238,11 @@ O desenvolvimento do **KokoroSim** está organizado em grandes marcos arquitetur
 * [ ] Visualização topográfica de frentes de onda, espirais arritmogênicas (*rotor waves*), fibrilação ventricular e despolarizações fracionadas.
 
 ### Fase 15: Modelação Farmacológica Avançada e Novos Protocolos Clínicos
-* [ ] Implementação de novos fármacos e toxinas (ex.: digitalina, bloqueadores específicos de $I_{Kr}$, agentes parassimpaticomiméticos).
-* [ ] Painel interativo de casos clínicos e cenários patológicos pré-configurados para auxílio diagnóstico e ensino médico.
+* [x] **Alvos Iônicos e Farmacologia Biofísica no Motor (#13)**:
+  - Bloqueio seletivo de $I_{Kr}$ (Sotalol/Dofetilida) desacelerando a repolarização de Fase 3 e prolongando o intervalo QT.
+  - Antagonismo beta-1 adrenérgico competitivo (Propranolol) atenuando taquicardia sinusal e inotropismo ventricular.
+  - Antagonismo muscarínico parassimpático (Atropina) bloqueando a corrente $I_{K,ACh}$ nodal e revertendo bradicardia vagal.
+* [ ] Painel interativo de casos clínicos e cenários patológicos pré-configurados para auxílio diagnóstico e ensino médico (#14, #15).
 
 ### Fase 16: Arquitetura de Interface Mobile-First e Responsividade Nativa
 * [ ] **Layout Responsivo Adaptativo para Smartphones (Modo Retrato / Mobile UI)**:
