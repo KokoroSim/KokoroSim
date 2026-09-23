@@ -43,6 +43,9 @@ pub struct HemodynamicsModel {
     pub aortic_regurgitation: f64,
     pub mitral_stenosis: f64,
     pub mitral_regurgitation: f64,
+
+    // Modulação exógena de resistência vascular periférica (ex: vasodilatadores, choque distributivo)
+    pub r_tpr_mod: f64,
 }
 
 impl HemodynamicsModel {
@@ -75,7 +78,12 @@ impl HemodynamicsModel {
             aortic_regurgitation: 0.0,
             mitral_stenosis: 0.0,
             mitral_regurgitation: 0.0,
+            r_tpr_mod: 1.0,
         }
+    }
+
+    pub fn set_peripheral_resistance_ratio(&mut self, ratio: f64) {
+        self.r_tpr_mod = ratio.clamp(0.2, 5.0);
     }
 
     pub fn set_valvopathies(
@@ -239,7 +247,7 @@ impl HemodynamicsModel {
         // 8. Modelo Arterial Windkessel de 3 Elementos para a Pressão Aórtica
         // dP_ao/dt = (Q_out - Q_regurg_ao) / C_ao - (P_ao - P_venous) / (R_tpr * C_ao)
         let p_venous = 4.0;
-        let r_tpr = self.r_tpr_base * (1.0 - (symp * 0.25) + (parasymp * 0.15));
+        let r_tpr = (self.r_tpr_base * self.r_tpr_mod * (1.0 + (symp * 0.60) - (parasymp * 0.15))).clamp(self.r_tpr_base * 0.25, self.r_tpr_base * 3.0);
         let dp_ao = ((q_out - q_regurg_ao) / self.c_ao) - ((self.p_ao - p_venous) / (r_tpr * self.c_ao));
         self.p_ao = (self.p_ao + dp_ao * dt).clamp(20.0, 260.0);
     }

@@ -6,6 +6,7 @@ pub mod purkinje;
 pub mod fibroblast;
 pub mod hemodynamics;
 pub mod respiratory;
+pub mod baroreflex;
 
 // Aqui ficará o gerenciador de estado global que orquestra as 4 células
 use wasm_bindgen::prelude::*;
@@ -72,6 +73,7 @@ pub struct HudMetrics {
     pub sv: f64,
     pub ef: f64,
     pub co: f64,
+    pub map: f64,
 }
 
 #[wasm_bindgen]
@@ -86,6 +88,7 @@ pub struct HeartSystem {
     fibroblast: fibroblast::FibroblastCell,
     hemo: hemodynamics::HemodynamicsModel,
     resp: respiratory::RespiratorySystem,
+    baro: baroreflex::BaroreflexModel,
     acc_r_peak: bool,
     acc_b1: bool,
     acc_b2: bool,
@@ -158,6 +161,7 @@ impl HeartSystem {
             fibroblast: fibroblast::FibroblastCell::default(),
             hemo: hemodynamics::HemodynamicsModel::new(),
             resp: respiratory::RespiratorySystem::new(),
+            baro: baroreflex::BaroreflexModel::new(),
             acc_r_peak: false,
             acc_b1: false,
             acc_b2: false,
@@ -291,9 +295,46 @@ impl HeartSystem {
         }
 
         // Passo de Integração (Forward Euler)
-        // 1. Dinâmica Respiratória & Acoplamento Cardiorrespiratório (RSA)
+        // 1. Barorreflexo Arterial em Malha Fechada (após estabilização dos batimentos iniciais)
+        if self.time > 1500.0 {
+            self.baro.step(dt, self.hemo.p_ao);
+        }
+
+        // 2. Dinâmica Respiratória & Acoplamento Cardiorrespiratório (RSA)
         self.resp.step(dt);
+
+        // Modulação autonômica integrada (Farmacologia basal/manual + compensação barorreflexa)
+        let mut eff_pharm = self.pharm;     // Para células ventriculares e nó AV
+        let mut eff_pharm_hemo = self.pharm; // Para hemodinâmica (vasoconstrição R_tpr completa)
+
+        if self.baro.enabled && self.time > 2000.0 {
+            // Barorreflexo — separação de efeitos fisiológicos por via eferente:
+            //
+            // 1. Vagal (delta_parasymp): age no nó SA e no AV → bradicardia reflexa sob hipertensão
+            //    ach = parasymp * 1e-3 no Severi → delta_parasymp=0.015 → ach=1.5e-5 µM (adequado)
+            eff_pharm.parasymp = (eff_pharm.parasymp + self.baro.delta_parasymp).clamp(0.0, 1.0);
+
+            // 2. Simpático cronótropo (SA node): ESCALA REDUZIDA de 0.02x.
+            //    No Severi, iso = p.symp em µM. O range fisiológico é 0.001–0.010 µM.
+            //    delta_symp=0.25 × 0.02 = 0.005 µM ISO → +4-6 BPM (taquicardia leve reflexa)
+            //    Sem escala (iso=0.10 µM), os gates de ICaL/If saturam paradoxalmente.
+            let baro_chron = self.baro.delta_symp * 0.02;
+            eff_pharm.symp = (eff_pharm.symp + baro_chron).clamp(0.0, 1.0);
+
+            // 3. Simpático vasomotor (hemodinâmica): delta_symp completo → R_tpr ↑ (vasoconstrição)
+            //    Este é o mecanismo primário de restauração de PAM pelo barorreflexo.
+            eff_pharm_hemo.symp = (eff_pharm_hemo.symp + self.baro.delta_symp).clamp(0.0, 1.0);
+            eff_pharm_hemo.parasymp = (eff_pharm_hemo.parasymp + self.baro.delta_parasymp).clamp(0.0, 1.0);
+        }
+
+        // O nó SA recebe modulação autonômica do barorreflexo e da RSA
         let mut eff_pharm_sa = self.pharm;
+        if self.baro.enabled && self.time > 2000.0 {
+            // Reflexo taquicardizante simpático no nó SA sob hipotensão (desinibição adrenérgica)
+            let sa_symp = self.baro.delta_symp * 0.35;
+            eff_pharm_sa.symp = (eff_pharm_sa.symp + sa_symp).clamp(0.0, 1.0);
+        }
+
         if self.rsa_enabled && self.time > 1000.0 {
             if self.resp.f_rsa > 0.0 {
                 // Inspiração: inibição vagal fisiológica com aceleração sinusal transitória (~ +3 a +4 BPM)
@@ -305,14 +346,14 @@ impl HeartSystem {
         // O nó SA (Severi) e Nó AV (Inada) foram modelados no artigo original em SEGUNDOS
         let dt_sec = dt / 1000.0;
         self.sa_node.step(dt_sec, &eff_pharm_sa);
-        self.av_node.step(dt_sec, &self.pharm);
+        self.av_node.step(dt_sec, &eff_pharm);
         
         // O Átrio (Courtemanche), Purkinje (Stewart) e Ventrículo Transmural (Ten Tusscher) em MILISSEGUNDOS
-        self.atrium.step(dt, &self.pharm);
-        self.purkinje.step(dt, &self.pharm);
-        self.vent_endo.step(dt, &self.pharm);
-        self.vent_m.step(dt, &self.pharm);
-        self.vent_epi.step(dt, &self.pharm);
+        self.atrium.step(dt, &eff_pharm);
+        self.purkinje.step(dt, &eff_pharm);
+        self.vent_endo.step(dt, &eff_pharm);
+        self.vent_m.step(dt, &eff_pharm);
+        self.vent_epi.step(dt, &eff_pharm);
         
         self.time += dt;
         
@@ -517,8 +558,8 @@ impl HeartSystem {
             self.vent_endo.ca_i,
             self.atrium.v,
             self.vent_endo.v,
-            self.pharm.symp,
-            self.pharm.parasymp,
+            eff_pharm_hemo.symp,
+            eff_pharm_hemo.parasymp,
         );
 
         if self.hemo.event_r_peak { self.acc_r_peak = true; }
@@ -863,7 +904,36 @@ impl HeartSystem {
             sv: self.hemo.stroke_volume,
             ef: self.hemo.ejection_fraction,
             co,
+            map: self.baro.pam,
         }
+    }
+
+    pub fn set_baroreflex_enabled(&mut self, enabled: bool) {
+        self.baro.enabled = enabled;
+    }
+
+    pub fn get_baroreflex_enabled(&self) -> bool {
+        self.baro.enabled
+    }
+
+    pub fn get_hemo_map(&self) -> f64 {
+        self.baro.pam
+    }
+
+    pub fn get_baro_s_baro(&self) -> f64 {
+        self.baro.s_baro
+    }
+
+    pub fn get_baro_delta_symp(&self) -> f64 {
+        self.baro.delta_symp
+    }
+
+    pub fn get_baro_delta_parasymp(&self) -> f64 {
+        self.baro.delta_parasymp
+    }
+
+    pub fn set_peripheral_resistance_ratio(&mut self, ratio: f64) {
+        self.hemo.set_peripheral_resistance_ratio(ratio);
     }
 
     pub fn set_valvopathy_params(

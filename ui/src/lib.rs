@@ -74,6 +74,7 @@ fn App() -> Element {
     let mut resp_raw = use_signal(|| 1.5);   // cmH2O/(L/s)
     let mut resp_crs = use_signal(|| 0.10);  // L/cmH2O
     let mut rsa_toggle = use_signal(|| true); // Arritmia Sinusal Respiratória
+    let mut baro_toggle = use_signal(|| true); // Barorreflexo em Malha Fechada
     let mut trigger_spiro = use_signal(|| false);
     let mut spiro_vef1 = use_signal(|| 3.80);
     let mut spiro_cvf = use_signal(|| 4.60);
@@ -93,6 +94,7 @@ fn App() -> Element {
     let mut sv = use_signal(|| 70.0);
     let mut ef = use_signal(|| 58.3);
     let mut co = use_signal(|| 4.8);
+    let mut map = use_signal(|| 90.0);
     let mut show_about = use_signal(|| false);
     
     use_future(move || async move {
@@ -259,6 +261,7 @@ fn App() -> Element {
                 }
                 system.write().set_respiratory_params(resp_rate(), resp_raw(), resp_crs());
                 system.write().set_rsa_enabled(rsa_toggle());
+                system.write().set_baroreflex_enabled(baro_toggle());
                 
                 // 2. Step Engine
                 // Amostragem compacta: 1 ponto a cada 5.0ms (downsample=500 com dt=0.01ms)
@@ -443,6 +446,7 @@ fn App() -> Element {
                     sv.set(metrics.sv);
                     ef.set(metrics.ef);
                     co.set(metrics.co);
+                    map.set(metrics.map);
 
                     spiro_vef1.set(system.read().get_vef1());
                     spiro_cvf.set(system.read().get_cvf());
@@ -463,6 +467,7 @@ fn App() -> Element {
     let ef_str = format!("{:.1}", ef());
     let sv_str = format!("{:.0}", sv());
     let co_str = format!("{:.2}", co());
+    let map_str = format!("{:.0}", map());
 
     let mut active_accordion = use_signal(|| None::<usize>);
 
@@ -495,6 +500,7 @@ fn App() -> Element {
         resp_raw.set(1.5);
         resp_crs.set(0.10);
         rsa_toggle.set(true);
+        baro_toggle.set(true);
         trigger_spiro.set(false);
         system.set(HeartSystem::new());
         active_accordion.set(None);
@@ -573,6 +579,7 @@ fn App() -> Element {
                         div { class: "hud-item", "駆出率 // FE: ", span { id: "hud-ef", "{ef_str}%" } }
                         div { class: "hud-item", "一拍拍出量 // VS: ", span { id: "hud-sv", "{sv_str} mL" } }
                         div { class: "hud-item", "心拍出量 // DC: ", span { id: "hud-co", "{co_str} L/min" } }
+                        div { class: "hud-item", "平均動脈圧 // PAM: ", span { id: "hud-map", "{map_str} mmHg" } }
                     } else {
                         div { class: "hud-item", "呼吸数 // FR: ", span { id: "hud-rr", "{resp_rate():.0} irpm" } }
                         div { class: "hud-item", "一秒量 // VEF₁: ", span { id: "hud-vef1", "{spiro_vef1():.2} L" } }
@@ -795,6 +802,7 @@ fn App() -> Element {
                     Checkbox { label: "🔊 Bip de Monitor (UTI - Onda R)".to_string(), color: "#2ecc71".to_string(), checked: sound_uti }
                     Checkbox { label: "🩺 Bulhas Cardíacas (B1 / B2)".to_string(), color: "#e74c3c".to_string(), checked: sound_bulhas }
                     Checkbox { label: "🫁 Arritmia Sinusal Respiratória (RSA)".to_string(), color: "#a29bfe".to_string(), checked: rsa_toggle }
+                    Checkbox { label: "🎯 Barorreflexo em Malha Fechada (PAM)".to_string(), color: "#00cec9".to_string(), checked: baro_toggle }
                 }
 
                 Accordion { index: 8, label: "8. 弁膜症 // Valvopatias & Dinâmica Valvar".to_string(), active_accordion,
