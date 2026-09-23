@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Features
+  - (ecg,ui) adicionar ganho 1N/2N no ecg e modo vetorcardiograma 2d (#20)
   - (renal) implement Guyton pressure-natriuresis, glomerular dynamics and Nefro Lab (Issue #2 Bloco D)
   - (microvascular) implementa Bloco C Starling, dinâmica capilar e edema (#2)
   - (ui,hemodynamics) adicionar diagrama 2D de Guyton no canal CH-2D (refs #2)

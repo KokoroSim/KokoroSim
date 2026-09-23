@@ -59,6 +59,7 @@ pub struct Plotter {
     single_state: SingleState,
     sound_markers: Vec<(usize, u8)>, // (index, sound_code)
     total_pushed: u64, // Contador total de amostras recebidas (usado para offset de grade)
+    ecg_gain: f64,     // Ganho do ECG (1.0 = 1N, 2.0 = 2N)
 }
 
 impl Plotter {
@@ -79,7 +80,17 @@ impl Plotter {
             single_state: SingleState::Armed,
             sound_markers: Vec::new(),
             total_pushed: 0,
+            ecg_gain: 1.0,
         }
+    }
+
+    pub fn set_ecg_gain(&mut self, gain: f64) {
+        self.ecg_gain = gain.max(0.1);
+    }
+
+    #[allow(dead_code)]
+    pub fn ecg_gain(&self) -> f64 {
+        self.ecg_gain
     }
 
     pub fn set_mode(&mut self, mode: ViewMode) {
@@ -358,10 +369,11 @@ impl Plotter {
                     // Em modo ECG isotrópico, y_zero é calculado para garantir que os picos caibam:
                     // - Pico positivo máximo esperado: ~1.10 mV (R em V5 com kr=1.45 × 0.75)
                     // - Pico negativo máximo esperado: ~0.25 mV (S em V1 com ks=1.30 × 0.17)
-                    // - Margem: 10% de 's' em cada lado
+                    // - Margem: 10% de 's' em cada lado, escalado com ecg_gain (1N = 10mm/mV, 2N = 20mm/mV)
+                    let gain = self.ecg_gain;
                     let y_zero = if is_ecg_grid {
-                        let peak_pos_mv = 1.15_f64; // mV acima da isoline (headroom positivo)
-                        let peak_neg_mv = 0.30_f64; // mV abaixo da isoline (headroom negativo)
+                        let peak_pos_mv = 1.15_f64 * gain; // mV acima da isoline com ganho
+                        let peak_neg_mv = 0.30_f64 * gain; // mV abaixo da isoline com ganho
                         let margin_px = s * 0.5;    // margem extra em pixels (0.5 quadradinhos)
                         let px_above = peak_pos_mv * 10.0 * s + margin_px;
                         let px_below = peak_neg_mv * 10.0 * s + margin_px;
@@ -380,7 +392,7 @@ impl Plotter {
                     // Mapeamento vertical de voltagem -> pixel
                     let val_to_y = |val: f64| -> f64 {
                         if is_ecg_grid {
-                            y_zero - (val * 10.0 * s)
+                            y_zero - (val * 10.0 * s * gain)
                         } else {
                             height - ((val - min_y) / range_y) * height
                         }
@@ -1394,6 +1406,231 @@ impl GuytonPlotter {
 
         ctx.set_fill_style_str("#2ecc71");
         let _ = ctx.fill_text(&format!("★ Eq: {:.1} mmHg | {:.1} L/min", cvp, op_flow), leg_x, leg_y);
+        ctx.restore();
+    }
+}
+
+pub struct VcgPlotter {
+    canvas_id: String,
+    points: Vec<(f64, f64)>, // (DI em mV, aVF em mV)
+    capacity: usize,         // ~400 amostras (cobre ~1.5 batimentos a 5ms/amostra)
+}
+
+impl VcgPlotter {
+    pub fn new(canvas_id: &str, capacity: usize) -> Self {
+        Self {
+            canvas_id: canvas_id.to_string(),
+            points: Vec::with_capacity(capacity),
+            capacity,
+        }
+    }
+
+    pub fn push(&mut self, di: f64, avf: f64) {
+        if self.points.len() >= self.capacity {
+            self.points.remove(0);
+        }
+        self.points.push((di, avf));
+    }
+
+    #[allow(dead_code)]
+    pub fn reset(&mut self) {
+        self.points.clear();
+    }
+
+    pub fn draw(&self) {
+        let window = match web_sys::window() {
+            Some(w) => w,
+            None => return,
+        };
+        let document = match window.document() {
+            Some(d) => d,
+            None => return,
+        };
+        let canvas = match document.get_element_by_id(&self.canvas_id) {
+            Some(c) => match c.dyn_into::<HtmlCanvasElement>() {
+                Ok(c) => c,
+                Err(_) => return,
+            },
+            None => return,
+        };
+
+        let width = canvas.client_width() as f64;
+        let height = canvas.client_height() as f64;
+
+        if width <= 0.0 || height <= 0.0 {
+            return;
+        }
+
+        if canvas.width() as f64 != width || canvas.height() as f64 != height {
+            canvas.set_width(width as u32);
+            canvas.set_height(height as u32);
+        }
+
+        let ctx = match canvas.get_context("2d") {
+            Ok(Some(c)) => match c.dyn_into::<CanvasRenderingContext2d>() {
+                Ok(c) => c,
+                Err(_) => return,
+            },
+            _ => return,
+        };
+
+        // 1. Limpa fundo preto escuro
+        ctx.set_fill_style_str("#000000");
+        ctx.fill_rect(0.0, 0.0, width, height);
+
+        // 2. Geometria Isotrópica Centralizada (Plano Frontal de Einthoven: DI x aVF)
+        let center_x = width / 2.0;
+        let center_y = height / 2.0;
+        // Escala em pixels por mV: reservamos ±1.5 mV dentro da área útil
+        let side = (width.min(height) - 48.0).max(40.0);
+        let scale = side / 3.0; // 1.0 mV = scale pixels
+
+        let di_to_x = |di: f64| -> f64 { center_x + di * scale };
+        // Na convenção médica clássica do plano frontal, aVF positivo aponta para BAIXO (+90°)
+        let avf_to_y = |avf: f64| -> f64 { center_y + avf * scale };
+
+        ctx.save();
+
+        // 3. Círculos de calibração concêntricos (0.5 mV e 1.0 mV)
+        ctx.set_stroke_style_str("rgba(255, 255, 255, 0.08)");
+        ctx.set_line_width(1.0);
+        ctx.begin_path();
+        let _ = ctx.arc(center_x, center_y, 0.5 * scale, 0.0, std::f64::consts::PI * 2.0);
+        ctx.stroke();
+
+        ctx.set_stroke_style_str("rgba(255, 255, 255, 0.15)");
+        ctx.set_line_width(1.0);
+        ctx.begin_path();
+        let _ = ctx.arc(center_x, center_y, 1.0 * scale, 0.0, std::f64::consts::PI * 2.0);
+        ctx.stroke();
+
+        // 4. Eixos Ortogonais DI (horizontal) e aVF (vertical)
+        ctx.set_stroke_style_str("rgba(0, 242, 254, 0.35)");
+        ctx.set_line_width(1.0);
+        ctx.begin_path();
+        // Eixo horizontal DI
+        ctx.move_to(center_x - 1.4 * scale, center_y);
+        ctx.line_to(center_x + 1.4 * scale, center_y);
+        // Eixo vertical aVF
+        ctx.move_to(center_x, center_y - 1.4 * scale);
+        ctx.line_to(center_x, center_y + 1.4 * scale);
+        ctx.stroke();
+
+        // 5. Rótulos dos eixos e ângulos polares
+        ctx.set_font("10px 'JetBrains Mono', monospace");
+        ctx.set_fill_style_str("rgba(0, 242, 254, 0.7)");
+
+        // +DI (0° à direita)
+        ctx.set_text_align("left");
+        ctx.set_text_baseline("middle");
+        let _ = ctx.fill_text("+DI (0°)", center_x + 1.4 * scale + 4.0, center_y);
+
+        // -DI (±180° à esquerda)
+        ctx.set_text_align("right");
+        let _ = ctx.fill_text("-DI (180°)", center_x - 1.4 * scale - 4.0, center_y);
+
+        // +aVF (+90° para baixo)
+        ctx.set_text_align("center");
+        ctx.set_text_baseline("top");
+        let _ = ctx.fill_text("+aVF (+90°)", center_x, center_y + 1.4 * scale + 3.0);
+
+        // -aVF (-90° para cima)
+        ctx.set_text_baseline("bottom");
+        let _ = ctx.fill_text("-aVF (-90°)", center_x, center_y - 1.4 * scale - 3.0);
+
+        // 6. Rótulos sutis de quadrantes diagnósticos nos cantos
+        ctx.set_font("9px 'JetBrains Mono', monospace");
+
+        // Inferior Direito: 0° a +90° (Eixo Normal)
+        ctx.set_fill_style_str("rgba(46, 204, 113, 0.35)");
+        ctx.set_text_align("right");
+        ctx.set_text_baseline("bottom");
+        let _ = ctx.fill_text("NORMAL [0° a +90°]", width - 8.0, height - 8.0);
+
+        // Superior Direito: -90° a 0° (Desvio à Esquerda)
+        ctx.set_fill_style_str("rgba(241, 196, 15, 0.35)");
+        ctx.set_text_baseline("top");
+        let _ = ctx.fill_text("DESVIO ESQ [-90° a 0°]", width - 8.0, 8.0);
+
+        // Inferior Esquerdo: +90° a +180° (Desvio à Direita)
+        ctx.set_fill_style_str("rgba(230, 126, 34, 0.35)");
+        ctx.set_text_align("left");
+        ctx.set_text_baseline("bottom");
+        let _ = ctx.fill_text("DESVIO DIR [+90° a 180°]", 8.0, height - 8.0);
+
+        // Superior Esquerdo: -90° a -180° (Desvio Extremo)
+        ctx.set_fill_style_str("rgba(231, 76, 60, 0.35)");
+        ctx.set_text_baseline("top");
+        let _ = ctx.fill_text("EXTREMO [-90° a -180°]", 8.0, 8.0);
+
+        // 7. Traçado do Loop Vetorial Frontal (com fade temporal)
+        let n = self.points.len();
+        if n >= 2 {
+            for i in 1..n {
+                let progress = i as f64 / n as f64; // 0.0 a 1.0
+                let (di0, avf0) = self.points[i - 1];
+                let (di1, avf1) = self.points[i];
+
+                let x0 = di_to_x(di0);
+                let y0 = avf_to_y(avf0);
+                let x1 = di_to_x(di1);
+                let y1 = avf_to_y(avf1);
+
+                ctx.set_stroke_style_str(&format!("rgba(0, 242, 254, {:.2})", 0.08 + progress * 0.82));
+                ctx.set_line_width(1.0 + progress * 1.0);
+                ctx.begin_path();
+                ctx.move_to(x0, y0);
+                ctx.line_to(x1, y1);
+                ctx.stroke();
+            }
+
+            // 8. Vetor instantâneo (da origem ao ponto atual)
+            let (curr_di, curr_avf) = self.points[n - 1];
+            let curr_x = di_to_x(curr_di);
+            let curr_y = avf_to_y(curr_avf);
+
+            ctx.set_stroke_style_str("rgba(241, 196, 15, 0.85)");
+            ctx.set_line_width(1.8);
+            ctx.begin_path();
+            ctx.move_to(center_x, center_y);
+            ctx.line_to(curr_x, curr_y);
+            ctx.stroke();
+
+            // Ponto luminoso na ponta do vetor
+            ctx.set_fill_style_str("#f1c40f");
+            ctx.begin_path();
+            let _ = ctx.arc(curr_x, curr_y, 3.5, 0.0, std::f64::consts::PI * 2.0);
+            ctx.fill();
+
+            // 9. Cálculo e exibição do Ângulo Instantâneo ÂQRS e classificação
+            let mag = (curr_di * curr_di + curr_avf * curr_avf).sqrt();
+            let (angle_deg, diag_str, diag_color) = if mag > 0.08 {
+                let deg = curr_avf.atan2(curr_di) * 180.0 / std::f64::consts::PI;
+                let (d, c) = if deg >= 0.0 && deg <= 90.0 {
+                    ("Eixo Normal", "#2ecc71")
+                } else if deg >= -90.0 && deg < 0.0 {
+                    ("Desvio à Esquerda", "#f1c40f")
+                } else if deg > 90.0 && deg <= 180.0 {
+                    ("Desvio à Direita", "#e67e22")
+                } else {
+                    ("Desvio Extremo", "#e74c3c")
+                };
+                (format!("{:+3.0}°", deg), d, c)
+            } else {
+                ("---".to_string(), "Isoelétrico", "#95a5a6")
+            };
+
+            ctx.set_font("bold 11px 'JetBrains Mono', monospace");
+            ctx.set_text_align("center");
+            ctx.set_text_baseline("top");
+            ctx.set_fill_style_str(diag_color);
+            let _ = ctx.fill_text(
+                &format!("Â: {} [ {} ]", angle_deg, diag_str),
+                center_x,
+                6.0,
+            );
+        }
+
         ctx.restore();
     }
 }

@@ -158,7 +158,7 @@ pub struct HeartSystem {
     pub pr_rr: f64,
 }
 
-pub const BATCH_CHUNK_SIZE: usize = 21;
+pub const BATCH_CHUNK_SIZE: usize = 23;
 
 #[wasm_bindgen]
 impl HeartSystem {
@@ -647,6 +647,8 @@ impl HeartSystem {
                 batch.push(self.renal.diuresis_ml_h); // 18: Débito Urinário (mL/h)
                 batch.push(self.renal.rpf);        // 19: Fluxo Plasmático Renal (mL/min)
                 batch.push(self.renal.vlec);       // 20: Volume de Líquido Extracelular (L)
+                batch.push(self.compute_ecg_lead(0)); // 21: Derivação DI (Plano Frontal X, mV)
+                batch.push(self.compute_ecg_lead(5)); // 22: Derivação aVF (Plano Frontal Y, mV)
             }
         }
         batch
@@ -832,6 +834,14 @@ impl HeartSystem {
 
     pub fn compute_ecg(&self) -> f64 {
         self.compute_ecg_lead(self.ecg_lead)
+    }
+
+    pub fn compute_lead_di(&self) -> f64 {
+        self.compute_ecg_lead(0)
+    }
+
+    pub fn compute_lead_avf(&self) -> f64 {
+        self.compute_ecg_lead(5)
     }
 
     pub fn compute_ecg_lead(&self, lead_idx: usize) -> f64 {

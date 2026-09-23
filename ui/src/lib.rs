@@ -5,7 +5,7 @@ use engine::models::HeartSystem;
 use wasm_bindgen::prelude::*;
 
 mod plot;
-use plot::{Plotter, PvLoopPlotter, GuytonPlotter};
+use plot::{Plotter, PvLoopPlotter, GuytonPlotter, VcgPlotter};
 
 mod audio;
 
@@ -67,6 +67,7 @@ fn App() -> Element {
     let mut is_paused = use_signal(|| false);
     let mut ghost_status_str = use_signal(|| "📸 Capturar".to_string());
     let mut ecg_lead_idx = use_signal(|| 1usize);
+    let mut ecg_gain = use_signal(|| 1.0); // 1.0 (1N = 10 mm/mV) ou 2.0 (2N = 20 mm/mV)
     let mut ion_cell_idx = use_signal(|| 4usize); // Endocárdio por padrão
     let mut ion_var_idx = use_signal(|| 0usize);  // [Ca2+]_i por padrão
     let mut two_d_mode = use_signal(|| "pv".to_string()); // "pv" ou "guyton"
@@ -147,6 +148,7 @@ fn App() -> Element {
         let mut hemo_plotter_lap = Plotter::new("canvas-ch4", buffer_capacity); // LAP Atrial (Amarelo Âmbar)
         let mut pv_plotter = PvLoopPlotter::new("canvas-pv", 700);              // Alça P x V 2D em plano de fase
         let guyton_plotter = GuytonPlotter::new("canvas-guyton");              // Diagrama de Guyton 2D (DC x RV)
+        let mut vcg_plotter = VcgPlotter::new("canvas-vcg", 400);              // Vetorcardiograma Frontal 2D (DI x aVF)
 
         // Plotters Respiratórios Dedicados (Pulmo Lab)
         let mut resp_plotter_vol = Plotter::new("canvas-resp-vol", buffer_capacity);   // Espirograma V x t (Turquesa)
@@ -373,6 +375,8 @@ fn App() -> Element {
                         let du_val = chunk[18];
                         let rpf_val = chunk[19];
                         let vlec_val = chunk[20];
+                        let di_val = chunk[21];
+                        let avf_val = chunk[22];
                         
                         pa_plotter_sa.push(sa, sound_code, is_sa_fire);
                         pa_plotter_av.push(av, sound_code, is_sa_fire);
@@ -388,6 +392,7 @@ fn App() -> Element {
                         hemo_plotter_aop.push(aop, sound_code, is_sa_fire);
                         hemo_plotter_lap.push(lap, sound_code, is_sa_fire);
                         pv_plotter.push(vol_lv, lvp);
+                        vcg_plotter.push(di_val, avf_val);
 
                         // Traçados do Pulmo Lab
                         resp_plotter_vol.push(vol, sound_code, is_sa_fire);
@@ -469,8 +474,14 @@ fn App() -> Element {
                 pa_plotter_endo.draw_scales(-90.0, 50.0, false, "+50 mV", "-20 mV", "-90 mV");
                 
                 // CH-02: ECG Calibrado em mV com Grade Isotrópica (40ms x 0.1mV)
-                ecg_plotter.draw(-0.5, 1.5, "#00f2fe", true, ghost, uti_m, bulhas_m, true, None);
-                ecg_plotter.draw_scales(-0.5, 1.5, true, "+1.5 mV", "0.0 mV", "-0.5 mV");
+                ecg_plotter.set_ecg_gain(ecg_gain());
+                if ecg_gain() == 2.0 {
+                    ecg_plotter.draw(-0.25, 0.75, "#00f2fe", true, ghost, uti_m, bulhas_m, true, None);
+                    ecg_plotter.draw_scales(-0.25, 0.75, true, "+0.75 mV (2N)", "0.0 mV", "-0.25 mV");
+                } else {
+                    ecg_plotter.draw(-0.5, 1.5, "#00f2fe", true, ghost, uti_m, bulhas_m, true, None);
+                    ecg_plotter.draw_scales(-0.5, 1.5, true, "+1.5 mV (1N)", "0.0 mV", "-0.5 mV");
+                }
 
                 // CH-03: Variável Iônica / Cinética Celular Dinâmica
                 let (min_ch3, max_ch3, color_ch3, top_l, mid_l, bot_l) = match ion_var_idx() {
@@ -493,10 +504,10 @@ fn App() -> Element {
                 hemo_plotter_lap.draw(0.0, 180.0, "#eab308", false, ghost, uti_m, bulhas_m, false, None);
                 hemo_plotter_aop.draw_scales(0.0, 180.0, false, "180 mmHg", "90 mmHg", "0 mmHg");
 
-                // CH-2D: Alça Pressão-Volume 2D (Plano de Fase) ou Diagrama de Guyton
+                // CH-2D: Alça Pressão-Volume 2D (Plano de Fase), Diagrama de Guyton ou Vetorcardiograma Frontal
                 if two_d_mode() == "pv" {
                     pv_plotter.draw(edv(), esv(), ef(), sv());
-                } else {
+                } else if two_d_mode() == "guyton" {
                     let sys_read = system.read();
                     guyton_plotter.draw(
                         sys_read.get_pmes(),
@@ -506,6 +517,8 @@ fn App() -> Element {
                         co(),
                         sys_read.get_venous_return(),
                     );
+                } else {
+                    vcg_plotter.draw();
                 }
             } else if active_tab() == "pulmo" {
                 // PULMO LAB:
@@ -1237,6 +1250,19 @@ fn App() -> Element {
                                     option { value: "10", selected: ecg_lead_idx() == 10, "V5 (Precordial Lateral Baixa)" }
                                     option { value: "11", selected: ecg_lead_idx() == 11, "V6 (Precordial Lateral Baixa)" }
                                 }
+                                span { " | Ganho: " }
+                                select {
+                                    id: "select-ecg-gain",
+                                    style: "background: #111; color: var(--neon-cyan); border: 1px solid var(--neon-cyan); border-radius: 3px; font-size: 1.1vh; padding: 1px 4px; cursor: pointer; margin-left: 2px;",
+                                    value: if ecg_gain() == 2.0 { "2.0" } else { "1.0" },
+                                    onchange: move |evt| {
+                                        if let Ok(g) = evt.value().parse::<f64>() {
+                                            ecg_gain.set(g);
+                                        }
+                                    },
+                                    option { value: "1.0", selected: ecg_gain() == 1.0, "1N (10 mm/mV)" }
+                                    option { value: "2.0", selected: ecg_gain() == 2.0, "2N (20 mm/mV)" }
+                                }
                                 span { " ]" }
                             }
                             canvas { id: "canvas-ecg" }
@@ -1316,13 +1342,16 @@ fn App() -> Element {
                                         onchange: move |evt| two_d_mode.set(evt.value()),
                                         option { value: "pv", selected: two_d_mode() == "pv", "圧力-容積 // Alça P×V (VE)" }
                                         option { value: "guyton", selected: two_d_mode() == "guyton", "循環平衡 // Guyton (DC × RV)" }
+                                        option { value: "vcg", selected: two_d_mode() == "vcg", "心電図ベクトル // Vetorcardiograma (DI × aVF)" }
                                     }
                                     span { " ]" }
                                 }
                                 if two_d_mode() == "pv" {
                                     canvas { id: "canvas-pv" }
-                                } else {
+                                } else if two_d_mode() == "guyton" {
                                     canvas { id: "canvas-guyton" }
+                                } else {
+                                    canvas { id: "canvas-vcg" }
                                 }
                             }
                         }

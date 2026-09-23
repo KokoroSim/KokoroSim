@@ -357,6 +357,29 @@ test.describe('KokoroSim — Testes E2E do Simulador Web (Wasm + Dioxus)', () =>
     await expect(pvCanvas).not.toBeVisible();
     await expect(modeSelect).toHaveValue('guyton');
 
+    // 5. Comuta para o modo Vetorcardiograma 2D (DI x aVF)
+    const vcgCanvas = page.locator('#canvas-vcg');
+    await modeSelect.selectOption('vcg');
+    await expect(vcgCanvas).toBeVisible();
+    await expect(pvCanvas).not.toBeVisible();
+    await expect(guytonCanvas).not.toBeVisible();
+    await expect(modeSelect).toHaveValue('vcg');
+
+    const vcgBox = await vcgCanvas.boundingBox();
+    expect(vcgBox).not.toBeNull();
+    expect(vcgBox.width).toBeGreaterThan(50);
+    expect(vcgBox.height).toBeGreaterThan(30);
+
+    // 6. Testa o seletor de ganho do ECG (1N / 2N)
+    const ecgGainSelect = page.locator('#select-ecg-gain');
+    await expect(ecgGainSelect).toBeVisible();
+    await expect(ecgGainSelect).toHaveValue('1.0');
+    await ecgGainSelect.selectOption('2.0');
+    await expect(ecgGainSelect).toHaveValue('2.0');
+    await page.waitForTimeout(300);
+    await ecgGainSelect.selectOption('1.0');
+    await expect(ecgGainSelect).toHaveValue('1.0');
+
     expect(jsErrors).toHaveLength(0);
   });
 
