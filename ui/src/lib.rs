@@ -75,6 +75,8 @@ fn App() -> Element {
     let mut resp_crs = use_signal(|| 0.10);  // L/cmH2O
     let mut rsa_toggle = use_signal(|| true); // Arritmia Sinusal Respiratória
     let mut baro_toggle = use_signal(|| true); // Barorreflexo em Malha Fechada
+    let mut orthostasis_toggle = use_signal(|| false); // Desafio Postural de Ortostase (Guyton)
+    let mut pmes_slider = use_signal(|| 7.5); // Pressão Média de Enchimento Sistêmico basal (mmHg)
     let mut trigger_spiro = use_signal(|| false);
     let mut spiro_vef1 = use_signal(|| 3.80);
     let mut spiro_cvf = use_signal(|| 4.60);
@@ -95,6 +97,8 @@ fn App() -> Element {
     let mut ef = use_signal(|| 58.3);
     let mut co = use_signal(|| 4.8);
     let mut map = use_signal(|| 90.0);
+    let mut cvp = use_signal(|| 3.2);
+    let mut pmes = use_signal(|| 7.5);
     let mut show_about = use_signal(|| false);
     
     use_future(move || async move {
@@ -262,6 +266,8 @@ fn App() -> Element {
                 system.write().set_respiratory_params(resp_rate(), resp_raw(), resp_crs());
                 system.write().set_rsa_enabled(rsa_toggle());
                 system.write().set_baroreflex_enabled(baro_toggle());
+                system.write().set_orthostasis(orthostasis_toggle());
+                system.write().set_pmes(pmes_slider());
                 
                 // 2. Step Engine
                 // Amostragem compacta: 1 ponto a cada 5.0ms (downsample=500 com dt=0.01ms)
@@ -447,6 +453,8 @@ fn App() -> Element {
                     ef.set(metrics.ef);
                     co.set(metrics.co);
                     map.set(metrics.map);
+                    cvp.set(metrics.cvp);
+                    pmes.set(metrics.pmes);
 
                     spiro_vef1.set(system.read().get_vef1());
                     spiro_cvf.set(system.read().get_cvf());
@@ -468,6 +476,8 @@ fn App() -> Element {
     let sv_str = format!("{:.0}", sv());
     let co_str = format!("{:.2}", co());
     let map_str = format!("{:.0}", map());
+    let cvp_str = format!("{:.1}", cvp());
+    let pmes_str = format!("{:.1}", pmes());
 
     let mut active_accordion = use_signal(|| None::<usize>);
 
@@ -501,6 +511,8 @@ fn App() -> Element {
         resp_crs.set(0.10);
         rsa_toggle.set(true);
         baro_toggle.set(true);
+        orthostasis_toggle.set(false);
+        pmes_slider.set(7.5);
         trigger_spiro.set(false);
         system.set(HeartSystem::new());
         active_accordion.set(None);
@@ -580,6 +592,8 @@ fn App() -> Element {
                         div { class: "hud-item", "一拍拍出量 // VS: ", span { id: "hud-sv", "{sv_str} mL" } }
                         div { class: "hud-item", "心拍出量 // DC: ", span { id: "hud-co", "{co_str} L/min" } }
                         div { class: "hud-item", "平均動脈圧 // PAM: ", span { id: "hud-map", "{map_str} mmHg" } }
+                        div { class: "hud-item", "中心静脈圧 // PVC: ", span { id: "hud-cvp", "{cvp_str} mmHg" } }
+                        div { class: "hud-item", "充満圧 // PMES: ", span { id: "hud-pmes", "{pmes_str} mmHg" } }
                     } else {
                         div { class: "hud-item", "呼吸数 // FR: ", span { id: "hud-rr", "{resp_rate():.0} irpm" } }
                         div { class: "hud-item", "一秒量 // VEF₁: ", span { id: "hud-vef1", "{spiro_vef1():.2} L" } }
@@ -829,6 +843,20 @@ fn App() -> Element {
                         min: 0.0, max: 100.0, step: 1.0, default_val: 0.0, unit: "%".to_string(),
                         help: Some("Regurgitação sistólica do VE para o átrio esquerdo gerando onda v patológica gigante.".to_string()),
                         val: mitral_regurg
+                    }
+                }
+
+                Accordion { index: 9, label: "9. 循環平衡 // Retorno Venoso & Guyton".to_string(), active_accordion,
+                    Checkbox {
+                        label: "🚶 Ortostase (Em Pé / Tilt)".to_string(),
+                        color: "#fdcb6e".to_string(),
+                        checked: orthostasis_toggle
+                    }
+                    Slider {
+                        label: "Volemia (PMES)".to_string(),
+                        min: 1.0, max: 15.0, step: 0.5, default_val: 7.5, unit: " mmHg".to_string(),
+                        help: Some("Pressão Média de Enchimento Sistêmico de Arthur Guyton. Determina a pré-carga e o retorno venoso às cavas. Reduzida na hemorragia e choque hipovolêmico (< 4 mmHg); aumentada na reposição volêmica (> 10 mmHg).".to_string()),
+                        val: pmes_slider
                     }
                 }
                 } else {

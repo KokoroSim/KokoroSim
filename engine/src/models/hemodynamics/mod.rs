@@ -46,6 +46,14 @@ pub struct HemodynamicsModel {
 
     // Modulação exógena de resistência vascular periférica (ex: vasodilatadores, choque distributivo)
     pub r_tpr_mod: f64,
+
+    // Acoplamento Sistêmico de Guyton & Retorno Venoso
+    pub pmes_base: f64,         // Pressão Média de Enchimento Sistêmico basal (mmHg, repouso ~7.5)
+    pub pmes_effective: f64,    // PMES instantânea (modulada por ortostase e venoconstrição simpática)
+    pub cvp: f64,               // Pressão Venosa Central (PVC / Átrio Direito, mmHg ~2.5-4.0)
+    pub venous_return: f64,     // Retorno Venoso (L/min)
+    pub r_rv_base: f64,         // Resistência ao retorno venoso (mmHg*min/L, ~0.85)
+    pub orthostasis: bool,      // Posição ortostática (em pé / pooling venoso gravitacional)
 }
 
 impl HemodynamicsModel {
@@ -79,7 +87,37 @@ impl HemodynamicsModel {
             mitral_stenosis: 0.0,
             mitral_regurgitation: 0.0,
             r_tpr_mod: 1.0,
+            pmes_base: 7.5,
+            pmes_effective: 7.5,
+            cvp: 3.2,
+            venous_return: 5.0,
+            r_rv_base: 0.85,
+            orthostasis: false,
         }
+    }
+
+    pub fn set_orthostasis(&mut self, enabled: bool) {
+        self.orthostasis = enabled;
+    }
+
+    pub fn get_orthostasis(&self) -> bool {
+        self.orthostasis
+    }
+
+    pub fn set_pmes(&mut self, pmes: f64) {
+        self.pmes_base = pmes.clamp(1.0, 16.0);
+    }
+
+    pub fn get_pmes(&self) -> f64 {
+        self.pmes_effective
+    }
+
+    pub fn get_cvp(&self) -> f64 {
+        self.cvp
+    }
+
+    pub fn get_venous_return(&self) -> f64 {
+        self.venous_return
     }
 
     pub fn set_peripheral_resistance_ratio(&mut self, ratio: f64) {
@@ -149,10 +187,33 @@ impl HemodynamicsModel {
         let e_diast = self.e_min + 0.0028 * v_excess;
         let elastance = e_diast + (e_max - e_diast) * self.f_active;
 
-        // 4. Pressão Atrial Esquerda (LAP) - Curva fisiológica do Diagrama de Wiggers
-        // Linha de base diastólica (~7 mmHg com venoconstrição sob simpático e estase na estenose mitral)
+        // 4. Acoplamento Sistêmico de Guyton: Retorno Venoso e Pressão Média de Enchimento Sistêmico (PMES)
+        // PMES reflete a volemia total e a capacitância vascular periférica.
+        // Na ortostase (em pé), o acúmulo hidrostático venoso em membros inferiores (pooling ~500 mL)
+        // reduz a PMES efetiva. A venoconstrição simpática reflexa alfa-1 recruta sangue dos leitos
+        // capacitivos (esplâncnico/cutâneo), restaurando parcialmente a PMES.
+        let pooling_factor = if self.orthostasis { 0.32 } else { 0.0 };
+        let venoconstriction = symp * 0.28 - parasymp * 0.08;
+        self.pmes_effective = (self.pmes_base * (1.0 - pooling_factor + venoconstriction)).clamp(1.0, 20.0);
+
+        // Resistência ao Retorno Venoso (R_rv)
+        let r_rv = (self.r_rv_base * (1.0 + (if self.orthostasis { 0.18 } else { 0.0 })) / (1.0 + symp * 0.15)).max(0.2);
+
+        // Retorno Venoso instantâneo (Guyton): RV = (PMES - PVC) / R_rv
+        self.venous_return = ((self.pmes_effective - self.cvp) / r_rv).max(0.0);
+
+        // Dinâmica de Conservação de Massa no Leito Venoso Central:
+        // d(PVC)/dt = (RV - DC) / C_venous
+        // Em repouso eutrófico, a PVC se estabiliza exatamente no ponto onde RV == DC.
+        let est_co = (self.stroke_volume * 75.0) / 1000.0; // Débito cardíaco atual em L/min
+        let d_cvp = (self.venous_return - est_co) / 2500.0; // Constante de tempo de complacência venosa (2.5s)
+        self.cvp = (self.cvp + d_cvp * dt).clamp(0.5, 12.0);
+
+        // Pressão Atrial Esquerda (LAP) - Curva fisiológica do Diagrama de Wiggers
+        // Linha de base diastólica modulada pelo retorno venoso (Guyton), simpático e valvopatias
         let ms_backlog = self.mitral_stenosis * 15.0;
-        let p_la_base = 7.0 + (symp * 3.5) + ms_backlog;
+        let volume_drive = (self.pmes_effective / 7.5).clamp(0.1, 2.5);
+        let p_la_base = (1.5 + 5.5 * volume_drive + (symp * 2.5) + ms_backlog).clamp(1.0, 35.0);
         
         // Onda 'a' (contração atrial ativa / sístole atrial pós-onda P, hipertrofiada na estenose mitral)
         let a_gain = 1.0 + self.mitral_stenosis * 0.6;

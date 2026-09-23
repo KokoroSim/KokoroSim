@@ -156,6 +156,23 @@ O desenvolvimento do **KokoroSim** está organizado em grandes marcos arquitetur
 * [x] **Validação e Suíte de Testes E2E (Playwright)**:
   - 10 cenários automatizados cobrindo Wiggers, alça $P \times V$, estabilidade hemodinâmica sob valvopatias e persistência em segundo plano.
 
+### Fase 13.1: Acoplamento Sistêmico de Guyton, Retorno Venoso e Resposta à Ortostase (MED-7002 / Issue #2) ✅ CONCLUÍDO
+* [x] **Modelo de Retorno Venoso de Arthur Guyton**:
+  - Equação fundamental de acoplamento sistêmico: $RV = (PMES - PVC) / R_{rv}$.
+  - Dinâmica contínua de conservação de massa para a Pressão Venosa Central: $\frac{d(PVC)}{dt} = \frac{RV - DC}{C_{venous}}$, estabelecendo convergência estável no ponto de equilíbrio $RV = DC$.
+  - Acoplamento biofísico de pré-carga atrial esquerda ($p_{la\_base}$) derivado de $PVC$ e volume circulante efetivo.
+* [x] **Desafio Postural e Resposta à Ortostase (Tilt)**:
+  - Represamento venoso gravitacional esplâncnico e de membros inferiores (~$32\%$ de redução de $PMES$ e aumento de resistência ao retorno venoso $R_{rv}$).
+  - Gradiente de coluna hidrostática carotídea ($\Delta P \approx 18\text{ mmHg}$) descarregando imediatamente os barorreceptores do seio carotídeo antes da queda aórtica.
+  - Resposta compensatória fisiológica de malha fechada via barorreflexo (taquicardia reflexa, vasoconstrição venosa e arteriolar via $\alpha_1$, manutenção de $PAM$).
+* [x] **Controles Clínicos e Telemetria no Simulador Web**:
+  - Nova sanfona no Cardio Lab (`9. 循環平衡 // Retorno Venoso & Guyton`) com checkbox `🚶 Ortostase (Em Pé / Tilt)` e slider contínuo de volemia `Volemia (PMES)` ($1.0$ a $15.0\text{ mmHg}$).
+  - Novos pods de telemetria no HUD do Cardio Lab: Pressão Venosa Central (`PVC`) e Pressão Média de Enchimento Sistêmico (`PMES`).
+* [x] **Harness de Testes Automatizados**:
+  - 4 testes de integração em Rust (`guyton_and_orthostasis.rs`): equilíbrio normovolêmico, desafio ortostático com taquicardia reflexa, choque hipovolêmico/hemorragia e expansão volêmica.
+  - Suíte Playwright E2E expandida para 11 testes, validando controles de sanfona, telemetria no HUD e persistência.
+
+
 ### Fase 14: Expansão Espacial (Monodomínio 2D / 3D)
 * [ ] Substituição do modelo 0D acoplado por malha bidimensional de diferenças finitas (matriz de 100x100 a 200x200 miócitos).
 * [ ] Difusão tecidual contínua com tensor de condutividade anisotrópica.

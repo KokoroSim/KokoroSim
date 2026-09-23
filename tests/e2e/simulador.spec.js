@@ -176,10 +176,10 @@ test.describe('KokoroSim — Testes E2E do Simulador Web (Wasm + Dioxus)', () =>
 
   test('deve iniciar com todas as sanfonas fechadas e permitir apenas uma aberta por vez', async ({ page }) => {
     const accordions = page.locator('details.control-group');
-    await expect(accordions).toHaveCount(9);
+    await expect(accordions).toHaveCount(10);
 
     // 1. Todas iniciam fechadas
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 10; i++) {
       await expect(accordions.nth(i)).not.toHaveAttribute('open');
     }
 
@@ -282,4 +282,37 @@ test.describe('KokoroSim — Testes E2E do Simulador Web (Wasm + Dioxus)', () =>
 
     expect(jsErrors).toHaveLength(0);
   });
+
+  test('deve manipular os controles de Guyton e ortostase com telemetria no HUD', async ({ page }) => {
+    // 1. Valida pods de PVC e PMES no HUD
+    const cvpHud = page.locator('#hud-cvp');
+    const pmesHud = page.locator('#hud-pmes');
+    await expect(cvpHud).toBeVisible();
+    await expect(pmesHud).toBeVisible();
+    await expect(cvpHud).toContainText('mmHg');
+    await expect(pmesHud).toContainText('mmHg');
+
+    // 2. Abre a sanfona 9 (Retorno Venoso & Guyton)
+    const guytonAccordion = page.locator('details.control-group', { hasText: 'Retorno Venoso & Guyton' });
+    await expect(guytonAccordion).toBeVisible();
+    await guytonAccordion.locator('summary').click();
+    await expect(guytonAccordion).toHaveAttribute('open');
+
+    // 3. Testa o toggle de Ortostase
+    const orthoContainer = guytonAccordion.locator('.slider-container', { hasText: 'Ortostase' });
+    const orthoCheckbox = orthoContainer.locator('input[type="checkbox"]');
+    await expect(orthoCheckbox).toBeVisible();
+    await expect(orthoCheckbox).not.toBeChecked();
+
+    await orthoContainer.click();
+    await expect(orthoCheckbox).toBeChecked();
+    await page.waitForTimeout(500);
+
+    // Desmarca ortostase
+    await orthoContainer.click();
+    await expect(orthoCheckbox).not.toBeChecked();
+
+    expect(jsErrors).toHaveLength(0);
+  });
 });
+

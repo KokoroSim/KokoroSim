@@ -74,6 +74,8 @@ pub struct HudMetrics {
     pub ef: f64,
     pub co: f64,
     pub map: f64,
+    pub cvp: f64,
+    pub pmes: f64,
 }
 
 #[wasm_bindgen]
@@ -297,7 +299,12 @@ impl HeartSystem {
         // Passo de Integração (Forward Euler)
         // 1. Barorreflexo Arterial em Malha Fechada (após estabilização dos batimentos iniciais)
         if self.time > 1500.0 {
-            self.baro.step(dt, self.hemo.p_ao);
+            // Na posição ortostática (em pé), a coluna hidrostática gravitacional entre a raiz aórtica
+            // e a bifurcação do seio carotídeo (~35 cm) impõe um gradiente hidrostático de ~18 mmHg (ΔP = ρ·g·h).
+            // Isso descarrega os barorreceptores carotídeos e deflagra a compensação autonômica postural imediata.
+            let hydrostatic_carotid_offset = if self.hemo.orthostasis { 18.0 } else { 0.0 };
+            let p_baro_sensed = (self.hemo.p_ao - hydrostatic_carotid_offset).max(20.0);
+            self.baro.step(dt, p_baro_sensed);
         }
 
         // 2. Dinâmica Respiratória & Acoplamento Cardiorrespiratório (RSA)
@@ -905,6 +912,8 @@ impl HeartSystem {
             ef: self.hemo.ejection_fraction,
             co,
             map: self.baro.pam,
+            cvp: self.hemo.cvp,
+            pmes: self.hemo.pmes_effective,
         }
     }
 
@@ -965,5 +974,29 @@ impl HeartSystem {
 
     pub fn get_mitral_regurgitation(&self) -> f64 {
         self.hemo.mitral_regurgitation
+    }
+
+    pub fn set_orthostasis(&mut self, enabled: bool) {
+        self.hemo.set_orthostasis(enabled);
+    }
+
+    pub fn get_orthostasis(&self) -> bool {
+        self.hemo.get_orthostasis()
+    }
+
+    pub fn set_pmes(&mut self, pmes: f64) {
+        self.hemo.set_pmes(pmes);
+    }
+
+    pub fn get_pmes(&self) -> f64 {
+        self.hemo.get_pmes()
+    }
+
+    pub fn get_cvp(&self) -> f64 {
+        self.hemo.get_cvp()
+    }
+
+    pub fn get_venous_return(&self) -> f64 {
+        self.hemo.get_venous_return()
     }
 }
