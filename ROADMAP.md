@@ -86,21 +86,21 @@ O desenvolvimento do **KokoroSim** está organizado em grandes marcos arquitetur
   - Implementação de seletor duplo no cabeçalho de cada um dos 4 osciloscópios (`CH-01` a `CH-04`), tornando todos os canais 100% dinâmicos e intercambiáveis.
   - **1ª Dropdown (Domínio Fisiológico)**: `Potenciais de Ação`, `Eletrocardiograma (ECG)`, `Cinética Iônica e Transportadores`, `Hemodinâmica (Wiggers & Alça PxV)`, `Espirometria e Mecânica Respiratória`.
   - **2ª Dropdown (Visão ou Derivação Contextual)**: Ajusta-se dinamicamente conforme o domínio selecionado na primeira.
-* [ ] **Recalibração do ECG (Morfologia Clássica de Livro-Texto)**:
+* [x] **Recalibração do ECG (Morfologia Clássica de Livro-Texto)**:
   - Resolução da distorção do traçado da v2 (onde a diferença direta $V_{endo} - V_{epi}$ produzia ruído e ausência de morfologia escarpada realista).
   - Reintrodução da síntese biofísica espaço-temporal calibrada (como no modelo consagrado da v1):
     - **Onda P**: Deflexão atrial suave, arredondada e com duração fisiológica (~80 ms).
     - **Complexo QRS**: Deflexão ventricular afiada, escarpada e bifásica/trifásica (ondas Q, R e S nítidas com largura < 120 ms modulada por bloqueadores de sódio).
     - **Onda T ("Morrinho")**: Repolarização suave, positiva e assimétrica modulada por potássio e bloqueadores de $I_K$.
-* [ ] **Grade Biomédica Proporcional do ECG (Isotrópica 40 ms × 0.1 mV)**:
+* [x] **Grade Biomédica Proporcional do ECG (Isotrópica 40 ms × 0.1 mV)**:
   - Mapeamento matemático em pixels preservando a proporção 1:1 rigorosa do papel milimetrado de ECG:
     - **Quadradinhos pequenos**: $40\text{ ms}$ (horizontal) $\times$ $0.1\text{ mV}$ (vertical).
     - **Quadradões grandes**: $200\text{ ms}$ ($5\text{ quadradinhos}$) $\times$ $0.5\text{ mV}$ ($5\text{ quadradinhos}$).
     - Garantia de que 1 quadradinho no Canvas seja visualmente um quadrado perfeito, permitindo diagnóstico imediato por contagem visual de quadradinhos (PR em 3–5 quadradinhos, QRS < 3 quadradinhos, R com 10 quadradinhos de altura).
-    - Toggle de ganho rápido: padrão **$1N$ ($10\text{ mm/mV}$)** e **$2N$ ($20\text{ mm/mV}$)**.
-* [ ] **ECG de 12 Derivações Clínicas**:
+    - Toggle de ganho rápido no CH-02: padrão **$1N$ ($10\text{ mm/mV}$)** e **$2N$ ($20\text{ mm/mV}$)**.
+* [x] **ECG de 12 Derivações Clínicas e Vetorcardiograma 2D**:
   - Projeção tridimensional do dipolo cardíaco nas derivações periféricas de Einthoven/Goldberger (**DI, DII, DIII, aVR, aVL, aVF**) e precordiais horizontais (**V1 a V6**).
-  - Modo Vetorcardiograma 2D ($DI \times aVF$) traçando o loop elétrico frontal instantâneo e o cálculo do Eixo Elétrico Cardíaco em graus.
+  - Modo Vetorcardiograma 2D ($DI \times aVF$) traçando o loop elétrico frontal instantâneo com círculos de calibração concêntricos, quadrantes clínicos e cálculo do Eixo Elétrico Cardíaco ($\hat{A}_{\text{QRS}}$) em graus no CH-2D.
 * [ ] **Escalas Metrológicas Dinâmicas em Todos os Gráficos**:
   - Indicação numérica visual contínua dos eixos em cada canal: **Topo (Valor Máximo $Y_{max}$)**, **Centro (Valor Médio / Zero $Y_{mid}$)** e **Base (Valor Mínimo $Y_{min}$)** acompanhados das respectivas unidades de engenharia biomédica ($mV$, $mmHg$, $L$, $L/s$, $\mu M$).
 
