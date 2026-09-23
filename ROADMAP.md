@@ -73,9 +73,9 @@ O desenvolvimento do **KokoroSim** está organizado em grandes marcos arquitetur
 
 ## 🔬 Próximos Passos (KokoroSim v2.1+)
 
-### Fase 9: Modernização de Infraestrutura e Qualidade de Software (Rust 2024 & Dioxus 0.7)
-* [ ] **Migração para Rust Edition 2024**: Adoção das novas convenções de compilação, closures assíncronas otimizadas e lifetimes estritos para WebAssembly.
-* [ ] **Atualização para Dioxus 0.7**: Transição para o novo reconciliador de Virtual DOM e reatividade avançada de Signals, reduzindo o overhead de renderização do osciloscópio.
+### Fase 9: Modernização de Infraestrutura e Qualidade de Software (Rust 2024 & Dioxus 0.7) ✅ CONCLUÍDO
+* [x] **Migração para Rust Edition 2024**: Adoção das novas convenções de compilação, closures assíncronas otimizadas e lifetimes estritos para WebAssembly.
+* [x] **Atualização para Dioxus 0.7**: Transição para o novo reconciliador de Virtual DOM e reatividade avançada de Signals, fixando Dioxus 0.7.10 e migrando render loop para o padrão canônico `use_hook(|| spawn(...))`.
 * [x] **Harness de Testes Automatizados E2E e Wasm**:
   - [x] Testes unitários do motor numérico em Rust nativo e Wasm (validação de invariantes matemáticas, estabilidade de $V_m$, ausência de `NaN`, resiliência e não-congelamento sob espectro extremo de parâmetros).
   - [x] Suíte de testes de interface end-to-end com Playwright em modo headless e worker único: validação de inicialização WASM, 4 canais de osciloscópio, congelamento/pausa, captura da Onda Fantasma bio-sincronizada, disparo Single-Shot, reset de parâmetros, 3 camadas padrão ativas e legendas humanizadas.
