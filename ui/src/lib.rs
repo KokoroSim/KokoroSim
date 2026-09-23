@@ -89,6 +89,22 @@ fn App() -> Element {
     let mut spiro_pef = use_signal(|| 8.50);
     let mut is_in_spiro = use_signal(|| false);
 
+    // Parâmetros e Métricas Nefrológicas (Nefro Lab)
+    let mut renal_stenosis = use_signal(|| 0.0);       // % estenose de artéria renal (0 a 100%)
+    let mut renal_afferent_tone = use_signal(|| 1.0);  // tônus/resistência aferente (0.5 a 3.0x)
+    let mut renal_raas_block = use_signal(|| false);   // bloqueio SRAA (IECA / BRA)
+    let mut renal_loop_diuretic = use_signal(|| 0.0);  // diurético de alça / furosemida (0 a 100%)
+    let mut renal_thiazide = use_signal(|| 0.0);      // tiazídico (0 a 100%)
+    let mut renal_water_intake = use_signal(|| 2000.0);// mL/dia (500 a 4000)
+    let mut trigger_bolus = use_signal(|| false);      // infusão rápida de bolus 500 mL
+    let mut nefro_tfg = use_signal(|| 125.0);
+    let mut nefro_du = use_signal(|| 60.0);
+    let mut nefro_rpf = use_signal(|| 660.0);
+    let mut nefro_ff = use_signal(|| 18.9);
+    let mut nefro_vlec = use_signal(|| 15.0);
+    let mut nefro_renal_map = use_signal(|| 90.0);
+    let mut nefro_sodium = use_signal(|| 150.0);
+
     // Dynamic HUD metrics state
     let mut bpm = use_signal(|| 75.0);
     let mut pr = use_signal(|| 160.0);
@@ -137,6 +153,12 @@ fn App() -> Element {
         let mut resp_plotter_ppl = Plotter::new("canvas-resp-ppl", buffer_capacity);   // Pressão Intrapleural (Coral)
         let mut resp_plotter_rsa = Plotter::new("canvas-resp-rsa", buffer_capacity);   // Acoplamento Cardiorrespiratório RSA (Carmine)
 
+        // Plotters Nefrológicos Dedicados (Nefro Lab)
+        let mut nefro_plotter_gfr = Plotter::new("canvas-nefro-gfr", buffer_capacity);   // TFG (Ouro/Âmbar #f39c12)
+        let mut nefro_plotter_uout = Plotter::new("canvas-nefro-uout", buffer_capacity); // Débito Urinário (Turquesa #00cec9)
+        let mut nefro_plotter_rbf = Plotter::new("canvas-nefro-rbf", buffer_capacity);   // FPR (Coral #e17055)
+        let mut nefro_plotter_vlec = Plotter::new("canvas-nefro-vlec", buffer_capacity); // VLEC (Lilás #a29bfe)
+
         let mut audio = audio::AudioManager::new();
 
         loop {
@@ -160,6 +182,10 @@ fn App() -> Element {
             resp_plotter_flow.set_mode(current_mode);
             resp_plotter_ppl.set_mode(current_mode);
             resp_plotter_rsa.set_mode(current_mode);
+            nefro_plotter_gfr.set_mode(current_mode);
+            nefro_plotter_uout.set_mode(current_mode);
+            nefro_plotter_rbf.set_mode(current_mode);
+            nefro_plotter_vlec.set_mode(current_mode);
 
             if trigger_clear_ghost() {
                 pa_plotter_sa.clear_ghost();
@@ -178,6 +204,10 @@ fn App() -> Element {
                 resp_plotter_flow.clear_ghost();
                 resp_plotter_ppl.clear_ghost();
                 resp_plotter_rsa.clear_ghost();
+                nefro_plotter_gfr.clear_ghost();
+                nefro_plotter_uout.clear_ghost();
+                nefro_plotter_rbf.clear_ghost();
+                nefro_plotter_vlec.clear_ghost();
                 pv_plotter.reset();
                 trigger_clear_ghost.set(false);
                 ghost_status_str.set("📸 Capturar".to_string());
@@ -200,6 +230,10 @@ fn App() -> Element {
                 resp_plotter_flow.capture_ghost();
                 resp_plotter_ppl.capture_ghost();
                 resp_plotter_rsa.capture_ghost();
+                nefro_plotter_gfr.capture_ghost();
+                nefro_plotter_uout.capture_ghost();
+                nefro_plotter_rbf.capture_ghost();
+                nefro_plotter_vlec.capture_ghost();
                 trigger_capture_ghost.set(false);
                 ghost_status_str.set("⏳ Aguardando Nó SA...".to_string());
             }
@@ -240,6 +274,10 @@ fn App() -> Element {
                 resp_plotter_flow.arm_single();
                 resp_plotter_ppl.arm_single();
                 resp_plotter_rsa.arm_single();
+                nefro_plotter_gfr.arm_single();
+                nefro_plotter_uout.arm_single();
+                nefro_plotter_rbf.arm_single();
+                nefro_plotter_vlec.arm_single();
                 trigger_arm_single.set(false);
             }
             
@@ -283,6 +321,20 @@ fn App() -> Element {
                 system.write().set_baroreflex_enabled(baro_toggle());
                 system.write().set_orthostasis(orthostasis_toggle());
                 system.write().set_pmes(pmes_slider());
+
+                // Parâmetros e Gatilhos Nefrológicos (Nefro Lab)
+                if trigger_bolus() {
+                    system.write().infuse_fluid_bolus(500.0);
+                    trigger_bolus.set(false);
+                }
+                system.write().set_renal_params(
+                    renal_stenosis() / 100.0,
+                    renal_afferent_tone(),
+                    renal_raas_block(),
+                    renal_loop_diuretic() / 100.0,
+                    renal_thiazide() / 100.0,
+                    renal_water_intake(),
+                );
                 
                 // 2. Step Engine
                 // Amostragem compacta: 1 ponto a cada 5.0ms (downsample=500 com dt=0.01ms)
@@ -294,10 +346,10 @@ fn App() -> Element {
                 let downsample = 500; // 5ms por ponto amostrado (500 * 0.01ms = 5.0ms)
                 let batch = system.write().run_batch(dt, steps, downsample);
                 
-                // Batch achatado de 17 canais: [sa, av, atr, purk, endo, epi, fib, cai, lvp, aop, ecg, sound_events, vol, flow, p_pl, v_lv, p_la]
-                let chunk_size = 17;
+                // Batch achatado de 21 canais: [sa, av, atr, purk, endo, epi, fib, cai, lvp, aop, ecg, sound_events, vol, flow, p_pl, v_lv, p_la, tfg, du, rpf, vlec]
+                let chunk_size = HeartSystem::get_chunk_size();
                 for chunk in batch.chunks(chunk_size) {
-                    if chunk.len() == 17 {
+                    if chunk.len() == chunk_size {
                         let sa = chunk[0];
                         let av = chunk[1];
                         let atrium = chunk[2];
@@ -316,6 +368,10 @@ fn App() -> Element {
                         let ppl = chunk[14];
                         let vol_lv = chunk[15];
                         let lap = chunk[16];
+                        let tfg_val = chunk[17];
+                        let du_val = chunk[18];
+                        let rpf_val = chunk[19];
+                        let vlec_val = chunk[20];
                         
                         pa_plotter_sa.push(sa, sound_code, is_sa_fire);
                         pa_plotter_av.push(av, sound_code, is_sa_fire);
@@ -337,6 +393,12 @@ fn App() -> Element {
                         resp_plotter_flow.push(flow, sound_code, is_sa_fire);
                         resp_plotter_ppl.push(ppl, sound_code, is_sa_fire);
                         resp_plotter_rsa.push(sa, sound_code, is_sa_fire);
+
+                        // Traçados do Nefro Lab
+                        nefro_plotter_gfr.push(tfg_val, sound_code, is_sa_fire);
+                        nefro_plotter_uout.push(du_val, sound_code, is_sa_fire);
+                        nefro_plotter_rbf.push(rpf_val, sound_code, is_sa_fire);
+                        nefro_plotter_vlec.push(vlec_val, sound_code, is_sa_fire);
 
                         // Disparo dos eventos acústicos de acordo com as checkboxes ativas
                         if (sound_code & 1) != 0 && sound_uti() {
@@ -444,7 +506,7 @@ fn App() -> Element {
                         sys_read.get_venous_return(),
                     );
                 }
-            } else {
+            } else if active_tab() == "pulmo" {
                 // PULMO LAB:
                 // CH-01: Volume Pulmonar (V x t) de 0.0 a 7.0 L
                 resp_plotter_vol.draw(0.0, 7.0, "#00f2fe", true, ghost, uti_m, bulhas_m, false, None);
@@ -461,6 +523,23 @@ fn App() -> Element {
                 // CH-04: Acoplamento Cardiorrespiratório RSA (Disparo Sinusal guiado pela Respiração)
                 resp_plotter_rsa.draw(-90.0, 50.0, "#a29bfe", true, ghost, uti_m, bulhas_m, false, None);
                 resp_plotter_rsa.draw_scales(-90.0, 50.0, false, "+50 mV (Nó SA)", "-20 mV", "-90 mV");
+            } else {
+                // NEFRO LAB:
+                // CH-01: Taxa de Filtração Glomerular (TFG) de 0.0 a 160.0 mL/min
+                nefro_plotter_gfr.draw(0.0, 160.0, "#f39c12", true, ghost, uti_m, bulhas_m, false, None);
+                nefro_plotter_gfr.draw_scales(0.0, 160.0, false, "160 mL/min", "125 mL/min (TFG)", "0 mL/min");
+
+                // CH-02: Débito Urinário Instantâneo (DU) de 0.0 a 400.0 mL/h
+                nefro_plotter_uout.draw(0.0, 400.0, "#00cec9", true, ghost, uti_m, bulhas_m, false, None);
+                nefro_plotter_uout.draw_scales(0.0, 400.0, false, "400 mL/h (Poliúria)", "60 mL/h (Basal)", "0 mL/h (Anúria)");
+
+                // CH-03: Fluxo Plasmático Renal (FPR) de 0.0 a 900.0 mL/min
+                nefro_plotter_rbf.draw(0.0, 900.0, "#e17055", true, ghost, uti_m, bulhas_m, false, None);
+                nefro_plotter_rbf.draw_scales(0.0, 900.0, false, "900 mL/min", "660 mL/min (FPR)", "0 mL/min");
+
+                // CH-04: Volume de Líquido Extracelular (VLEC) de 10.0 a 20.0 L
+                nefro_plotter_vlec.draw(10.0, 20.0, "#a29bfe", true, ghost, uti_m, bulhas_m, false, None);
+                nefro_plotter_vlec.draw_scales(10.0, 20.0, false, "20.0 L (Hipervolemia)", "15.0 L (Basal)", "10.0 L (Depleção)");
             }
 
             // 4. Update HUD metrics at ~10 Hz (every 6 frames)
@@ -487,6 +566,13 @@ fn App() -> Element {
                     edema_pulm.set(metrics.edema_pulm);
                     edema_godet.set(metrics.edema_godet);
                     spo2.set(metrics.spo2);
+                    nefro_tfg.set(metrics.tfg);
+                    nefro_du.set(metrics.diuresis);
+                    nefro_rpf.set(metrics.rpf);
+                    nefro_ff.set(metrics.ff * 100.0);
+                    nefro_vlec.set(metrics.vlec);
+                    nefro_renal_map.set(metrics.renal_map);
+                    nefro_sodium.set(metrics.sodium_excretion);
 
                     spiro_vef1.set(system.read().get_vef1());
                     spiro_cvf.set(system.read().get_cvf());
@@ -544,6 +630,13 @@ fn App() -> Element {
         mitral_regurg.set(0.0);
         albumin_slider.set(4.0);
         permeability_slider.set(0.0);
+        renal_stenosis.set(0.0);
+        renal_afferent_tone.set(1.0);
+        renal_raas_block.set(false);
+        renal_loop_diuretic.set(0.0);
+        renal_thiazide.set(0.0);
+        renal_water_intake.set(2000.0);
+        trigger_bolus.set(false);
         sound_uti.set(false);
         sound_bulhas.set(false);
         view_mode.set("rolling".to_string());
@@ -627,6 +720,11 @@ fn App() -> Element {
                         onclick: move |_| active_tab.set("pulmo".to_string()),
                         "🫁 PULMO LAB"
                     }
+                    button {
+                        class: if active_tab() == "nefro" { "lab-tab active nefro" } else { "lab-tab" },
+                        onclick: move |_| active_tab.set("nefro".to_string()),
+                        "🫘 NEFRO LAB"
+                    }
                 }
                 div { class: "hud-metrics",
                     if active_tab() == "cardio" {
@@ -645,7 +743,7 @@ fn App() -> Element {
                         div { class: "hud-item", "毛細管圧 // Pcp: ", span { id: "hud-pcp", "{pcp_str} mmHg" } }
                         div { class: "hud-item", "膠質浸透圧 // πc: ", span { id: "hud-pic", "{pic_str} mmHg" } }
                         div { class: "hud-item", "浮腫 // Godet: ", span { id: "hud-godet", "{godet_str}" } }
-                    } else {
+                    } else if active_tab() == "pulmo" {
                         div { class: "hud-item", "呼吸数 // FR: ", span { id: "hud-rr", "{resp_rate():.0} irpm" } }
                         div { class: "hud-item", "一秒量 // VEF₁: ", span { id: "hud-vef1", "{spiro_vef1():.2} L" } }
                         div { class: "hud-item", "努力肺活量 // CVF: ", span { id: "hud-cvf", "{spiro_cvf():.2} L" } }
@@ -656,6 +754,15 @@ fn App() -> Element {
                         div { class: "hud-item", "気道抵抗 // Raw: ", span { id: "hud-raw", "{resp_raw():.1} cmH₂O" } }
                         div { class: "hud-item", "肺水腫 // Edema: ", span { id: "hud-edema-pulm", "{edema_pulm_str}" } }
                         div { class: "hud-item", "酸素飽和度 // SpO₂: ", span { id: "hud-spo2", "{spo2_str}%" } }
+                    } else {
+                        div { class: "hud-item", "濾過量 // TFG: ", span { id: "hud-tfg", "{nefro_tfg():.0} mL/min" } }
+                        div { class: "hud-item", "時間尿量 // DU: ", span { id: "hud-du", "{nefro_du():.0} mL/h" } }
+                        div { class: "hud-item", "血漿流量 // FPR: ", span { id: "hud-fpr", "{nefro_rpf():.0} mL/min" } }
+                        div { class: "hud-item", "濾過率 // FF: ", span { id: "hud-ff", "{nefro_ff():.1}%" } }
+                        div { class: "hud-item", "細胞外液 // VLEC: ", span { id: "hud-vlec", "{nefro_vlec():.2} L" } }
+                        div { class: "hud-item", "腎灌流圧 // PAMr: ", span { id: "hud-pamr", "{nefro_renal_map():.0} mmHg" } }
+                        div { class: "hud-item", "Na排泄 // Na⁺: ", span { id: "hud-na", "{nefro_sodium():.0} mEq/d" } }
+                        div { class: "hud-item", "平均動脈圧 // PAM: ", span { id: "hud-nefro-pam", "{map_str} mmHg" } }
                     }
                 }
             }
@@ -936,7 +1043,7 @@ fn App() -> Element {
                         if two_d_mode() == "guyton" { "🔄 Voltar para Alça P×V (VE)" } else { "📊 Exibir Diagrama de Guyton (CH-2D)" }
                     }
                 }
-                } else {
+                } else if active_tab() == "pulmo" {
                     Accordion { index: 10, label: "1. 換気力学 // Mecânica Ventilatória".to_string(), active_accordion,
                             Slider {
                                 label: "Frequência Respiratória".to_string(),
@@ -1046,6 +1153,56 @@ fn App() -> Element {
                                 }
                             }
                         }
+                } else {
+                    Accordion { index: 20, label: "1. 糸球体動態 // Hemodinâmica & Autoregulação".to_string(), active_accordion,
+                        Slider {
+                            label: "Estenose de Artéria Renal".to_string(),
+                            min: 0.0, max: 100.0, step: 1.0, default_val: 0.0, unit: "%".to_string(),
+                            help: Some("Estenose aterosclerótica da artéria renal (modelo de Goldblatt). Reduz a pressão de perfusão nos glomérulos, retém sódio e desvia a curva de Guyton para a direita.".to_string()),
+                            val: renal_stenosis
+                        }
+                        Slider {
+                            label: "Tônus Aferente (Simpático)".to_string(),
+                            min: 0.5, max: 3.0, step: 0.1, default_val: 1.0, unit: "x".to_string(),
+                            help: Some("Resistência da arteríola aferente controlada pelo tônus simpático renal. Vasoconstrição aferente aguda reduz o FPR e a TFG protegendo contra hipertensão grave.".to_string()),
+                            val: renal_afferent_tone
+                        }
+                        Checkbox {
+                            label: "💊 Bloqueio SRAA (IECA / BRA)".to_string(),
+                            color: "#fdcb6e".to_string(),
+                            checked: renal_raas_block
+                        }
+                    }
+
+                    Accordion { index: 21, label: "2. 尿細管薬理 // Farmacologia Tubular & Diuréticos".to_string(), active_accordion,
+                        Slider {
+                            label: "Diurético de Alça (Furosemida)".to_string(),
+                            min: 0.0, max: 100.0, step: 1.0, default_val: 0.0, unit: "%".to_string(),
+                            help: Some("Inibidor potente do cotransportador NKCC2 na alça de Henle. Aumenta a fração excretada de sódio e água em até 5x, aliviando congestão volêmica e edema de pulmão.".to_string()),
+                            val: renal_loop_diuretic
+                        }
+                        Slider {
+                            label: "Tiazídico (Hidroclorotiazida)".to_string(),
+                            min: 0.0, max: 100.0, step: 1.0, default_val: 0.0, unit: "%".to_string(),
+                            help: Some("Inibidor do cotransportador NCC no túbulo contorcido distal. Aumenta a natriurese moderada de longo prazo e reduz a resistência vascular periférica.".to_string()),
+                            val: renal_thiazide
+                        }
+                    }
+
+                    Accordion { index: 22, label: "3. 水塩出納 // Balanço Hidrossalino & Volemia".to_string(), active_accordion,
+                        Slider {
+                            label: "Ingesta Hídrica Diária".to_string(),
+                            min: 500.0, max: 4000.0, step: 100.0, default_val: 2000.0, unit: " mL/dia".to_string(),
+                            help: Some("Consumo diário de água e sais minerais. Em equilíbrio normotenso (2000 mL/dia), iguala exatamente o débito urinário somado às perdas insensíveis.".to_string()),
+                            val: renal_water_intake
+                        }
+                        button {
+                            class: "icon-btn",
+                            style: "width: 100%; padding: 8px 10px; margin-top: 6px; background: rgba(243, 156, 18, 0.2); color: #f39c12; font-weight: bold; border: 1px solid #f39c12; border-radius: 4px; cursor: pointer; font-size: 1.35vh; text-align: center; transition: all 0.2s;",
+                            onclick: move |_| trigger_bolus.set(true),
+                            "💧 INFUNDIR BOLUS IV (500 mL CRISTALÓIDE)"
+                        }
+                    }
                 }
             }
 
@@ -1167,7 +1324,7 @@ fn App() -> Element {
                                 }
                             }
                         }
-                } else {
+                } else if active_tab() == "pulmo" {
                         div { class: "canvas-wrapper",
                             div { class: "canvas-label", "CH-01 [ 呼吸気量 // ESPIROGRAMA CONTÍNUO (Volume x Tempo em Litros) ]" }
                             canvas { id: "canvas-resp-vol" }
@@ -1183,6 +1340,23 @@ fn App() -> Element {
                         div { class: "canvas-wrapper",
                             div { class: "canvas-label", "CH-04 [ 心肺カップリング // ACOPLAMENTO CARDIORRESPIRATÓRIO (RSA & Nó SA) ]" }
                             canvas { id: "canvas-resp-rsa" }
+                        }
+                } else {
+                        div { class: "canvas-wrapper",
+                            div { class: "canvas-label", "CH-01 [ 糸球体濾過量 // TAXA DE FILTRAÇÃO GLOMERULAR (TFG x Tempo em mL/min) ]" }
+                            canvas { id: "canvas-nefro-gfr" }
+                        }
+                        div { class: "canvas-wrapper",
+                            div { class: "canvas-label", "CH-02 [ 時間尿量 // DÉBITO URINÁRIO INSTANTÂNEO (DU x Tempo em mL/h) ]" }
+                            canvas { id: "canvas-nefro-uout" }
+                        }
+                        div { class: "canvas-wrapper",
+                            div { class: "canvas-label", "CH-03 [ 腎血流動態 // FLUXO PLASMÁTICO RENAL (FPR x Tempo em mL/min) ]" }
+                            canvas { id: "canvas-nefro-rbf" }
+                        }
+                        div { class: "canvas-wrapper",
+                            div { class: "canvas-label", "CH-04 [ 体液平衡 // VOLUME DE LÍQUIDO EXTRACELULAR (VLEC x Tempo em Litros) ]" }
+                            canvas { id: "canvas-nefro-vlec" }
                         }
                 }
             }

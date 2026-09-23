@@ -410,6 +410,65 @@ test.describe('KokoroSim — Testes E2E do Simulador Web (Wasm + Dioxus)', () =>
 
     expect(jsErrors).toHaveLength(0);
   });
+
+  test('deve alternar para o Nefro Lab, exibir os 4 canais renais e responder à Furosemida com aumento de diurese', async ({ page }) => {
+    // 1. Alterna para a aba NEFRO LAB
+    const nefroTabBtn = page.locator('.lab-tab', { hasText: 'NEFRO LAB' });
+    await expect(nefroTabBtn).toBeVisible();
+    await nefroTabBtn.click();
+    await expect(nefroTabBtn).toHaveClass(/active/);
+
+    // 2. Valida a presença dos 4 canvases especializados do Nefro Lab
+    await expect(page.locator('#canvas-nefro-gfr')).toBeVisible();
+    await expect(page.locator('#canvas-nefro-uout')).toBeVisible();
+    await expect(page.locator('#canvas-nefro-rbf')).toBeVisible();
+    await expect(page.locator('#canvas-nefro-vlec')).toBeVisible();
+
+    // 3. Valida a telemetria do HUD Nefro (TFG, DU, VLEC)
+    const tfgLocator = page.locator('#hud-tfg');
+    await expect(tfgLocator).toBeVisible();
+    await expect(tfgLocator).toContainText('mL/min');
+
+    const duLocator = page.locator('#hud-du');
+    await expect(duLocator).toBeVisible();
+    await expect(duLocator).toContainText('mL/h');
+
+    const vlecLocator = page.locator('#hud-vlec');
+    await expect(vlecLocator).toBeVisible();
+    await expect(vlecLocator).toContainText('L');
+
+    // 4. Abre a Sanfona 21 (Farmacologia Tubular & Diuréticos)
+    const pharmAccordion = page.locator('details.control-group', { hasText: 'Farmacologia Tubular' });
+    await expect(pharmAccordion).toBeVisible();
+    await pharmAccordion.locator('summary').click();
+    await expect(pharmAccordion).toHaveAttribute('open');
+
+    // 5. Eleva Diurético de Alça (Furosemida) para 80%
+    const furosemidaContainer = pharmAccordion.locator('.slider-container', { hasText: 'Diurético de Alça (Furosemida)' });
+    const furosemidaSlider = furosemidaContainer.locator('input[type="range"]');
+    await furosemidaSlider.fill('80');
+
+    // Aguarda o efeito farmacológico e a atualização da telemetria (10 Hz)
+    await page.waitForTimeout(2000);
+
+    // 6. Confirma que o débito urinário instantâneo aumentou significativamente (> 120 mL/h, mais que o dobro do basal de 60 mL/h)
+    const duText = await duLocator.innerText();
+    const duVal = parseFloat(duText.replace(/[^\d.]/g, ''));
+    expect(duVal).toBeGreaterThan(120.0);
+
+    // 7. Abre a Sanfona 22 (Balanço Hidrossalino) e aciona Bolus IV
+    const balanceAccordion = page.locator('details.control-group', { hasText: 'Balanço Hidrossalino' });
+    await expect(balanceAccordion).toBeVisible();
+    await balanceAccordion.locator('summary').click();
+    await expect(balanceAccordion).toHaveAttribute('open');
+
+    const bolusBtn = balanceAccordion.locator('button', { hasText: 'INFUNDIR BOLUS IV' });
+    await expect(bolusBtn).toBeVisible();
+    await bolusBtn.click();
+
+    await page.waitForTimeout(1000);
+    expect(jsErrors).toHaveLength(0);
+  });
 });
 
 

@@ -202,10 +202,37 @@ O desenvolvimento do **KokoroSim** está organizado em grandes marcos arquitetur
   - 4 testes de integração em Rust (`microvascular_starling.rs`): equilíbrio normoalbuminêmico, anasarca por hipoalbuminemia, edema cardiogênico por estenose mitral e lesão de permeabilidade (sepse/SDRA).
   - 13º teste de integração E2E Playwright validando manipulação de albumina/permeabilidade, colapso oncótico, escala de Godet e telemetria cardiorrespiratória.
 
+### Fase 13.3: Fisiologia Renal, Hemodinâmica Glomerular, Natriurese de Pressão de Guyton e Nefro Lab (MED-7002 / Issue #2 - Bloco D) ✅ CONCLUÍDO
+* [x] **Autoregulação da Hemodinâmica Glomerular (Mecanismo Miogênico & Feedback Tubuloglomerular)**:
+  - Equilíbrio hidrostático capilar glomerular ($P_{gc}$) a partir da pressão arterial sistêmica renal ($PAM_{renal}$), controlada por estenose aterosclerótica (modelo 2-rim 1-clipe de Goldblatt) e tônus simpático aferente ($R_a$).
+  - Autoregulação eficaz de TFG ($120\text{ mL/min}$) e Fluxo Plasmático Renal ($600\text{ mL/min}$) na faixa fisiológica de 75 a 160 mmHg.
+  - Colapso pré-renal severo (oligúria/anúria) por queda da Pressão Líquida de Ultrafiltração ($NFP$) abaixo de $55\text{ mmHg}$.
+* [x] **Mecanismo Renal-Líquidos Corporais de Guyton e Balanço Hidrossalino**:
+  - Curva de natriurese e diurese de pressão de Guyton: $\dot{V}_u = \dot{V}_{u,basal} \cdot (1 + 0.045\Delta PAM + 0.0006\Delta PAM^2)$.
+  - Conservação de massa contínua no Volume de Líquido Extracelular: $\frac{d(VLEC)}{dt} = \kappa \cdot (\text{Ingesta} - \dot{V}_u - \text{Perdas})$.
+  - Acoplamento hemodinâmico de malha fechada sobre a Pressão Média de Enchimento Sistêmico de Guyton: $\Delta PMES = 1.5 \cdot (VLEC - 15.0)\text{ mmHg/L}$, fechando o loop de feedback a longo prazo sobre o Débito Cardíaco e Pressão Arterial.
+  - Infusão de bolus intravenoso rápido (500 mL de cristalóide) com expansão volêmica e natriurese compensatória.
+* [x] **Farmacologia Tubular e Bloqueio Neuro-Humoral**:
+  - Diuréticos de alça (Furosemida): bloqueio do cotransportador NKCC2 na alça ascendente espessa de Henle, multiplicando a taxa de excreção urinária em até $5\times$.
+  - Diuréticos tiazídicos (Hidroclorotiazida): inibição do cotransportador NCC no túbulo contorcido distal, multiplicando a excreção em até $2.5\times$.
+  - Bloqueio do Sistema Renina-Angiotensina-Aldosterona (IECA / BRA): vasodilatação da arteríola eferente, redução de $P_{gc}$ e alívio de sobrecarga glomerular com diminuição da fração de filtração.
+* [x] **Criação do 3º Laboratório Especializado: `🫘 NEFRO LAB`**:
+  - Nova aba no cabeçalho com identidade visual em Âmbar/Ouro (`#f39c12` / `#fdcb6e`).
+  - 4 novos canais de osciloscópio dedicados a 60 FPS:
+    - **CH-01**: `[ 糸球体濾過量 // TAXA DE FILTRAÇÃO GLOMERULAR (TFG x Tempo em mL/min) ]`
+    - **CH-02**: `[ 時間尿量 // DÉBITO URINÁRIO INSTANTÂNEO (DU x Tempo em mL/h) ]`
+    - **CH-03**: `[ 腎血流動態 // FLUXO PLASMÁTICO RENAL (FPR x Tempo em mL/min) ]`
+    - **CH-04**: `[ 体液平衡 // VOLUME DE LÍQUIDO EXTRACELULAR (VLEC x Tempo em Litros) ]`
+  - 3 sanfonas específicas do Nefro Lab:
+    - `1. 糸球体動態 // Hemodinâmica & Autoregulação` (Estenose, Tônus Aferente, Bloqueio SRAA)
+    - `2. 尿細管薬理 // Farmacologia Tubular & Diuréticos` (Furosemida, Tiazídico)
+    - `3. 水塩出納 // Balanço Hidrossalino & Volemia` (Ingesta hídrica, Botão de Bolus IV de 500 mL)
+  - Telemetria de alta fidelidade no HUD (10 Hz): $TFG$, $DU$, $FPR$, $FF$, $VLEC$, $PAM_{renal}$, $Na_{exc}$.
+* [x] **Suíte de Testes Automatizados**:
+  - 4 testes de integração em Rust (`nefro_guyton_closed_loop.rs`): autoregulação normotensa, curva de natriurese de pressão sob hipertensão aguda, oligúria pré-renal em choque hipotensivo e expansão por bolus vs. depleção por Furosemida.
+  - 14º teste de integração E2E Playwright validando comutação para o Nefro Lab, renderização dos 4 canais, telemetria do HUD, resposta túbulo-farmacológica à Furosemida e infusão de bolus IV.
 
 
-
-### Fase 14: Expansão Espacial (Monodomínio 2D / 3D)
 * [ ] Substituição do modelo 0D acoplado por malha bidimensional de diferenças finitas (matriz de 100x100 a 200x200 miócitos).
 * [ ] Difusão tecidual contínua com tensor de condutividade anisotrópica.
 * [ ] Visualização topográfica de frentes de onda, espirais arritmogênicas (*rotor waves*), fibrilação ventricular e despolarizações fracionadas.

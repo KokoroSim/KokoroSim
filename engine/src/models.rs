@@ -8,6 +8,7 @@ pub mod hemodynamics;
 pub mod respiratory;
 pub mod baroreflex;
 pub mod microvascular;
+pub mod renal;
 
 // Aqui ficará o gerenciador de estado global que orquestra as 4 células
 use wasm_bindgen::prelude::*;
@@ -82,6 +83,13 @@ pub struct HudMetrics {
     pub edema_pulm: f64,
     pub edema_godet: f64,
     pub spo2: f64,
+    pub tfg: f64,
+    pub diuresis: f64,
+    pub rpf: f64,
+    pub ff: f64,
+    pub vlec: f64,
+    pub renal_map: f64,
+    pub sodium_excretion: f64,
 }
 
 #[wasm_bindgen]
@@ -98,6 +106,7 @@ pub struct HeartSystem {
     resp: respiratory::RespiratorySystem,
     baro: baroreflex::BaroreflexModel,
     micro: microvascular::MicrovascularModel,
+    renal: renal::RenalModel,
     acc_r_peak: bool,
     acc_b1: bool,
     acc_b2: bool,
@@ -149,7 +158,7 @@ pub struct HeartSystem {
     pub pr_rr: f64,
 }
 
-pub const BATCH_CHUNK_SIZE: usize = 17;
+pub const BATCH_CHUNK_SIZE: usize = 21;
 
 #[wasm_bindgen]
 impl HeartSystem {
@@ -172,6 +181,7 @@ impl HeartSystem {
             resp: respiratory::RespiratorySystem::new(),
             baro: baroreflex::BaroreflexModel::new(),
             micro: microvascular::MicrovascularModel::new(),
+            renal: renal::RenalModel::new(),
             acc_r_peak: false,
             acc_b1: false,
             acc_b2: false,
@@ -567,6 +577,10 @@ impl HeartSystem {
             }
         }
 
+        // --- FISIOLOGIA RENAL, NATRIURESE DE PRESSÃO E BALANÇO HÍDRICO (GUYTON) ---
+        self.renal.step(dt / 1000.0, self.baro.pam);
+        self.hemo.set_pmes_volume_mod(self.renal.get_pmes_modulation());
+
         // --- HEMODINÂMICA E ACOPLAMENTO ELETROMECÂNICO ---
         self.hemo.step(
             dt,
@@ -629,6 +643,10 @@ impl HeartSystem {
                 batch.push(self.resp.p_pl);        // 14: Pressão Intrapleural (cmH2O)
                 batch.push(self.hemo.v_lv);        // 15: Volume Ventricular Esquerdo (mL)
                 batch.push(self.hemo.p_la);        // 16: Pressão Atrial Esquerda (LAP, mmHg)
+                batch.push(self.renal.tfg);        // 17: Taxa de Filtração Glomerular (mL/min)
+                batch.push(self.renal.diuresis_ml_h); // 18: Débito Urinário (mL/h)
+                batch.push(self.renal.rpf);        // 19: Fluxo Plasmático Renal (mL/min)
+                batch.push(self.renal.vlec);       // 20: Volume de Líquido Extracelular (L)
             }
         }
         batch
@@ -931,6 +949,13 @@ impl HeartSystem {
             edema_pulm: self.micro.v_edema_pulm,
             edema_godet: self.micro.godet_grade as f64,
             spo2: self.micro.spo2,
+            tfg: self.renal.tfg,
+            diuresis: self.renal.diuresis_ml_h,
+            rpf: self.renal.rpf,
+            ff: self.renal.ff,
+            vlec: self.renal.vlec,
+            renal_map: self.renal.renal_map,
+            sodium_excretion: self.renal.sodium_excretion,
         }
     }
 
@@ -1056,4 +1081,42 @@ impl HeartSystem {
     pub fn get_spo2(&self) -> f64 {
         self.micro.spo2
     }
+
+    pub fn set_renal_params(
+        &mut self,
+        stenosis: f64,
+        afferent_tone: f64,
+        raas_block: bool,
+        loop_diuretic: f64,
+        thiazide: f64,
+        water_intake: f64,
+    ) {
+        self.renal.set_params(
+            stenosis,
+            afferent_tone,
+            raas_block,
+            loop_diuretic,
+            thiazide,
+            water_intake,
+        );
+    }
+
+    pub fn infuse_fluid_bolus(&mut self, volume_ml: f64) {
+        self.renal.infuse_bolus(volume_ml);
+    }
+
+    pub fn get_tfg(&self) -> f64 { self.renal.tfg }
+    pub fn get_diuresis(&self) -> f64 { self.renal.diuresis_ml_h }
+    pub fn get_rpf(&self) -> f64 { self.renal.rpf }
+    pub fn get_rbf(&self) -> f64 { self.renal.rbf }
+    pub fn get_ff(&self) -> f64 { self.renal.ff }
+    pub fn get_vlec(&self) -> f64 { self.renal.vlec }
+    pub fn get_renal_map(&self) -> f64 { self.renal.renal_map }
+    pub fn get_sodium_excretion(&self) -> f64 { self.renal.sodium_excretion }
+    pub fn get_stenosis(&self) -> f64 { self.renal.renal_artery_stenosis }
+    pub fn get_afferent_tone(&self) -> f64 { self.renal.afferent_tone }
+    pub fn get_raas_block(&self) -> bool { self.renal.raas_block }
+    pub fn get_loop_diuretic(&self) -> f64 { self.renal.loop_diuretic }
+    pub fn get_thiazide(&self) -> f64 { self.renal.thiazide_diuretic }
+    pub fn get_water_intake(&self) -> f64 { self.renal.water_intake_ml_day }
 }

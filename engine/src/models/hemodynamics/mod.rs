@@ -50,6 +50,7 @@ pub struct HemodynamicsModel {
     // Acoplamento Sistêmico de Guyton & Retorno Venoso
     pub pmes_base: f64,         // Pressão Média de Enchimento Sistêmico basal (mmHg, repouso ~7.5)
     pub pmes_effective: f64,    // PMES instantânea (modulada por ortostase e venoconstrição simpática)
+    pub pmes_volume_mod: f64,   // Modulação por volume extracelular renal (mmHg)
     pub cvp: f64,               // Pressão Venosa Central (PVC / Átrio Direito, mmHg ~2.5-4.0)
     pub venous_return: f64,     // Retorno Venoso (L/min)
     pub r_rv_base: f64,         // Resistência ao retorno venoso (mmHg*min/L, ~0.85)
@@ -91,6 +92,7 @@ impl HemodynamicsModel {
             r_tpr_mod: 1.0,
             pmes_base: 7.5,
             pmes_effective: 7.5,
+            pmes_volume_mod: 0.0,
             cvp: 3.2,
             venous_return: 5.0,
             r_rv_base: 0.85,
@@ -98,6 +100,14 @@ impl HemodynamicsModel {
             inotropy: 1.0,
             orthostasis: false,
         }
+    }
+
+    pub fn set_pmes_volume_mod(&mut self, delta: f64) {
+        self.pmes_volume_mod = delta;
+    }
+
+    pub fn get_pmes_volume_mod(&self) -> f64 {
+        self.pmes_volume_mod
     }
 
     pub fn set_orthostasis(&mut self, enabled: bool) {
@@ -207,7 +217,8 @@ impl HemodynamicsModel {
         // capacitivos (esplâncnico/cutâneo), restaurando parcialmente a PMES.
         let pooling_factor = if self.orthostasis { 0.32 } else { 0.0 };
         let venoconstriction = symp * 0.28 - parasymp * 0.08;
-        self.pmes_effective = (self.pmes_base * (1.0 - pooling_factor + venoconstriction)).clamp(1.0, 20.0);
+        let pmes_total = (self.pmes_base + self.pmes_volume_mod).max(1.0);
+        self.pmes_effective = (pmes_total * (1.0 - pooling_factor + venoconstriction)).clamp(1.0, 25.0);
 
         // Resistência ao Retorno Venoso (R_rv)
         let r_rv = (self.r_rv_base * (1.0 + (if self.orthostasis { 0.18 } else { 0.0 })) / (1.0 + symp * 0.15)).max(0.2);

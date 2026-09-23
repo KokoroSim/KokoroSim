@@ -165,6 +165,13 @@ header {
     box-shadow: 0 0 10px rgba(46, 204, 113, 0.25);
 }
 
+.lab-tab.active.nefro {
+    background: rgba(243, 156, 18, 0.15);
+    color: #f39c12;
+    border-color: #f39c12;
+    box-shadow: 0 0 10px rgba(243, 156, 18, 0.25);
+}
+
 /* Pulmo Lab e Espirometria */
 .btn-spiro-trigger {
     background: linear-gradient(135deg, rgba(46, 204, 113, 0.2) 0%, rgba(0, 242, 254, 0.2) 100%);
