@@ -5,7 +5,7 @@ use engine::models::HeartSystem;
 use wasm_bindgen::prelude::*;
 
 mod plot;
-use plot::{Plotter, PvLoopPlotter};
+use plot::{Plotter, PvLoopPlotter, GuytonPlotter};
 
 mod audio;
 
@@ -65,6 +65,7 @@ fn App() -> Element {
     let mut ecg_lead_idx = use_signal(|| 1usize);
     let mut ion_cell_idx = use_signal(|| 4usize); // Endocárdio por padrão
     let mut ion_var_idx = use_signal(|| 0usize);  // [Ca2+]_i por padrão
+    let mut two_d_mode = use_signal(|| "pv".to_string()); // "pv" ou "guyton"
 
     // Seletor de Especialidade / Abas de Laboratório
     let mut active_tab = use_signal(|| "cardio".to_string()); // "cardio" ou "pulmo"
@@ -119,6 +120,7 @@ fn App() -> Element {
         let mut hemo_plotter_aop = Plotter::new("canvas-ch4", buffer_capacity); // AoP Aórtica (Coral)
         let mut hemo_plotter_lap = Plotter::new("canvas-ch4", buffer_capacity); // LAP Atrial (Amarelo Âmbar)
         let mut pv_plotter = PvLoopPlotter::new("canvas-pv", 700);              // Alça P x V 2D em plano de fase
+        let guyton_plotter = GuytonPlotter::new("canvas-guyton");              // Diagrama de Guyton 2D (DC x RV)
 
         // Plotters Respiratórios Dedicados (Pulmo Lab)
         let mut resp_plotter_vol = Plotter::new("canvas-resp-vol", buffer_capacity);   // Espirograma V x t (Turquesa)
@@ -415,8 +417,20 @@ fn App() -> Element {
                 hemo_plotter_lap.draw(0.0, 180.0, "#eab308", false, ghost, uti_m, bulhas_m, false, None);
                 hemo_plotter_aop.draw_scales(0.0, 180.0, false, "180 mmHg", "90 mmHg", "0 mmHg");
 
-                // CH-PV: Alça Pressão-Volume 2D (Plano de Fase)
-                pv_plotter.draw(edv(), esv(), ef(), sv());
+                // CH-2D: Alça Pressão-Volume 2D (Plano de Fase) ou Diagrama de Guyton
+                if two_d_mode() == "pv" {
+                    pv_plotter.draw(edv(), esv(), ef(), sv());
+                } else {
+                    let sys_read = system.read();
+                    guyton_plotter.draw(
+                        sys_read.get_pmes(),
+                        sys_read.get_r_rv(),
+                        sys_read.get_inotropy(),
+                        cvp(),
+                        co(),
+                        sys_read.get_venous_return(),
+                    );
+                }
             } else {
                 // PULMO LAB:
                 // CH-01: Volume Pulmonar (V x t) de 0.0 a 7.0 L
@@ -513,6 +527,7 @@ fn App() -> Element {
         baro_toggle.set(true);
         orthostasis_toggle.set(false);
         pmes_slider.set(7.5);
+        two_d_mode.set("pv".to_string());
         trigger_spiro.set(false);
         system.set(HeartSystem::new());
         active_accordion.set(None);
@@ -858,6 +873,18 @@ fn App() -> Element {
                         help: Some("Pressão Média de Enchimento Sistêmico de Arthur Guyton. Determina a pré-carga e o retorno venoso às cavas. Reduzida na hemorragia e choque hipovolêmico (< 4 mmHg); aumentada na reposição volêmica (> 10 mmHg).".to_string()),
                         val: pmes_slider
                     }
+                    button {
+                        class: "btn-toggle-guyton-2d",
+                        style: "width: 100%; margin-top: 6px; padding: 6px 8px; background: rgba(0, 242, 254, 0.12); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 1.25vh; text-align: center; transition: all 0.2s;",
+                        onclick: move |_| {
+                            if two_d_mode() == "guyton" {
+                                two_d_mode.set("pv".to_string());
+                            } else {
+                                two_d_mode.set("guyton".to_string());
+                            }
+                        },
+                        if two_d_mode() == "guyton" { "🔄 Voltar para Alça P×V (VE)" } else { "📊 Exibir Diagrama de Guyton (CH-2D)" }
+                    }
                 }
                 } else {
                     Accordion { index: 10, label: "1. 換気力学 // Mecânica Ventilatória".to_string(), active_accordion,
@@ -1068,9 +1095,22 @@ fn App() -> Element {
                             }
                             div { class: "canvas-wrapper",
                                 div { class: "canvas-label",
-                                    span { "CH-PV [ 圧力-容積ループ // ALÇA PRESSÃO-VOLUME DO VE ]" }
+                                    span { "CH-2D [ " }
+                                    select {
+                                        id: "select-2d-mode",
+                                        style: "background: #111; color: var(--neon-cyan); border: 1px solid var(--neon-cyan); border-radius: 3px; font-size: 1.2vh; padding: 1px 4px; cursor: pointer;",
+                                        value: "{two_d_mode()}",
+                                        onchange: move |evt| two_d_mode.set(evt.value()),
+                                        option { value: "pv", selected: two_d_mode() == "pv", "圧力-容積 // Alça P×V (VE)" }
+                                        option { value: "guyton", selected: two_d_mode() == "guyton", "循環平衡 // Guyton (DC × RV)" }
+                                    }
+                                    span { " ]" }
                                 }
-                                canvas { id: "canvas-pv" }
+                                if two_d_mode() == "pv" {
+                                    canvas { id: "canvas-pv" }
+                                } else {
+                                    canvas { id: "canvas-guyton" }
+                                }
                             }
                         }
                 } else {

@@ -53,6 +53,8 @@ pub struct HemodynamicsModel {
     pub cvp: f64,               // Pressão Venosa Central (PVC / Átrio Direito, mmHg ~2.5-4.0)
     pub venous_return: f64,     // Retorno Venoso (L/min)
     pub r_rv_base: f64,         // Resistência ao retorno venoso (mmHg*min/L, ~0.85)
+    pub r_rv_effective: f64,    // Resistência efetiva ao retorno venoso
+    pub inotropy: f64,          // Modulação inotrópica da função ventricular
     pub orthostasis: bool,      // Posição ortostática (em pé / pooling venoso gravitacional)
 }
 
@@ -92,6 +94,8 @@ impl HemodynamicsModel {
             cvp: 3.2,
             venous_return: 5.0,
             r_rv_base: 0.85,
+            r_rv_effective: 0.85,
+            inotropy: 1.0,
             orthostasis: false,
         }
     }
@@ -118,6 +122,14 @@ impl HemodynamicsModel {
 
     pub fn get_venous_return(&self) -> f64 {
         self.venous_return
+    }
+
+    pub fn get_r_rv(&self) -> f64 {
+        self.r_rv_effective
+    }
+
+    pub fn get_inotropy(&self) -> f64 {
+        self.inotropy
     }
 
     pub fn set_peripheral_resistance_ratio(&mut self, ratio: f64) {
@@ -180,6 +192,7 @@ impl HemodynamicsModel {
         // Efeito Anrep: autorregulação miocárdica em resposta ao aumento abrupto de pós-carga (estenose aórtica)
         let anrep = 1.0 + self.aortic_stenosis * 0.40;
         let inotropy = (1.0 + (symp * 1.15) - (parasymp * 0.30)) * anrep;
+        self.inotropy = inotropy;
         let e_max = self.e_max_base * inotropy;
         
         // Elastância passiva não-linear (EDPVR com rigidez elástica progressiva acima de 115 mL)
@@ -198,6 +211,7 @@ impl HemodynamicsModel {
 
         // Resistência ao Retorno Venoso (R_rv)
         let r_rv = (self.r_rv_base * (1.0 + (if self.orthostasis { 0.18 } else { 0.0 })) / (1.0 + symp * 0.15)).max(0.2);
+        self.r_rv_effective = r_rv;
 
         // Retorno Venoso instantâneo (Guyton): RV = (PMES - PVC) / R_rv
         self.venous_return = ((self.pmes_effective - self.cvp) / r_rv).max(0.0);

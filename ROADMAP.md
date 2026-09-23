@@ -165,12 +165,19 @@ O desenvolvimento do **KokoroSim** está organizado em grandes marcos arquitetur
   - Represamento venoso gravitacional esplâncnico e de membros inferiores (~$32\%$ de redução de $PMES$ e aumento de resistência ao retorno venoso $R_{rv}$).
   - Gradiente de coluna hidrostática carotídea ($\Delta P \approx 18\text{ mmHg}$) descarregando imediatamente os barorreceptores do seio carotídeo antes da queda aórtica.
   - Resposta compensatória fisiológica de malha fechada via barorreflexo (taquicardia reflexa, vasoconstrição venosa e arteriolar via $\alpha_1$, manutenção de $PAM$).
-* [x] **Controles Clínicos e Telemetria no Simulador Web**:
-  - Nova sanfona no Cardio Lab (`9. 循環平衡 // Retorno Venoso & Guyton`) com checkbox `🚶 Ortostase (Em Pé / Tilt)` e slider contínuo de volemia `Volemia (PMES)` ($1.0$ a $15.0\text{ mmHg}$).
+* [x] **Diagrama de Guyton Bidimensional (Frank-Starling vs. Retorno Venoso)**:
+  - Novo traçador `GuytonPlotter` renderizando o clássico plano cartesiano $Fluxo \times PVC$ ($0\text{ a }12\text{ L/min} \times -2\text{ a }14\text{ mmHg}$).
+  - Curva de Função Cardíaca (Frank-Starling em ciano `#00f2fe`) com sensibilidade inotrópica $\beta_1$ e platô de ejeção máxima.
+  - Curva Vascular de Retorno Venoso (em âmbar `#fdcb6e`) com declive $-1/R_{rv}$, intercepto no eixo X em $PVC = PMES$ e platô de colapso venoso em $PVC < 0\text{ mmHg}$ (*Guyton waterfall*).
+  - Traçado fantasma de referência basal ($PMES = 7.5\text{ mmHg}$, $R_{rv} = 0.85$, $inotropy = 1.0$) desenhado em tracejado sutil quando há intervenções ativas.
+  - Ponto de Equilíbrio Operacional dinâmico (marcador verde luminoso pulsante `#2ecc71`) com coordenadas instantâneas $(\text{PVC}, \text{DC})$.
+* [x] **Controles Clínicos e Comutação 2D no Simulador Web**:
+  - Nova sanfona no Cardio Lab (`9. 循環平衡 // Retorno Venoso & Guyton`) com checkbox `🚶 Ortostase (Em Pé / Tilt)`, slider contínuo de volemia `Volemia (PMES)` ($1.0$ a $15.0\text{ mmHg}$) e botão de atalho rápido para exibição do Diagrama de Guyton.
+  - Seletor de modo no canal 2D inferior direito (`CH-2D`): alternância instantânea entre `圧力-容積 // Alça P×V (VE)` e `循環平衡 // Guyton (DC × RV)`.
   - Novos pods de telemetria no HUD do Cardio Lab: Pressão Venosa Central (`PVC`) e Pressão Média de Enchimento Sistêmico (`PMES`).
 * [x] **Harness de Testes Automatizados**:
   - 4 testes de integração em Rust (`guyton_and_orthostasis.rs`): equilíbrio normovolêmico, desafio ortostático com taquicardia reflexa, choque hipovolêmico/hemorragia e expansão volêmica.
-  - Suíte Playwright E2E expandida para 11 testes, validando controles de sanfona, telemetria no HUD e persistência.
+  - Suíte Playwright E2E expandida para 12 testes, validando controles de sanfona, telemetria no HUD, comutação bidimensional entre Alça PxV e Diagrama de Guyton e persistência.
 
 
 ### Fase 14: Expansão Espacial (Monodomínio 2D / 3D)

@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Features
+  - (ui,hemodynamics) adicionar diagrama 2D de Guyton no canal CH-2D (refs #2)
   - (hemodynamics) implementar retorno venoso de Guyton e resposta a ortostase (refs #2)
   - (baroreflex) implementar barorreflexo em malha fechada e estabilizar cinetica sinusal
   - (ui) adicionar controles de valvopatias e telemetria sistolica no hud (closes #10)

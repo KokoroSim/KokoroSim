@@ -999,4 +999,12 @@ impl HeartSystem {
     pub fn get_venous_return(&self) -> f64 {
         self.hemo.get_venous_return()
     }
+
+    pub fn get_r_rv(&self) -> f64 {
+        self.hemo.get_r_rv()
+    }
+
+    pub fn get_inotropy(&self) -> f64 {
+        self.hemo.get_inotropy()
+    }
 }

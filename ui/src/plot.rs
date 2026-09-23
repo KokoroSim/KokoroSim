@@ -1087,3 +1087,314 @@ impl PvLoopPlotter {
         ctx.restore();
     }
 }
+
+pub struct GuytonPlotter {
+    canvas_id: String,
+}
+
+impl GuytonPlotter {
+    pub fn new(canvas_id: &str) -> Self {
+        Self {
+            canvas_id: canvas_id.to_string(),
+        }
+    }
+
+    pub fn draw(
+        &self,
+        pmes: f64,
+        r_rv: f64,
+        inotropy: f64,
+        cvp: f64,
+        cardiac_output: f64,
+        venous_return: f64,
+    ) {
+        let window = match web_sys::window() {
+            Some(w) => w,
+            None => return,
+        };
+        let document = match window.document() {
+            Some(d) => d,
+            None => return,
+        };
+        let canvas = match document.get_element_by_id(&self.canvas_id) {
+            Some(c) => match c.dyn_into::<HtmlCanvasElement>() {
+                Ok(c) => c,
+                Err(_) => return,
+            },
+            None => return,
+        };
+
+        let width = canvas.client_width() as f64;
+        let height = canvas.client_height() as f64;
+
+        if width <= 0.0 || height <= 0.0 {
+            return;
+        }
+
+        if canvas.width() as f64 != width || canvas.height() as f64 != height {
+            canvas.set_width(width as u32);
+            canvas.set_height(height as u32);
+        }
+
+        let ctx = match canvas.get_context("2d") {
+            Ok(Some(c)) => match c.dyn_into::<CanvasRenderingContext2d>() {
+                Ok(c) => c,
+                Err(_) => return,
+            },
+            _ => return,
+        };
+
+        // Escalas do plano de Guyton (X: -2..14 mmHg, Y: 0..12 L/min)
+        let min_pvc = -2.0;
+        let max_pvc = 14.0;
+        let min_flow = 0.0;
+        let max_flow = 12.0;
+
+        let margin_left = 34.0;
+        let margin_right = 12.0;
+        let margin_top = 16.0;
+        let margin_bottom = 24.0;
+
+        let plot_w = (width - margin_left - margin_right).max(10.0);
+        let plot_h = (height - margin_top - margin_bottom).max(10.0);
+
+        let map_x = |pvc: f64| margin_left + ((pvc - min_pvc) / (max_pvc - min_pvc)).clamp(0.0, 1.0) * plot_w;
+        let map_y = |flow: f64| margin_top + (1.0 - ((flow - min_flow) / (max_flow - min_flow)).clamp(0.0, 1.0)) * plot_h;
+
+        // 1. Fundo industrial escuro
+        ctx.set_fill_style_str("#020305");
+        ctx.fill_rect(0.0, 0.0, width, height);
+
+        // 2. Grade fosforescente sutil
+        ctx.set_stroke_style_str("rgba(0, 242, 254, 0.08)");
+        ctx.set_line_width(1.0);
+
+        ctx.begin_path();
+        for p in [-2.0, 0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0] {
+            let x = map_x(p);
+            ctx.move_to(x, margin_top);
+            ctx.line_to(x, margin_top + plot_h);
+        }
+        for f in [2.0, 4.0, 6.0, 8.0, 10.0] {
+            let y = map_y(f);
+            ctx.move_to(margin_left, y);
+            ctx.line_to(margin_left + plot_w, y);
+        }
+        ctx.stroke();
+
+        // 3. Eixos de coordenadas (com linha de PVC = 0 destacada)
+        ctx.set_stroke_style_str("rgba(255, 255, 255, 0.25)");
+        ctx.begin_path();
+        ctx.move_to(margin_left, margin_top);
+        ctx.line_to(margin_left, margin_top + plot_h);
+        ctx.line_to(margin_left + plot_w, margin_top + plot_h);
+        ctx.stroke();
+
+        // Linha pontilhada em PVC = 0 mmHg (limiar de colapso de cavas / Guyton waterfall)
+        ctx.save();
+        let _ = ctx.set_line_dash(&js_sys::Array::of2(&wasm_bindgen::JsValue::from_f64(3.0), &wasm_bindgen::JsValue::from_f64(3.0)));
+        ctx.set_stroke_style_str("rgba(255, 255, 255, 0.15)");
+        ctx.begin_path();
+        let x_zero = map_x(0.0);
+        ctx.move_to(x_zero, margin_top);
+        ctx.line_to(x_zero, margin_top + plot_h);
+        ctx.stroke();
+        ctx.restore();
+
+        // 4. Ticks e numeração dos eixos
+        ctx.set_fill_style_str("rgba(255, 255, 255, 0.45)");
+        ctx.set_font("9px 'Chakra Petch', monospace");
+        ctx.set_text_align("right");
+        ctx.set_text_baseline("middle");
+
+        for f in [0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0] {
+            let y = map_y(f);
+            let _ = ctx.fill_text(&format!("{:.0}", f), margin_left - 3.0, y);
+        }
+
+        ctx.set_text_align("center");
+        ctx.set_text_baseline("top");
+        for p in [0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0] {
+            let x = map_x(p);
+            let _ = ctx.fill_text(&format!("{:.0}", p), x, margin_top + plot_h + 3.0);
+        }
+
+        // Rótulos de grandezas
+        ctx.set_fill_style_str("rgba(0, 242, 254, 0.70)");
+        ctx.set_text_align("left");
+        ctx.set_text_baseline("top");
+        let _ = ctx.fill_text("Fluxo (L/min)", margin_left + 4.0, margin_top + 2.0);
+
+        ctx.set_text_align("right");
+        ctx.set_text_baseline("bottom");
+        let _ = ctx.fill_text("PVC (mmHg)", margin_left + plot_w, margin_top + plot_h - 2.0);
+
+        // Fórmulas analíticas biofísicas
+        let calc_rv = |p: f64, pmes_val: f64, r_val: f64| -> f64 {
+            let r_eff = r_val.max(0.1);
+            if p < 0.0 {
+                pmes_val / r_eff
+            } else if p <= pmes_val {
+                (pmes_val - p) / r_eff
+            } else {
+                0.0
+            }
+        };
+
+        let calc_dc = |p: f64, ino_val: f64| -> f64 {
+            let dc_max = (7.6 * ino_val).clamp(1.5, 22.0);
+            let pvc_0 = -1.0;
+            if p <= pvc_0 {
+                0.0
+            } else {
+                let delta_p = p - pvc_0;
+                let n = 1.8;
+                let ks_n = (2.8f64).powf(n);
+                let p_n = delta_p.powf(n);
+                dc_max * (p_n / (ks_n + p_n))
+            }
+        };
+
+        // 5. Curvas Basais Fantasmas (referência pontilhada tênue: PMES=7.5, R=0.85, Ino=1.0)
+        let is_altered = (pmes - 7.5).abs() > 0.3 || (r_rv - 0.85).abs() > 0.05 || (inotropy - 1.0).abs() > 0.05;
+        if is_altered {
+            ctx.save();
+            let _ = ctx.set_line_dash(&js_sys::Array::of2(&wasm_bindgen::JsValue::from_f64(3.0), &wasm_bindgen::JsValue::from_f64(3.0)));
+            ctx.set_line_width(1.0);
+
+            // Retorno Venoso Basal Fantasma
+            ctx.set_stroke_style_str("rgba(253, 203, 110, 0.25)");
+            ctx.begin_path();
+            let mut first = true;
+            let mut p = -2.0;
+            while p <= max_pvc {
+                let flow = calc_rv(p, 7.5, 0.85);
+                let x = map_x(p);
+                let y = map_y(flow);
+                if first {
+                    ctx.move_to(x, y);
+                    first = false;
+                } else {
+                    ctx.line_to(x, y);
+                }
+                p += 0.2;
+            }
+            ctx.stroke();
+
+            // Função Cardíaca Basal Fantasma
+            ctx.set_stroke_style_str("rgba(0, 242, 254, 0.25)");
+            ctx.begin_path();
+            first = true;
+            p = -2.0;
+            while p <= max_pvc {
+                let flow = calc_dc(p, 1.0);
+                let x = map_x(p);
+                let y = map_y(flow);
+                if first {
+                    ctx.move_to(x, y);
+                    first = false;
+                } else {
+                    ctx.line_to(x, y);
+                }
+                p += 0.2;
+            }
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // 6. Curva Vascular Atual de Retorno Venoso (Âmbar #fdcb6e)
+        ctx.save();
+        ctx.set_stroke_style_str("#fdcb6e");
+        ctx.set_line_width(2.0);
+        ctx.set_shadow_color("rgba(253, 203, 110, 0.4)");
+        ctx.set_shadow_blur(4.0);
+        ctx.begin_path();
+        let mut first = true;
+        let mut p = -2.0;
+        while p <= max_pvc {
+            let flow = calc_rv(p, pmes, r_rv);
+            let x = map_x(p);
+            let y = map_y(flow);
+            if first {
+                ctx.move_to(x, y);
+                first = false;
+            } else {
+                ctx.line_to(x, y);
+            }
+            p += 0.2;
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        // 7. Curva de Função Cardíaca Atual (Frank-Starling, Ciano #00f2fe)
+        ctx.save();
+        ctx.set_stroke_style_str("#00f2fe");
+        ctx.set_line_width(2.0);
+        ctx.set_shadow_color("rgba(0, 242, 254, 0.4)");
+        ctx.set_shadow_blur(4.0);
+        ctx.begin_path();
+        first = true;
+        p = -2.0;
+        while p <= max_pvc {
+            let flow = calc_dc(p, inotropy);
+            let x = map_x(p);
+            let y = map_y(flow);
+            if first {
+                ctx.move_to(x, y);
+                first = false;
+            } else {
+                ctx.line_to(x, y);
+            }
+            p += 0.2;
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        // 8. Ponto de Equilíbrio / Operação Dinâmica
+        let op_flow = if (cardiac_output - venous_return).abs() < 1.0 {
+            (cardiac_output + venous_return) * 0.5
+        } else {
+            cardiac_output
+        };
+        let cx = map_x(cvp);
+        let cy = map_y(op_flow);
+
+        ctx.save();
+        ctx.set_fill_style_str("#2ecc71");
+        ctx.set_shadow_color("#2ecc71");
+        ctx.set_shadow_blur(10.0);
+        ctx.begin_path();
+        let _ = ctx.arc(cx, cy, 4.5, 0.0, std::f64::consts::PI * 2.0);
+        ctx.fill();
+
+        // Anel pulsante sutil em volta do ponto
+        ctx.set_stroke_style_str("rgba(46, 204, 113, 0.5)");
+        ctx.set_line_width(1.2);
+        ctx.begin_path();
+        let _ = ctx.arc(cx, cy, 7.5, 0.0, std::f64::consts::PI * 2.0);
+        ctx.stroke();
+        ctx.restore();
+
+        // 9. Legenda compacta e Telemetria no topo direito
+        ctx.save();
+        ctx.set_font("10px 'JetBrains Mono', monospace");
+        ctx.set_text_align("right");
+        ctx.set_text_baseline("top");
+
+        let leg_x = width - margin_right - 4.0;
+        let mut leg_y = margin_top + 4.0;
+
+        ctx.set_fill_style_str("#00f2fe");
+        let _ = ctx.fill_text("● DC (Frank-Starling)", leg_x, leg_y);
+        leg_y += 12.0;
+
+        ctx.set_fill_style_str("#fdcb6e");
+        let _ = ctx.fill_text("● RV (Retorno Venoso)", leg_x, leg_y);
+        leg_y += 12.0;
+
+        ctx.set_fill_style_str("#2ecc71");
+        let _ = ctx.fill_text(&format!("★ Eq: {:.1} mmHg | {:.1} L/min", cvp, op_flow), leg_x, leg_y);
+        ctx.restore();
+    }
+}
+

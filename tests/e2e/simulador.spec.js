@@ -314,5 +314,51 @@ test.describe('KokoroSim — Testes E2E do Simulador Web (Wasm + Dioxus)', () =>
 
     expect(jsErrors).toHaveLength(0);
   });
+
+  test('deve comutar entre Alça P×V e Diagrama de Guyton (DC × RV) no canal 2D', async ({ page }) => {
+    // 1. Inicialmente no modo PV loop: #canvas-pv visível, #canvas-guyton oculto
+    const pvCanvas = page.locator('#canvas-pv');
+    const guytonCanvas = page.locator('#canvas-guyton');
+    const modeSelect = page.locator('#select-2d-mode');
+
+    await expect(pvCanvas).toBeVisible();
+    await expect(guytonCanvas).not.toBeVisible();
+    await expect(modeSelect).toHaveValue('pv');
+
+    // 2. Comuta pelo dropdown para Diagrama de Guyton
+    await modeSelect.selectOption('guyton');
+    await expect(pvCanvas).not.toBeVisible();
+    await expect(guytonCanvas).toBeVisible();
+
+    // Valida dimensões do canvas de Guyton
+    const box = await guytonCanvas.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box.width).toBeGreaterThan(50);
+    expect(box.height).toBeGreaterThan(30);
+
+    // 3. Abre a Sanfona 9 e usa o botão de atalho para alternar de volta para PxV
+    const guytonAccordion = page.locator('details.control-group', { hasText: 'Retorno Venoso & Guyton' });
+    await guytonAccordion.locator('summary').click();
+    await expect(guytonAccordion).toHaveAttribute('open');
+
+    const toggleBtn = guytonAccordion.locator('.btn-toggle-guyton-2d');
+    await expect(toggleBtn).toBeVisible();
+    await expect(toggleBtn).toContainText('Voltar para Alça P×V');
+
+    await toggleBtn.click();
+    await expect(pvCanvas).toBeVisible();
+    await expect(guytonCanvas).not.toBeVisible();
+    await expect(modeSelect).toHaveValue('pv');
+    await expect(toggleBtn).toContainText('Exibir Diagrama de Guyton');
+
+    // 4. Alterna novamente para Guyton pelo botão da sanfona
+    await toggleBtn.click();
+    await expect(guytonCanvas).toBeVisible();
+    await expect(pvCanvas).not.toBeVisible();
+    await expect(modeSelect).toHaveValue('guyton');
+
+    expect(jsErrors).toHaveLength(0);
+  });
 });
+
 
