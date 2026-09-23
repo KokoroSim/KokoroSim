@@ -127,8 +127,9 @@ fn App() -> Element {
     let mut spo2 = use_signal(|| 99.0);
     let mut show_about = use_signal(|| false);
     
-    use_future(move || async move {
-        let mut frame_count: u32 = 0;
+    use_hook(|| {
+        spawn(async move {
+            let mut frame_count: u32 = 0;
 
         // Create plotters com capacidade expandida (500 pontos) para acomodar ~2.5 segundos de histórico
         let buffer_capacity = 500;
@@ -582,6 +583,7 @@ fn App() -> Element {
                 }
             }
         }
+        });
     });
 
     let bpm_str = if bpm() > 0.0 { format!("{:.0}", bpm()) } else { "0".to_string() };
@@ -1388,8 +1390,8 @@ fn Accordion(index: usize, label: String, mut active_accordion: Signal<Option<us
             open: is_open,
             summary {
                 style: "{summary_style}",
-                prevent_default: "onclick",
-                onclick: move |_| {
+                onclick: move |evt| {
+                    evt.prevent_default();
                     if active_accordion() == Some(index) {
                         active_accordion.set(None);
                     } else {

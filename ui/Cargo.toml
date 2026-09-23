@@ -10,7 +10,7 @@ wasm-opt = false
 crate-type = ["cdylib"]
 
 [dependencies]
-dioxus = { version = "0.5", features = ["web"] }
+dioxus = { version = "=0.7.10", features = ["web"] }
 engine = { path = "../engine" }
 gloo-timers = { version = "0.3", features = ["futures"] }
 web-sys = { version = "0.3", features = [
