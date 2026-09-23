@@ -101,3 +101,87 @@ fn test_fibrosis_electrotonic_loading() {
         excursion
     );
 }
+
+#[test]
+fn test_sotalol_ikr_block_prolongs_action_potential_duration() {
+    let mut baseline = HeartSystem::new();
+    let mut sotalol = HeartSystem::new();
+    let dt = 0.01;
+
+    // Sotalol: 75% de bloqueio de I_Kr (block_ikr = 0.25)
+    sotalol.set_advanced_pharm_params(0.25, 0.0, 0.0);
+
+    // Simula 3.5 segundos para computar métricas eletrocardiográficas
+    for _ in 0..350_000 {
+        baseline.step(dt);
+        sotalol.step(dt);
+    }
+
+    let qt_base = baseline.get_hud_metrics().qt;
+    let qt_sotalol = sotalol.get_hud_metrics().qt;
+
+    // Sotalol deve prolongar o intervalo QT de repolarização
+    assert!(
+        qt_sotalol > qt_base + 15.0,
+        "Sotalol (bloqueio I_Kr) não prolongou o intervalo QT: basal={:.1} ms, sotalol={:.1} ms",
+        qt_base, qt_sotalol
+    );
+}
+
+#[test]
+fn test_beta_blocker_attenuates_sympathetic_tachycardia() {
+    let mut symp_only = HeartSystem::new();
+    let mut symp_beta = HeartSystem::new();
+    let dt = 0.01;
+
+    // Estímulo simpático alto em ambos (symp = 0.8)
+    symp_only.update_params(5.4, 1.8, 140.0, 1.0, 1.0, 1.0, 1.0, 0.8, 0.0, 0.0, 0.0);
+    symp_beta.update_params(5.4, 1.8, 140.0, 1.0, 1.0, 1.0, 1.0, 0.8, 0.0, 0.0, 0.0);
+
+    // Beta-bloqueador competitivo no segundo (Propranolol 85% de antagonismo)
+    symp_beta.set_advanced_pharm_params(1.0, 0.85, 0.0);
+
+    // Simula 4 segundos
+    for _ in 0..400_000 {
+        symp_only.step(dt);
+        symp_beta.step(dt);
+    }
+
+    let bpm_symp = symp_only.get_hud_metrics().bpm;
+    let bpm_beta = symp_beta.get_hud_metrics().bpm;
+
+    assert!(
+        bpm_symp > bpm_beta + 5.0,
+        "Beta-bloqueador não atenuou a taquicardia simpática: symp_livre={:.1} BPM, com_beta_blocker={:.1} BPM",
+        bpm_symp, bpm_beta
+    );
+}
+
+#[test]
+fn test_atropine_reverses_vagal_bradycardia() {
+    let mut vagal_only = HeartSystem::new();
+    let mut vagal_atropine = HeartSystem::new();
+    let dt = 0.01;
+
+    // Estímulo vagal/parassimpático moderado em ambos (parasymp = 0.6)
+    vagal_only.update_params(5.4, 1.8, 140.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.6, 0.0, 0.0);
+    vagal_atropine.update_params(5.4, 1.8, 140.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.6, 0.0, 0.0);
+
+    // Atropina (antagonismo muscarínico total 1.0)
+    vagal_atropine.set_advanced_pharm_params(1.0, 0.0, 1.0);
+
+    // Simula 4 segundos
+    for _ in 0..400_000 {
+        vagal_only.step(dt);
+        vagal_atropine.step(dt);
+    }
+
+    let bpm_vagal = vagal_only.get_hud_metrics().bpm;
+    let bpm_atropine = vagal_atropine.get_hud_metrics().bpm;
+
+    assert!(
+        bpm_atropine > bpm_vagal + 5.0,
+        "Atropina não reverteu a bradicardia vagal: vagal_puro={:.1} BPM, com_atropina={:.1} BPM",
+        bpm_vagal, bpm_atropine
+    );
+}

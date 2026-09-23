@@ -275,6 +275,7 @@ impl InadaCell {
         // Células nodais lentas (Inada 2009) foram calibradas estritamente para banho a 5.4 mM.
         // O piso biofísico de 5.4 mM preserva a condutância e evita bloqueio de condução artificial em hipocalemia.
         let ko_av = p.effective_ko().max(5.4);
+        self.ach = p.effective_parasymp() * 1e-4;
         let e_k = self.rtonf * (ko_av / self.ki).ln();
         let e_na = self.rtonf * (p.nao / self.nai).ln();
         let a_15 = 120.000/(1.00000+(- (self.v+50.0000)/15.0000).exp());
@@ -357,7 +358,7 @@ impl InadaCell {
         let a_69 = ( (( a_68*ko_av)/(10.0000+ko_av))*(self.v - e_k))/(1.00000+(((self.v - e_k) - 140.000)/( 2.50000*self.rtonf)).exp());
         let a_70 =   self.g_cal*self.d_gate*( 0.675000*self.f_gate+ 0.325000*self.f2)*(self.v - self.e_cal)*(1.00000 - (( a_69*self.ach)/(9.00000e-05+self.ach))/1.00000) * p.block_ca * p.isch_block() * p.ans_ca_modifier();
         let a_66 =   self.g_to*self.r_gate*( 0.450000*self.q_fast+ 0.550000*self.q_slow)*(self.v - e_k) * p.block_k;
-        let a_34 =   self.g_kr*( 0.900000*self.paf_gate+ 0.100000*self.pas_gate)*self.pik_gate*(self.v - e_k) * p.block_k;
+        let a_34 =   self.g_kr*( 0.900000*self.paf_gate+ 0.100000*self.pas_gate)*self.pik_gate*(self.v - e_k) * p.effective_ikr_block();
         let a_17 =  self.y_gate*self.g_f*(self.v - - 30.0000);
         let a_67 =  self.g_st*self.qa_gate*self.qi_gate*(self.v - self.e_st);
         let a_42 =  self.g_k1*(0.500000+0.500000/(1.00000+((self.v+30.0000)/5.00000).exp()));

@@ -154,7 +154,7 @@ impl VentricleCell {
         let i_to = self.g_to * self.r * self.s * (v - e_k) * p.block_k;
 
         // Rapid Time Dependent K+
-        let i_kr = G_KR * (p.ko / 5.4).sqrt() * self.xr1 * self.xr2 * (v - e_k) * p.block_k;
+        let i_kr = G_KR * (p.ko / 5.4).sqrt() * self.xr1 * self.xr2 * (v - e_k) * p.effective_ikr_block();
 
         // Slow Time Dependent K+
         let i_ks = self.g_ks * self.xs.powi(2) * (v - e_ks) * p.block_k;

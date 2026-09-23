@@ -268,7 +268,7 @@ impl AtriumCell {
         let i_to = c.cm * c.g_to * self.oa.powi(3) * self.oi * (self.v - e_k) * p.block_k;
         let g_kur = 0.005 + 0.05 / (1.0 + ((self.v - 15.0) / -13.0).exp());
         let i_kur = c.cm * g_kur * self.ua.powi(3) * self.ui * (self.v - e_k) * p.block_k;
-        let i_kr = (c.cm * c.g_kr * self.xr * (self.v - e_k)) / (1.0 + ((self.v + 15.0) / 22.4).exp()) * p.block_k;
+        let i_kr = (c.cm * c.g_kr * self.xr * (self.v - e_k)) / (1.0 + ((self.v + 15.0) / 22.4).exp()) * p.effective_ikr_block();
         let i_ks = c.cm * c.g_ks * self.xs.powi(2) * (self.v - e_k) * p.block_k;
         
         let f_nak = (1.0 + 0.1245 * (-0.1 * c.f_faraday * self.v / (c.r * c.t)).exp() + 0.0365 * c.sigma * (-c.f_faraday * self.v / (c.r * c.t)).exp()).powi(-1);

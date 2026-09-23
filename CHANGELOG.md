@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Features
+  - (engine) implementar alvos biofísicos de sotalol, beta-bloqueador e atropina (#13)
   - (ecg,ui) adicionar ganho 1N/2N no ecg e modo vetorcardiograma 2d (#20)
   - (renal) implement Guyton pressure-natriuresis, glomerular dynamics and Nefro Lab (Issue #2 Bloco D)
   - (microvascular) implementa Bloco C Starling, dinâmica capilar e edema (#2)

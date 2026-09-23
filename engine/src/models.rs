@@ -27,6 +27,9 @@ pub struct Pharmaco {
     pub parasymp: f64,
     pub isch: f64,
     pub fibrosis: f64,
+    pub block_ikr: f64,
+    pub beta_blocker: f64,
+    pub atropine: f64,
 }
 
 impl Pharmaco {
@@ -38,8 +41,20 @@ impl Pharmaco {
         1.0 - (self.isch * 0.5)
     }
 
+    pub fn effective_symp(&self) -> f64 {
+        (self.symp * (1.0 - self.beta_blocker)).max(0.0)
+    }
+
+    pub fn effective_parasymp(&self) -> f64 {
+        (self.parasymp * (1.0 - self.atropine)).max(0.0)
+    }
+
+    pub fn effective_ikr_block(&self) -> f64 {
+        self.block_k * self.block_ikr
+    }
+
     pub fn ans_ca_modifier(&self) -> f64 {
-        1.0 + (self.symp * 0.1) - (self.parasymp * 0.1)
+        1.0 + (self.effective_symp() * 0.1) - (self.effective_parasymp() * 0.1)
     }
 }
 
@@ -57,6 +72,9 @@ impl Default for Pharmaco {
             parasymp: 0.0,
             isch: 0.0,
             fibrosis: 0.0,
+            block_ikr: 1.0,
+            beta_blocker: 0.0,
+            atropine: 0.0,
         }
     }
 }
@@ -244,6 +262,24 @@ impl HeartSystem {
         self.pharm.fibrosis = fibrosis;
     }
 
+    pub fn set_advanced_pharm_params(&mut self, block_ikr: f64, beta_blocker: f64, atropine: f64) {
+        self.pharm.block_ikr = block_ikr.clamp(0.05, 1.0);
+        self.pharm.beta_blocker = beta_blocker.clamp(0.0, 1.0);
+        self.pharm.atropine = atropine.clamp(0.0, 1.0);
+    }
+
+    pub fn get_block_ikr(&self) -> f64 {
+        self.pharm.block_ikr
+    }
+
+    pub fn get_beta_blocker(&self) -> f64 {
+        self.pharm.beta_blocker
+    }
+
+    pub fn get_atropine(&self) -> f64 {
+        self.pharm.atropine
+    }
+
     pub fn step(&mut self, dt: f64) {
         let prev_v_vent = self.vent_endo.v;
         let prev_v_atr = self.atrium.v;
@@ -429,7 +465,7 @@ impl HeartSystem {
             } else {
                 1.0 - ((60.0 - self.bpm).min(30.0) / 60.0) * 0.10
             };
-            let ans_factor = (1.0 - (self.pharm.symp * 0.25) + (self.pharm.parasymp * 0.40) + (self.pharm.isch * 0.50))
+            let ans_factor = (1.0 - (self.pharm.effective_symp() * 0.25) + (self.pharm.effective_parasymp() * 0.40) + (self.pharm.isch * 0.50))
                 / self.pharm.block_ca.max(0.15);
             let dynamic_his_delay = (25.0 * rate_factor * ans_factor).clamp(15.0, 150.0);
 
@@ -587,8 +623,8 @@ impl HeartSystem {
             self.vent_endo.ca_i,
             self.atrium.v,
             self.vent_endo.v,
-            eff_pharm_hemo.symp,
-            eff_pharm_hemo.parasymp,
+            eff_pharm_hemo.effective_symp(),
+            eff_pharm_hemo.effective_parasymp(),
         );
 
         if self.hemo.event_r_peak { self.acc_r_peak = true; }

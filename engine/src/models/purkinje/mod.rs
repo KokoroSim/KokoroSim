@@ -271,7 +271,7 @@ impl PurkinjeCell {
         let i_sus = G_SUS * a_sus * (v - e_k) * p.block_k;
 
         // Rapid delayed rectifier K+
-        let i_kr = G_KR * (p.ko / 5.4).sqrt() * self.xr1 * self.xr2 * (v - e_k) * p.block_k;
+        let i_kr = G_KR * (p.ko / 5.4).sqrt() * self.xr1 * self.xr2 * (v - e_k) * p.effective_ikr_block();
 
         // Slow delayed rectifier K+
         let i_ks = G_KS * self.xs.powi(2) * (v - e_ks) * p.block_k;

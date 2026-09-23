@@ -341,8 +341,8 @@ impl SeveriCell {
 
     pub fn step(&mut self, dt_sec: f64, p: &Pharmaco) {
         // Atualização Farmacológica e Eletrolítica em tempo real
-        let iso = p.symp;
-        let ach = p.parasymp * 1e-3;
+        let iso = p.effective_symp();
+        let ach = p.effective_parasymp() * 1e-3;
 
         self.c[12] = iso;
         self.c[11] = ach;
@@ -378,7 +378,7 @@ impl SeveriCell {
         // 2. Fármacos Antiarrítmicos
         self.c[35] = self.c_base[35] * p.block_na * p.isch_block();
         self.c[79] = self.c_base[79] * p.block_k;
-        self.c[86] = self.c_base[86] * p.block_k;
+        self.c[86] = self.c_base[86] * p.effective_ikr_block();
         self.c[37] = self.c_base[37] * p.block_ca * p.isch_block();
         self.c[21] = self.c_base[21] * p.block_nak;
 
