@@ -41,6 +41,10 @@ fn App() -> Element {
     let mut aortic_regurg = use_signal(|| 0.0);
     let mut mitral_stenosis = use_signal(|| 0.0);
     let mut mitral_regurg = use_signal(|| 0.0);
+
+    // Dinâmica Microvascular & Starling (0% a 100%, 1.0 a 6.0 g/dL)
+    let mut albumin_slider = use_signal(|| 4.0); // g/dL
+    let mut permeability_slider = use_signal(|| 0.0); // 0% a 100%
     
     let show_sa = use_signal(|| true);
     let show_av = use_signal(|| false);
@@ -100,6 +104,11 @@ fn App() -> Element {
     let mut map = use_signal(|| 90.0);
     let mut cvp = use_signal(|| 3.2);
     let mut pmes = use_signal(|| 7.5);
+    let mut pcp = use_signal(|| 8.1);
+    let mut pi_c = use_signal(|| 27.5);
+    let mut edema_pulm = use_signal(|| 0.0);
+    let mut edema_godet = use_signal(|| 0.0);
+    let mut spo2 = use_signal(|| 99.0);
     let mut show_about = use_signal(|| false);
     
     use_future(move || async move {
@@ -255,6 +264,10 @@ fn App() -> Element {
                     aortic_regurg() / 100.0,
                     mitral_stenosis() / 100.0,
                     mitral_regurg() / 100.0,
+                );
+                system.write().set_microvascular_params(
+                    albumin_slider(),
+                    permeability_slider() / 100.0,
                 );
                 system.write().set_ecg_lead(ecg_lead_idx());
                 system.write().set_ion_cell(ion_cell_idx());
@@ -469,6 +482,11 @@ fn App() -> Element {
                     map.set(metrics.map);
                     cvp.set(metrics.cvp);
                     pmes.set(metrics.pmes);
+                    pcp.set(metrics.pcp);
+                    pi_c.set(metrics.pi_c);
+                    edema_pulm.set(metrics.edema_pulm);
+                    edema_godet.set(metrics.edema_godet);
+                    spo2.set(metrics.spo2);
 
                     spiro_vef1.set(system.read().get_vef1());
                     spiro_cvf.set(system.read().get_cvf());
@@ -492,6 +510,19 @@ fn App() -> Element {
     let map_str = format!("{:.0}", map());
     let cvp_str = format!("{:.1}", cvp());
     let pmes_str = format!("{:.1}", pmes());
+    let pcp_str = format!("{:.1}", pcp());
+    let pic_str = format!("{:.1}", pi_c());
+    let godet_str = if edema_godet() >= 0.5 {
+        format!("{:.0}+", edema_godet())
+    } else {
+        "0".to_string()
+    };
+    let edema_pulm_str = if edema_pulm() > 0.01 {
+        format!("{:.2} L", edema_pulm())
+    } else {
+        "0.0 L".to_string()
+    };
+    let spo2_str = format!("{:.0}", spo2());
 
     let mut active_accordion = use_signal(|| None::<usize>);
 
@@ -511,6 +542,8 @@ fn App() -> Element {
         aortic_regurg.set(0.0);
         mitral_stenosis.set(0.0);
         mitral_regurg.set(0.0);
+        albumin_slider.set(4.0);
+        permeability_slider.set(0.0);
         sound_uti.set(false);
         sound_bulhas.set(false);
         view_mode.set("rolling".to_string());
@@ -609,6 +642,9 @@ fn App() -> Element {
                         div { class: "hud-item", "平均動脈圧 // PAM: ", span { id: "hud-map", "{map_str} mmHg" } }
                         div { class: "hud-item", "中心静脈圧 // PVC: ", span { id: "hud-cvp", "{cvp_str} mmHg" } }
                         div { class: "hud-item", "充満圧 // PMES: ", span { id: "hud-pmes", "{pmes_str} mmHg" } }
+                        div { class: "hud-item", "毛細管圧 // Pcp: ", span { id: "hud-pcp", "{pcp_str} mmHg" } }
+                        div { class: "hud-item", "膠質浸透圧 // πc: ", span { id: "hud-pic", "{pic_str} mmHg" } }
+                        div { class: "hud-item", "浮腫 // Godet: ", span { id: "hud-godet", "{godet_str}" } }
                     } else {
                         div { class: "hud-item", "呼吸数 // FR: ", span { id: "hud-rr", "{resp_rate():.0} irpm" } }
                         div { class: "hud-item", "一秒量 // VEF₁: ", span { id: "hud-vef1", "{spiro_vef1():.2} L" } }
@@ -618,6 +654,8 @@ fn App() -> Element {
                         div { class: "hud-item", "心拍数 // FC: ", span { id: "hud-pulmo-bpm", "{bpm_str}" } }
                         div { class: "hud-item", "心拍出量 // DC: ", span { id: "hud-pulmo-co", "{co_str} L/min" } }
                         div { class: "hud-item", "気道抵抗 // Raw: ", span { id: "hud-raw", "{resp_raw():.1} cmH₂O" } }
+                        div { class: "hud-item", "肺水腫 // Edema: ", span { id: "hud-edema-pulm", "{edema_pulm_str}" } }
+                        div { class: "hud-item", "酸素飽和度 // SpO₂: ", span { id: "hud-spo2", "{spo2_str}%" } }
                     }
                 }
             }
@@ -825,6 +863,18 @@ fn App() -> Element {
                         help: Some("Acoplamento a fibroblastos não-excitáveis (MacCannell 2007). Drena corrente da fase 0, despolariza repouso e causa bloqueios intramiocárdicos.".to_string()),
                         val: fibrosis
                     }
+                    Slider {
+                        label: "Albumina Sérica (πc)".to_string(),
+                        min: 1.0, max: 6.0, step: 0.1, default_val: 4.0, unit: " g/dL".to_string(),
+                        help: Some("Determina a pressão coloidosmótica oncótica capilar (πc). Hipoalbuminemia severa (< 2.5 g/dL por desnutrição, cirrose ou síndrome nefrótica) colapsa a reabsorção capilar, culminando em anasarca e edema sistêmico.".to_string()),
+                        val: albumin_slider
+                    }
+                    Slider {
+                        label: "Permeabilidade Capilar (σ)".to_string(),
+                        min: 0.0, max: 100.0, step: 1.0, default_val: 0.0, unit: "%".to_string(),
+                        help: Some("Lesão endotelial por sepse, trauma ou choque inflamatório. Aumenta a condutância capilar Kf e reduz o coeficiente de reflexão de Staverman (σ), provocando edema não-cardiogênico / SARA / ARDS.".to_string()),
+                        val: permeability_slider
+                    }
                 }
 
                 Accordion { index: 7, label: "7. 生体音響 // Monitorização & Áudio".to_string(), active_accordion,
@@ -947,9 +997,13 @@ fn App() -> Element {
                                 div { class: "spiro-diag obstrutivo",
                                     "⚠️ DISTÚRBIO VENTILATÓRIO OBSTRUTIVO (Índice de Tiffeneau < 70%). Compatível com Asma Brônquica ou DPOC."
                                 }
-                            } else if spiro_cvf() < 3.5 {
+                            } else if edema_pulm() > 0.15 || spiro_cvf() < 3.5 {
                                 div { class: "spiro-diag restritivo",
-                                    "⚠️ SUGESTÃO DE PADRÃO RESTRITIVO (CVF reduzida com Tiffeneau preservado). Necessita CPT para confirmação (ex: Fibrose)."
+                                    if edema_pulm() > 0.15 {
+                                        "⚠️ DISTÚRBIO RESTRITIVO POR EDEMA PULMONAR (Congestão Alveolar com redução de CVF e rigidez tecidual)."
+                                    } else {
+                                        "⚠️ SUGESTÃO DE PADRÃO RESTRITIVO (CVF reduzida com Tiffeneau preservado). Necessita CPT para confirmação (ex: Fibrose)."
+                                    }
                                 }
                             } else {
                                 div { class: "spiro-diag normal",

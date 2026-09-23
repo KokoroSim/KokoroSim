@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Features
+  - (microvascular) implementa Bloco C Starling, dinâmica capilar e edema (#2)
   - (ui,hemodynamics) adicionar diagrama 2D de Guyton no canal CH-2D (refs #2)
   - (hemodynamics) implementar retorno venoso de Guyton e resposta a ortostase (refs #2)
   - (baroreflex) implementar barorreflexo em malha fechada e estabilizar cinetica sinusal

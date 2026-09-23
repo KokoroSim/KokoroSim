@@ -38,6 +38,7 @@ pub struct RespiratorySystem {
     pub vre: f64,           // Volume de Reserva Expiratório (L, ~1.1 L)
     pub vt: f64,            // Volume Corrente em repouso (L, ~0.5 L)
     pub vri: f64,           // Volume de Reserva Inspiratório (L, ~3.0 L)
+    pub edema_stiffness: f64, // Fator multiplicador de rigidez por edema intersticial/alveolar (1.0 = seco)
 
     // Estados da Manobra de Espirometria Forçada
     pub maneuver_state: ManeuverState,
@@ -76,6 +77,7 @@ impl RespiratorySystem {
             vre,
             vt,
             vri,
+            edema_stiffness: 1.0,
             maneuver_state: ManeuverState::Idle,
             t_maneuver_start: -1.0,
             t_exp_start: -1.0,
@@ -87,14 +89,25 @@ impl RespiratorySystem {
         }
     }
 
+    pub fn set_edema_stiffness(&mut self, factor: f64) {
+        self.edema_stiffness = factor.clamp(1.0, 5.0);
+    }
+
+    pub fn get_effective_crs(&self) -> f64 {
+        self.c_rs / self.edema_stiffness
+    }
+
     /// Capacidade Residual Funcional (CRF = VR + VRE)
     pub fn crf(&self) -> f64 {
-        self.vr + self.vre
+        let eff_vre = self.vre / (1.0 + (self.edema_stiffness - 1.0) * 0.5);
+        self.vr + eff_vre
     }
 
     /// Capacidade Pulmonar Total (CPT = CRF + VT + VRI)
     pub fn cpt(&self) -> f64 {
-        self.crf() + self.vt + self.vri
+        let eff_vt = self.vt / (1.0 + (self.edema_stiffness - 1.0) * 0.4);
+        let eff_vri = self.vri / self.edema_stiffness;
+        self.crf() + eff_vt + eff_vri
     }
 
     /// Capacidade Vital Forçada Fisiológica Teórica (CVF = VRI + VT + VRE)
@@ -126,13 +139,14 @@ impl RespiratorySystem {
                 let period_sec = 60.0 / self.resp_rate.max(5.0);
                 let t_sec = self.time / 1000.0;
                 let phase = (t_sec % period_sec) / period_sec; // 0.0 a 1.0
+                let eff_vt = self.vt / (1.0 + (self.edema_stiffness - 1.0) * 0.4);
 
                 // Proporção fisiológica I:E de 1:2 (inspiração dura 1/3 do ciclo, expiração dura 2/3)
                 let insp_fraction = 0.35;
                 if phase < insp_fraction {
                     // Fase Inspiratória Ativa
                     let p_i = phase / insp_fraction;
-                    let target_vol = crf + self.vt * (p_i * std::f64::consts::PI / 2.0).sin();
+                    let target_vol = crf + eff_vt * (p_i * std::f64::consts::PI / 2.0).sin();
                     let d_vol = target_vol - self.vol;
                     self.flow = -d_vol / dt_sec.max(1e-4); // Fluxo negativo na inspiração
                     self.vol = target_vol;
@@ -145,7 +159,7 @@ impl RespiratorySystem {
                 } else {
                     // Fase Expiratória Passiva (Recuo Elástico)
                     let p_e = (phase - insp_fraction) / (1.0 - insp_fraction);
-                    let target_vol = (crf + self.vt) - self.vt * (p_e * std::f64::consts::PI / 2.0).sin();
+                    let target_vol = (crf + eff_vt) - eff_vt * (p_e * std::f64::consts::PI / 2.0).sin();
                     let d_vol = self.vol - target_vol;
                     self.flow = d_vol / dt_sec.max(1e-4); // Fluxo positivo na expiração
                     self.vol = target_vol;
@@ -187,7 +201,7 @@ impl RespiratorySystem {
                 // Constante de tempo mecânica toracopulmonar tau = Raw * Crs
                 // Calibrada para ~0.58s em condições normais (Tiffeneau ~82%),
                 // aumentando linearmente sob broncoespasmo (asma/DPOC)
-                let tau = (0.58 * (self.raw / 1.5) * (self.c_rs / 0.10)).max(0.20);
+                let tau = (0.58 * (self.raw / 1.5) * (self.get_effective_crs() / 0.10)).max(0.15);
                 
                 // Modelo de esvaziamento alveolar sob compressão dinâmica das vias aéreas:
                 // Volume acima do VR decai exponencialmente modulado por tau

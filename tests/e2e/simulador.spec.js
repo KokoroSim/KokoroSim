@@ -359,6 +359,57 @@ test.describe('KokoroSim — Testes E2E do Simulador Web (Wasm + Dioxus)', () =>
 
     expect(jsErrors).toHaveLength(0);
   });
+
+  test('deve manipular Albumina e Permeabilidade na Sanfona 6 e refletir na dinâmica de Starling e Edema', async ({ page }) => {
+    // 1. Valida a presença da telemetria de Starling no Cardio HUD inicial
+    const pcpLocator = page.locator('#hud-pcp');
+    await expect(pcpLocator).toBeVisible();
+    await expect(pcpLocator).toContainText('mmHg');
+
+    const picLocator = page.locator('#hud-pic');
+    await expect(picLocator).toBeVisible();
+    await expect(picLocator).toContainText('mmHg');
+
+    const godetLocator = page.locator('#hud-godet');
+    await expect(godetLocator).toBeVisible();
+    await expect(godetLocator).toContainText('0');
+
+    // 2. Abre a Sanfona 6 (Condições Patológicas)
+    const pathoAccordion = page.locator('details.control-group', { hasText: 'Condições Patológicas' });
+    await expect(pathoAccordion).toBeVisible();
+    await pathoAccordion.locator('summary').click();
+    await expect(pathoAccordion).toHaveAttribute('open');
+
+    // Valida que agora contém 4 sliders (Isquemia, Fibrose, Albumina, Permeabilidade)
+    const sliders = pathoAccordion.locator('input[type="range"]');
+    await expect(sliders).toHaveCount(4);
+
+    // 3. Reduz Albumina para 1.5 g/dL (Hipoalbuminemia severa / Síndrome Nefrótica / Cirrose)
+    const albContainer = pathoAccordion.locator('.slider-container', { hasText: 'Albumina Sérica' });
+    const albSlider = albContainer.locator('input[type="range"]');
+    await albSlider.fill('1.5');
+    await page.waitForTimeout(2000);
+
+    // 4. Verifica colapso da pressão oncótica pi_c e desenvolvimento de edema sistêmico (Cacifo / Godet)
+    await expect(picLocator).toContainText(/^(7\.|8\.|9\.)/); // ~7.5 mmHg
+    const godetVal = await godetLocator.innerText();
+    expect(godetVal).not.toBe('0');
+
+    // 5. Alterna para o Pulmo Lab e valida a telemetria respiratória de edema e SpO2
+    const pulmoTabBtn = page.locator('.lab-tab', { hasText: 'PULMO LAB' });
+    await pulmoTabBtn.click();
+    await expect(pulmoTabBtn).toHaveClass(/active/);
+
+    const edemaPulmLocator = page.locator('#hud-edema-pulm');
+    await expect(edemaPulmLocator).toBeVisible();
+    await expect(edemaPulmLocator).toContainText('L');
+
+    const spo2Locator = page.locator('#hud-spo2');
+    await expect(spo2Locator).toBeVisible();
+    await expect(spo2Locator).toContainText('%');
+
+    expect(jsErrors).toHaveLength(0);
+  });
 });
 
 

@@ -179,6 +179,31 @@ O desenvolvimento do **KokoroSim** está organizado em grandes marcos arquitetur
   - 4 testes de integração em Rust (`guyton_and_orthostasis.rs`): equilíbrio normovolêmico, desafio ortostático com taquicardia reflexa, choque hipovolêmico/hemorragia e expansão volêmica.
   - Suíte Playwright E2E expandida para 12 testes, validando controles de sanfona, telemetria no HUD, comutação bidimensional entre Alça PxV e Diagrama de Guyton e persistência.
 
+### Fase 13.2: Dinâmica Capilar, Equilíbrio de Starling Microvascular e Gênese de Edema (MED-7002 / Issue #2 - Bloco C) ✅ CONCLUÍDO
+* [x] **Equação de Starling e Dinâmica Transendotelial**:
+  - Filtração capilar líquida: $J_v = K_f \cdot [(P_c - P_i) - \sigma (\pi_c - \pi_i)]$.
+  - Calibração fisiológica de Pressão Coloidosmótica de Landis-Pappenheimer para Albumina sérica humana: $\pi_c = 4.0 \cdot Alb + 0.60 \cdot Alb^2 + 0.03 \cdot Alb^3$ ($Alb=4.0\text{ g/dL} \implies \pi_c=27.5\text{ mmHg}$).
+  - Filtro e Capacidade de Compensação Linfática (*Lymphatic Safety Factor*): drenagem adaptativa que impede acúmulo intersticial enquanto a taxa de filtração permanecer abaixo do limiar de segurança linfática.
+* [x] **Microcirculação Pulmonar e Edema Cardiogênico vs. Permeabilidade (SDRA / ARDS)**:
+  - Acoplamento hemodinâmico direto da Pressão Capilar Pulmonar à Pressão Atrial Esquerda: $P_{cp} = 0.85 \cdot P_{la} + 3.0\text{ mmHg}$.
+  - Edema cardiogênico induzido por Estenose Mitral ou falência de VE ($P_{la} > 18\text{ mmHg} \implies P_{cp} > 18-20\text{ mmHg}$).
+  - Edema inflamatório por lesão endotelial e colapso do coeficiente de reflexão de Staverman ($\sigma \to 0.45$, $K_f \uparrow$ em sepse/SDRA).
+  - Consequência mecânica ventilatória: rigidez tecidual pulmonar proporcional ao líquido alveolar com decaimento da complacência efetiva ($C_{rs}$ efetiva reduzida até $5\times$), redução de volumes estáticos ($V_T, VRI, VRE, CPT$) e queda na saturação de oxigênio ($SpO_2$).
+  - Diagnóstico espirométrico interativo com alerta de Distúrbio Ventilatório Restritivo por Edema Pulmonar.
+* [x] **Microcirculação Sistêmica e Gênese de Anasarca / Cacifo (Godet)**:
+  - Pressão hidrostática capilar sistêmica acoplada à Pressão Venosa Central: $P_{c,sist} = 0.75 \cdot PVC + 10.0\text{ mmHg}$.
+  - Hipoalbuminemia severa (< 2.5 g/dL por desnutrição, cirrose ou síndrome nefrótica) colapsando $\pi_c$ (< 10 mmHg) e induzindo edema periférico/anasarca.
+  - Escala clínica contínua do Sinal de Cacifo / Grau de Godet ($0$ a $4+$) com telemetria instantânea.
+* [x] **Integração na Interface do kokor心sim**:
+  - Integração de sliders contínuos de Albumina Sérica ($1.0$ a $6.0\text{ g/dL}$) e Permeabilidade Capilar ($0$ a $100\%$) na sanfona de Condições Patológicas (mantendo rigorosamente a estrutura canônica de 10 sanfonas).
+  - Telemetria no HUD do Cardio Lab: Pressão Capilar Pulmonar (`Pcp`), Pressão Coloidosmótica (`πc`) e Edema Sistêmico (`Godet`).
+  - Telemetria no HUD do Pulmo Lab: Volume de Edema Pulmonar (`Edema`) e Saturação Periférica de Oxigênio (`SpO₂`).
+* [x] **Suíte de Testes Automatizados**:
+  - 4 testes de integração em Rust (`microvascular_starling.rs`): equilíbrio normoalbuminêmico, anasarca por hipoalbuminemia, edema cardiogênico por estenose mitral e lesão de permeabilidade (sepse/SDRA).
+  - 13º teste de integração E2E Playwright validando manipulação de albumina/permeabilidade, colapso oncótico, escala de Godet e telemetria cardiorrespiratória.
+
+
+
 
 ### Fase 14: Expansão Espacial (Monodomínio 2D / 3D)
 * [ ] Substituição do modelo 0D acoplado por malha bidimensional de diferenças finitas (matriz de 100x100 a 200x200 miócitos).

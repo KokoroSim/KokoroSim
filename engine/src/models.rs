@@ -7,6 +7,7 @@ pub mod fibroblast;
 pub mod hemodynamics;
 pub mod respiratory;
 pub mod baroreflex;
+pub mod microvascular;
 
 // Aqui ficará o gerenciador de estado global que orquestra as 4 células
 use wasm_bindgen::prelude::*;
@@ -76,6 +77,11 @@ pub struct HudMetrics {
     pub map: f64,
     pub cvp: f64,
     pub pmes: f64,
+    pub pcp: f64,
+    pub pi_c: f64,
+    pub edema_pulm: f64,
+    pub edema_godet: f64,
+    pub spo2: f64,
 }
 
 #[wasm_bindgen]
@@ -91,6 +97,7 @@ pub struct HeartSystem {
     hemo: hemodynamics::HemodynamicsModel,
     resp: respiratory::RespiratorySystem,
     baro: baroreflex::BaroreflexModel,
+    micro: microvascular::MicrovascularModel,
     acc_r_peak: bool,
     acc_b1: bool,
     acc_b2: bool,
@@ -164,6 +171,7 @@ impl HeartSystem {
             hemo: hemodynamics::HemodynamicsModel::new(),
             resp: respiratory::RespiratorySystem::new(),
             baro: baroreflex::BaroreflexModel::new(),
+            micro: microvascular::MicrovascularModel::new(),
             acc_r_peak: false,
             acc_b1: false,
             acc_b2: false,
@@ -573,6 +581,10 @@ impl HeartSystem {
         if self.hemo.event_b1 { self.acc_b1 = true; }
         if self.hemo.event_b2 { self.acc_b2 = true; }
 
+        // --- MICROCIRCULAÇÃO, EQUILÍBRIO DE STARLING E DINÂMICA DE EDEMA ---
+        self.micro.step(dt, self.hemo.p_la, self.hemo.cvp);
+        self.resp.set_edema_stiffness(self.micro.get_crs_stiffness_factor());
+
         // 5. Razão PR / RR
         if self.bpm > 0.0 {
             let est_rr = 60000.0 / self.bpm;
@@ -914,6 +926,11 @@ impl HeartSystem {
             map: self.baro.pam,
             cvp: self.hemo.cvp,
             pmes: self.hemo.pmes_effective,
+            pcp: self.micro.pcp,
+            pi_c: self.micro.pi_c,
+            edema_pulm: self.micro.v_edema_pulm,
+            edema_godet: self.micro.godet_grade as f64,
+            spo2: self.micro.spo2,
         }
     }
 
@@ -1006,5 +1023,37 @@ impl HeartSystem {
 
     pub fn get_inotropy(&self) -> f64 {
         self.hemo.get_inotropy()
+    }
+
+    pub fn set_microvascular_params(&mut self, albumin: f64, permeability: f64) {
+        self.micro.set_params(albumin, permeability);
+    }
+
+    pub fn get_albumin(&self) -> f64 {
+        self.micro.albumin
+    }
+
+    pub fn get_capillary_permeability(&self) -> f64 {
+        self.micro.capillary_permeability
+    }
+
+    pub fn get_pcp(&self) -> f64 {
+        self.micro.pcp
+    }
+
+    pub fn get_pi_c(&self) -> f64 {
+        self.micro.pi_c
+    }
+
+    pub fn get_pulmonary_edema(&self) -> f64 {
+        self.micro.v_edema_pulm
+    }
+
+    pub fn get_systemic_edema_godet(&self) -> f64 {
+        self.micro.godet_grade as f64
+    }
+
+    pub fn get_spo2(&self) -> f64 {
+        self.micro.spo2
     }
 }
