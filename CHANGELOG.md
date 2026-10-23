@@ -22,6 +22,7 @@
   - (ui) adicionar suporte a multiplas derivacoes de ECG e grade milimetrada
 
 ### Bug Fixes
+  - (build) configurar profile.release com LTO fat e strip, e crt-static musl (closes #1)
   - (engine,ui) recalibrate RSA homeostasis, add UI feedback and 300s baseline test suite
   - (ecg) ajusta margem de picos, rolagem de grade e novo icone com zona segura
   - (ecg) corrige amplitude e grade dinamica do ecg
