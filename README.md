@@ -269,6 +269,16 @@ A versão 1.0 foi o protótipo inicial do projeto, desenvolvida em Vanilla TypeS
 
 ---
 
+## 🛠️ Compilação & Build Otimizado
+
+```bash
+# Compilação de release com LTO fat e strip
+cargo build --release
+
+# Compilação estática universal (static-pie) contra musl libc
+cargo build --release --target x86_64-unknown-linux-musl
+```
+
 ## 📜 Licença [↑](#indice "Voltar ao Índice")
 
 Distribuído sob a licença **GNU General Public License v3.0 (GPLv3)**. Consulte o arquivo `LICENSE` para mais detalhes.
