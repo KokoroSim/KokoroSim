@@ -26,7 +26,11 @@ fn test_normoalbuminemic_resting_starling_equilibrium() {
     // Wait, let's verify Landis-Pappenheimer coefficients in literature:
     // Landis-Pappenheimer 1963: pi_c = 2.8 * C + 0.18 * C^2 + 0.012 * C^3 para C em g/dL de proteína total (~7 g/dL) = 28 mmHg
     // Para Albumina pura (normal ~4.0 g/dL): pi_c ~ 25 mmHg
-    assert!(pi_c > 10.0 && pi_c < 35.0, "Pressão oncótica deve estar em faixa fisiológica: {}", pi_c);
+    assert!(
+        pi_c > 10.0 && pi_c < 35.0,
+        "Pressão oncótica deve estar em faixa fisiológica: {}",
+        pi_c
+    );
 
     // 2. PCP de repouso deve estar abaixo do limiar de segurança de Starling (~18 mmHg)
     assert!(pcp < 15.0, "PCP basal deve ser baixa (< 15 mmHg): {}", pcp);
@@ -34,7 +38,11 @@ fn test_normoalbuminemic_resting_starling_equilibrium() {
     // 3. Pulmão e tecidos periféricos permanecem secos sem edema
     assert_eq!(edema_pulm, 0.0, "Edema pulmonar basal deve ser 0.0");
     assert_eq!(godet, 0.0, "Edema de cacifo basal deve ser grau 0");
-    assert!(spo2 >= 97.0, "SpO2 basal deve ser excelente (> 97%): {}", spo2);
+    assert!(
+        spo2 >= 97.0,
+        "SpO2 basal deve ser excelente (> 97%): {}",
+        spo2
+    );
 }
 
 #[test]
@@ -54,10 +62,18 @@ fn test_hypoalbuminemia_triggers_anasarca_and_systemic_edema() {
     let godet = heart.get_systemic_edema_godet();
 
     // A pressão oncótica deve despencar
-    assert!(pi_c < 10.0, "Pressão oncótica na hipoalbuminemia grave deve cair (< 10 mmHg): {}", pi_c);
+    assert!(
+        pi_c < 10.0,
+        "Pressão oncótica na hipoalbuminemia grave deve cair (< 10 mmHg): {}",
+        pi_c
+    );
 
     // O extravasamento periférico deve gerar edema de cacifo clínico evidente (Godet >= 2)
-    assert!(godet >= 2.0, "Hipoalbuminemia grave deve produzir sinal de Godet >= 2+: {}", godet);
+    assert!(
+        godet >= 2.0,
+        "Hipoalbuminemia grave deve produzir sinal de Godet >= 2+: {}",
+        godet
+    );
 }
 
 #[test]
@@ -78,10 +94,18 @@ fn test_cardiogenic_pulmonary_edema_from_mitral_stenosis() {
     let spo2 = heart.get_spo2();
 
     // PCP deve ultrapassar o limiar de Starling (> 18 mmHg)
-    assert!(pcp > 18.0, "Estenose mitral grave deve elevar PCP acima do limiar de Starling: {}", pcp);
+    assert!(
+        pcp > 18.0,
+        "Estenose mitral grave deve elevar PCP acima do limiar de Starling: {}",
+        pcp
+    );
 
     // Edema pulmonar deve se acumular
-    assert!(edema_pulm > 0.10, "Edema pulmonar deve se manifestar com PCP elevada: {}", edema_pulm);
+    assert!(
+        edema_pulm > 0.10,
+        "Edema pulmonar deve se manifestar com PCP elevada: {}",
+        edema_pulm
+    );
 
     // Saturação de oxigênio deve cair devido ao espessamento da barreira alvéolo-capilar
     assert!(spo2 < 97.0, "SpO2 deve cair sob edema pulmonar: {}", spo2);
@@ -104,6 +128,10 @@ fn test_endothelial_permeability_injury_sepsis_ards() {
     let spo2 = heart.get_spo2();
 
     // Mesmo com hemodinâmica basal, a quebra de barreira extravasa fluido (edema não-cardiogênico)
-    assert!(edema_pulm > 0.08, "Lesão de permeabilidade endotelial deve causar edema: {}", edema_pulm);
+    assert!(
+        edema_pulm > 0.08,
+        "Lesão de permeabilidade endotelial deve causar edema: {}",
+        edema_pulm
+    );
     assert!(spo2 < 97.0, "SpO2 deve cair no edema tipo SARA: {}", spo2);
 }

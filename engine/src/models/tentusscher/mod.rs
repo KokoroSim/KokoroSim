@@ -1,6 +1,5 @@
 #![allow(non_snake_case)]
 
-
 const R: f64 = 8.314;
 const T: f64 = 310.0;
 const F: f64 = 96.485;
@@ -146,7 +145,9 @@ impl VentricleCell {
 
         // Inward Rectifier K+
         let alpha_k1 = 0.1 / (1.0 + f64::exp(0.06 * (v - e_k - 200.0)));
-        let beta_k1 = (3.0 * f64::exp(0.0002 * (v - e_k + 100.0)) + f64::exp(0.1 * (v - e_k - 10.0))) / (1.0 + f64::exp(-0.5 * (v - e_k)));
+        let beta_k1 = (3.0 * f64::exp(0.0002 * (v - e_k + 100.0))
+            + f64::exp(0.1 * (v - e_k - 10.0)))
+            / (1.0 + f64::exp(-0.5 * (v - e_k)));
         let xk1_inf = alpha_k1 / (alpha_k1 + beta_k1);
         let i_k1 = G_K1 * xk1_inf * (p.effective_ko() / 5.4).sqrt() * (v - e_k) * p.block_k;
 
@@ -154,32 +155,41 @@ impl VentricleCell {
         let i_to = self.g_to * self.r * self.s * (v - e_k) * p.block_k;
 
         // Rapid Time Dependent K+
-        let i_kr = G_KR * (p.ko / 5.4).sqrt() * self.xr1 * self.xr2 * (v - e_k) * p.effective_ikr_block();
+        let i_kr =
+            G_KR * (p.ko / 5.4).sqrt() * self.xr1 * self.xr2 * (v - e_k) * p.effective_ikr_block();
 
         // Slow Time Dependent K+
         let i_ks = self.g_ks * self.xs.powi(2) * (v - e_ks) * p.block_k;
 
         // L-type Ca2+ Current
-        let i_cal = ((G_CAL * self.d * self.f * self.f_ca * 4.0 * v * F.powi(2) / (R * T)) *
-            (self.ca_i * f64::exp(2.0 * v * F / (R * T)) - 0.341 * p.cao) /
-            (f64::exp(2.0 * v * F / (R * T)) - 1.0)) * p.block_ca * p.isch_block() * p.ans_ca_modifier();
+        let i_cal = ((G_CAL * self.d * self.f * self.f_ca * 4.0 * v * F.powi(2) / (R * T))
+            * (self.ca_i * f64::exp(2.0 * v * F / (R * T)) - 0.341 * p.cao)
+            / (f64::exp(2.0 * v * F / (R * T)) - 1.0))
+            * p.block_ca
+            * p.isch_block()
+            * p.ans_ca_modifier();
 
         // Na+/K+ Pump
-        let i_nak = ((P_NAK * p.ko / (p.ko + K_MK) * self.na_i / (self.na_i + K_MNA)) /
-            (1.0 + 0.1245 * f64::exp(-0.1 * v * F / (R * T)) + 0.0353 * f64::exp(-v * F / (R * T)))) * p.block_nak;
+        let i_nak = ((P_NAK * p.ko / (p.ko + K_MK) * self.na_i / (self.na_i + K_MNA))
+            / (1.0
+                + 0.1245 * f64::exp(-0.1 * v * F / (R * T))
+                + 0.0353 * f64::exp(-v * F / (R * T))))
+            * p.block_nak;
 
         // Fast Na+
-        let i_na = G_NA * self.m.powi(3) * self.h * self.j * (v - e_na) * p.block_na * p.isch_block();
+        let i_na =
+            G_NA * self.m.powi(3) * self.h * self.j * (v - e_na) * p.block_na * p.isch_block();
 
         // Background Na+
         let i_b_na = G_BNA * (v - e_na);
 
         // Na+/Ca2+ Exchanger
-        let i_naca = K_NACA *
-            (f64::exp(GAMMA * v * F / (R * T)) * self.na_i.powi(3) * p.cao -
-             f64::exp((GAMMA - 1.0) * v * F / (R * T)) * p.nao.powi(3) * self.ca_i * ALPHA) /
-            ((KM_NAI.powi(3) + p.nao.powi(3)) * (KM_CA + p.cao) *
-             (1.0 + K_SAT * f64::exp((GAMMA - 1.0) * v * F / (R * T))));
+        let i_naca = K_NACA
+            * (f64::exp(GAMMA * v * F / (R * T)) * self.na_i.powi(3) * p.cao
+                - f64::exp((GAMMA - 1.0) * v * F / (R * T)) * p.nao.powi(3) * self.ca_i * ALPHA)
+            / ((KM_NAI.powi(3) + p.nao.powi(3))
+                * (KM_CA + p.cao)
+                * (1.0 + K_SAT * f64::exp((GAMMA - 1.0) * v * F / (R * T))));
 
         // Background Ca2+
         let i_b_ca = G_BCA * (v - e_ca);
@@ -195,7 +205,20 @@ impl VentricleCell {
 
         // Calculate state derivatives
         // dv/dt (inclui corrente de acoplamento eletrotônico aos fibroblastos i_gap)
-        let dv = -(i_k1 + i_to + i_kr + i_ks + i_cal + i_nak + i_na + i_b_na + i_naca + i_b_ca + i_p_k + i_p_ca + i_stim + self.i_gap);
+        let dv = -(i_k1
+            + i_to
+            + i_kr
+            + i_ks
+            + i_cal
+            + i_nak
+            + i_na
+            + i_b_na
+            + i_naca
+            + i_b_ca
+            + i_p_k
+            + i_p_ca
+            + i_stim
+            + self.i_gap);
 
         // Gates
         let xr1_inf = 1.0 / (1.0 + f64::exp((-26.0 - v) / 7.0));
@@ -215,17 +238,35 @@ impl VentricleCell {
 
         let m_inf = 1.0 / (1.0 + f64::exp((-56.86 - v) / 9.03)).powi(2);
         let alpha_m = 1.0 / (1.0 + f64::exp((-60.0 - v) / 5.0));
-        let beta_m = 0.1 / (1.0 + f64::exp((v + 35.0) / 5.0)) + 0.1 / (1.0 + f64::exp((v - 50.0) / 200.0));
+        let beta_m =
+            0.1 / (1.0 + f64::exp((v + 35.0) / 5.0)) + 0.1 / (1.0 + f64::exp((v - 50.0) / 200.0));
         let tau_m = alpha_m * beta_m;
 
         let h_inf = 1.0 / (1.0 + f64::exp((v + 71.55) / 7.43)).powi(2);
-        let alpha_h = if v < -40.0 { 0.057 * f64::exp(-(v + 80.0) / 6.8) } else { 0.0 };
-        let beta_h = if v < -40.0 { 2.7 * f64::exp(0.079 * v) + 310000.0 * f64::exp(0.3485 * v) } else { 0.77 / (0.13 * (1.0 + f64::exp((v + 10.66) / -11.1))) };
+        let alpha_h = if v < -40.0 {
+            0.057 * f64::exp(-(v + 80.0) / 6.8)
+        } else {
+            0.0
+        };
+        let beta_h = if v < -40.0 {
+            2.7 * f64::exp(0.079 * v) + 310000.0 * f64::exp(0.3485 * v)
+        } else {
+            0.77 / (0.13 * (1.0 + f64::exp((v + 10.66) / -11.1)))
+        };
         let tau_h = 1.0 / (alpha_h + beta_h);
 
         let j_inf = 1.0 / (1.0 + f64::exp((v + 71.55) / 7.43)).powi(2);
-        let alpha_j = if v < -40.0 { (-25428.0 * f64::exp(0.2444 * v) - 6.948e-6 * f64::exp(-0.04391 * v)) * (v + 37.78) / (1.0 + f64::exp(0.311 * (v + 79.23))) } else { 0.0 };
-        let beta_j = if v < -40.0 { 0.02424 * f64::exp(-0.01052 * v) / (1.0 + f64::exp(-0.1378 * (v + 40.14))) } else { 0.6 * f64::exp(0.057 * v) / (1.0 + f64::exp(-0.1 * (v + 32.0))) };
+        let alpha_j = if v < -40.0 {
+            (-25428.0 * f64::exp(0.2444 * v) - 6.948e-6 * f64::exp(-0.04391 * v)) * (v + 37.78)
+                / (1.0 + f64::exp(0.311 * (v + 79.23)))
+        } else {
+            0.0
+        };
+        let beta_j = if v < -40.0 {
+            0.02424 * f64::exp(-0.01052 * v) / (1.0 + f64::exp(-0.1378 * (v + 40.14)))
+        } else {
+            0.6 * f64::exp(0.057 * v) / (1.0 + f64::exp(-0.1 * (v + 32.0)))
+        };
         let tau_j = 1.0 / (alpha_j + beta_j);
 
         let d_inf = 1.0 / (1.0 + f64::exp((-5.0 - v) / 7.5));
@@ -235,7 +276,9 @@ impl VentricleCell {
         let tau_d = alpha_d * beta_d + gamma_d;
 
         let f_inf = 1.0 / (1.0 + f64::exp((v + 20.0) / 7.0));
-        let tau_f = 1125.0 * f64::exp(-(v + 27.0).powi(2) / 240.0) + 80.0 + 165.0 / (1.0 + f64::exp((25.0 - v) / 10.0));
+        let tau_f = 1125.0 * f64::exp(-(v + 27.0).powi(2) / 240.0)
+            + 80.0
+            + 165.0 / (1.0 + f64::exp((25.0 - v) / 10.0));
 
         let alpha_fca = 1.0 / (1.0 + (self.ca_i / 0.000325).powi(8));
         let beta_fca = 0.1 / (1.0 + f64::exp((self.ca_i - 0.0005) / 0.0001));
@@ -243,19 +286,29 @@ impl VentricleCell {
         let fca_inf = (alpha_fca + beta_fca + gama_fca + 0.23) / 1.46;
 
         let s_inf = 1.0 / (1.0 + f64::exp((v + 20.0) / 5.0));
-        let tau_s = 85.0 * f64::exp(-(v + 45.0).powi(2) / 320.0) + 5.0 / (1.0 + f64::exp((v - 20.0) / 5.0)) + 3.0;
+        let tau_s = 85.0 * f64::exp(-(v + 45.0).powi(2) / 320.0)
+            + 5.0 / (1.0 + f64::exp((v - 20.0) / 5.0))
+            + 3.0;
 
         let r_inf = 1.0 / (1.0 + f64::exp((20.0 - v) / 6.0));
         let tau_r = 9.5 * f64::exp(-(v + 40.0).powi(2) / 1800.0) + 0.8;
 
         // Intracellular Calcium Dynamics
-        let g_inf = if self.ca_i < 0.00035 { 1.0 / (1.0 + (self.ca_i / 0.00035).powi(6)) } else { 1.0 / (1.0 + (self.ca_i / 0.00035).powi(16)) };
+        let g_inf = if self.ca_i < 0.00035 {
+            1.0 / (1.0 + (self.ca_i / 0.00035).powi(6))
+        } else {
+            1.0 / (1.0 + (self.ca_i / 0.00035).powi(16))
+        };
 
-        let i_rel = (A_REL * self.ca_sr.powi(2) / (B_REL.powi(2) + self.ca_sr.powi(2)) + C_REL) * self.d * self.g;
+        let i_rel = (A_REL * self.ca_sr.powi(2) / (B_REL.powi(2) + self.ca_sr.powi(2)) + C_REL)
+            * self.d
+            * self.g;
         let i_up = VMAX_UP / (1.0 + K_UP.powi(2) / self.ca_i.powi(2));
         let i_leak = V_LEAK * (self.ca_sr - self.ca_i);
 
-        let dca_i_total = -(i_cal + i_b_ca + i_p_ca - 2.0 * i_naca) / (2.0 * V_C * F) * CM + i_leak - i_up + i_rel;
+        let dca_i_total = -(i_cal + i_b_ca + i_p_ca - 2.0 * i_naca) / (2.0 * V_C * F) * CM + i_leak
+            - i_up
+            + i_rel;
         let f_jca_i_free = 1.0 / (1.0 + (BUF_C * K_BUF_C) / (self.ca_i + K_BUF_C).powi(2));
         let dca_i = dca_i_total * f_jca_i_free;
 
@@ -267,14 +320,14 @@ impl VentricleCell {
         let dna_i = -(i_na + i_b_na + 3.0 * i_nak + 3.0 * i_naca) * CM / (V_C * F);
         let dk_i = -(i_k1 + i_to + i_kr + i_ks + i_p_k + i_stim - 2.0 * i_nak) * CM / (V_C * F);
 
-#[inline(always)]
-fn rush_larsen(val: f64, inf: f64, tau: f64, dt: f64) -> f64 {
-    if tau > 1e-7 {
-        inf + (val - inf) * (-dt / tau).exp()
-    } else {
-        inf
-    }
-}
+        #[inline(always)]
+        fn rush_larsen(val: f64, inf: f64, tau: f64, dt: f64) -> f64 {
+            if tau > 1e-7 {
+                inf + (val - inf) * (-dt / tau).exp()
+            } else {
+                inf
+            }
+        }
 
         // Update states (Rush-Larsen for gates, Forward Euler for concentrations & voltage)
         self.v += dv * dt;
@@ -290,7 +343,7 @@ fn rush_larsen(val: f64, inf: f64, tau: f64, dt: f64) -> f64 {
         self.s = rush_larsen(self.s, s_inf, tau_s, dt).clamp(0.0, 1.0);
         self.r = rush_larsen(self.r, r_inf, tau_r, dt).clamp(0.0, 1.0);
         self.g = rush_larsen(self.g, g_inf, TAU_G, dt).clamp(0.0, 1.0);
-        
+
         self.ca_i = (self.ca_i + dca_i * dt).max(1e-7);
         self.ca_sr = (self.ca_sr + dca_sr * dt).max(1e-7);
         self.na_i = (self.na_i + dna_i * dt).max(1.0);

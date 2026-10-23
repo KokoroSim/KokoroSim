@@ -6,23 +6,23 @@
 #[derive(Clone, Debug)]
 pub struct MicrovascularModel {
     // Parâmetros ajustáveis
-    pub albumin: f64,               // Concentração sérica de albumina (g/dL, basal ~4.0, intervalo 1.0 a 6.0)
+    pub albumin: f64, // Concentração sérica de albumina (g/dL, basal ~4.0, intervalo 1.0 a 6.0)
     pub capillary_permeability: f64, // Permeabilidade capilar patológica / Lesão endotelial / Sepse [0.0, 1.0]
 
     // Estados de dinâmica microvascular pulmonar
-    pub pcp: f64,                   // Pressão capilar pulmonar estimada (mmHg)
-    pub pi_c: f64,                  // Pressão oncótica plasmática (mmHg, Landis-Pappenheimer)
-    pub jv_pulm: f64,               // Taxa de filtração capilar pulmonar líquida (mL/min)
-    pub j_lymph_pulm: f64,          // Drenagem linfática pulmonar (mL/min)
-    pub v_edema_pulm: f64,          // Fração de acúmulo de edema pulmonar [0.0 = seco, 1.0 = alveolar grave]
+    pub pcp: f64,          // Pressão capilar pulmonar estimada (mmHg)
+    pub pi_c: f64,         // Pressão oncótica plasmática (mmHg, Landis-Pappenheimer)
+    pub jv_pulm: f64,      // Taxa de filtração capilar pulmonar líquida (mL/min)
+    pub j_lymph_pulm: f64, // Drenagem linfática pulmonar (mL/min)
+    pub v_edema_pulm: f64, // Fração de acúmulo de edema pulmonar [0.0 = seco, 1.0 = alveolar grave]
 
     // Estados de dinâmica microvascular sistêmica
-    pub pc_syst: f64,               // Pressão capilar sistêmica estimada (mmHg)
-    pub jv_syst: f64,               // Taxa de filtração capilar sistêmica líquida (mL/min)
-    pub j_lymph_syst: f64,          // Drenagem linfática sistêmica (mL/min)
-    pub v_edema_syst: f64,          // Fração de acúmulo de edema sistêmico [0.0, 1.0]
-    pub godet_grade: u8,            // Grau de edema de cacifo / Godet (0 a 4+)
-    pub spo2: f64,                  // Saturação de oxigênio estimada (%)
+    pub pc_syst: f64,      // Pressão capilar sistêmica estimada (mmHg)
+    pub jv_syst: f64,      // Taxa de filtração capilar sistêmica líquida (mL/min)
+    pub j_lymph_syst: f64, // Drenagem linfática sistêmica (mL/min)
+    pub v_edema_syst: f64, // Fração de acúmulo de edema sistêmico [0.0, 1.0]
+    pub godet_grade: u8,   // Grau de edema de cacifo / Godet (0 a 4+)
+    pub spo2: f64,         // Saturação de oxigênio estimada (%)
 }
 
 impl Default for MicrovascularModel {
@@ -68,8 +68,8 @@ impl MicrovascularModel {
     pub fn step(
         &mut self,
         dt_ms: f64,
-        p_la: f64,       // Pressão atrial esquerda (mmHg, acoplamento de Wiggers)
-        cvp: f64,        // Pressão venosa central (mmHg, acoplamento de Guyton)
+        p_la: f64, // Pressão atrial esquerda (mmHg, acoplamento de Wiggers)
+        cvp: f64,  // Pressão venosa central (mmHg, acoplamento de Guyton)
     ) {
         let dt_sec = dt_ms / 1000.0;
 

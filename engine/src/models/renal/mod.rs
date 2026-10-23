@@ -9,25 +9,25 @@
 #[derive(Debug, Clone)]
 pub struct RenalModel {
     // Variáveis de estado hemodinâmico e renal
-    pub vlec: f64,                  // Volume de Líquido Extracelular (L, basal: 15.0 L)
-    pub tfg: f64,                   // Taxa de Filtração Glomerular (mL/min, basal: ~125.0)
-    pub rbf: f64,                   // Fluxo Sanguíneo Renal (mL/min, basal: ~1200.0)
-    pub rpf: f64,                   // Fluxo Plasmático Renal (mL/min, basal: ~660.0)
-    pub ff: f64,                    // Fração de Filtração (TFG / RPF, basal: ~0.19 a 0.21)
-    pub diuresis_rate_ml_min: f64,  // Taxa de diurese instantânea (mL/min, basal: ~1.0)
-    pub diuresis_ml_h: f64,         // Débito urinário instantâneo (mL/h, basal: ~60.0)
-    pub sodium_excretion: f64,      // Excreção de sódio (mEq/dia, basal: ~150.0)
-    pub renal_map: f64,             // Pressão de perfusão arterial renal pós-estenose (mmHg)
-    pub accumulated_urine_ml: f64,  // Volume total de urina acumulado (mL)
+    pub vlec: f64,                 // Volume de Líquido Extracelular (L, basal: 15.0 L)
+    pub tfg: f64,                  // Taxa de Filtração Glomerular (mL/min, basal: ~125.0)
+    pub rbf: f64,                  // Fluxo Sanguíneo Renal (mL/min, basal: ~1200.0)
+    pub rpf: f64,                  // Fluxo Plasmático Renal (mL/min, basal: ~660.0)
+    pub ff: f64,                   // Fração de Filtração (TFG / RPF, basal: ~0.19 a 0.21)
+    pub diuresis_rate_ml_min: f64, // Taxa de diurese instantânea (mL/min, basal: ~1.0)
+    pub diuresis_ml_h: f64,        // Débito urinário instantâneo (mL/h, basal: ~60.0)
+    pub sodium_excretion: f64,     // Excreção de sódio (mEq/dia, basal: ~150.0)
+    pub renal_map: f64,            // Pressão de perfusão arterial renal pós-estenose (mmHg)
+    pub accumulated_urine_ml: f64, // Volume total de urina acumulado (mL)
 
     // Parâmetros e controles clínicos
     pub renal_artery_stenosis: f64, // Estenose da artéria renal (0.0 a 1.0)
-    pub afferent_tone: f64,         // Tônus / Resistência da arteríola aferente (0.5 a 3.0, basal: 1.0)
-    pub raas_block: bool,           // Bloqueio do SRAA (IECA / BRA) -> vasodilatação eferente
-    pub loop_diuretic: f64,         // Diurético de alça / Furosemida (0.0 a 1.0)
-    pub thiazide_diuretic: f64,     // Diurético tiazídico (0.0 a 1.0)
-    pub water_intake_ml_day: f64,   // Ingesta hídrica diária (mL/dia, basal: 2000.0)
-    pub insensible_loss_ml_day: f64,// Perdas insensíveis por pele/respiração (mL/dia, basal: 560.0)
+    pub afferent_tone: f64, // Tônus / Resistência da arteríola aferente (0.5 a 3.0, basal: 1.0)
+    pub raas_block: bool,   // Bloqueio do SRAA (IECA / BRA) -> vasodilatação eferente
+    pub loop_diuretic: f64, // Diurético de alça / Furosemida (0.0 a 1.0)
+    pub thiazide_diuretic: f64, // Diurético tiazídico (0.0 a 1.0)
+    pub water_intake_ml_day: f64, // Ingesta hídrica diária (mL/dia, basal: 2000.0)
+    pub insensible_loss_ml_day: f64, // Perdas insensíveis por pele/respiração (mL/dia, basal: 560.0)
 
     // Fator de aceleração metabólica renal para visualização em tempo real (1s real = 1min biológico)
     pub time_acceleration: f64,
@@ -98,7 +98,8 @@ impl RenalModel {
         let eferent_sraa_factor = if self.raas_block { 0.88 } else { 1.0 };
 
         // Cálculo da TFG e RPF
-        let tfg_target = (125.0 * autoreg_factor * afferent_resistance_mod * eferent_sraa_factor).max(0.0);
+        let tfg_target =
+            (125.0 * autoreg_factor * afferent_resistance_mod * eferent_sraa_factor).max(0.0);
         let rpf_target = (660.0 * autoreg_factor * afferent_resistance_mod).max(0.0);
 
         // Suavização temporal da TFG e RPF (cinética de resposta miogênica em ~2-5s)
@@ -107,7 +108,11 @@ impl RenalModel {
         self.tfg = self.tfg * alpha + tfg_target * (1.0 - alpha);
         self.rpf = self.rpf * alpha + rpf_target * (1.0 - alpha);
         self.rbf = self.rpf / 0.55; // Hematócrito 45% -> RBF = RPF / (1 - Hct)
-        self.ff = if self.rpf > 10.0 { (self.tfg / self.rpf).clamp(0.0, 0.40) } else { 0.0 };
+        self.ff = if self.rpf > 10.0 {
+            (self.tfg / self.rpf).clamp(0.0, 0.40)
+        } else {
+            0.0
+        };
 
         // 3. Curva de Guyton de Natriurese e Diurese de Pressão
         // Excreção urinária de água e sódio em função da pressão de perfusão renal
@@ -123,18 +128,23 @@ impl RenalModel {
         // 4. Farmacologia Tubular & Diuréticos
         // - Furosemida (Alça de Henle / NKCC2): até 5x a taxa de filtração excretada
         // - Hidroclorotiazida (Túbulo Distal / NCC): até 2.5x
-        let diuretic_factor = 1.0 + 4.0 * self.loop_diuretic.clamp(0.0, 1.0) + 1.5 * self.thiazide_diuretic.clamp(0.0, 1.0);
+        let diuretic_factor = 1.0
+            + 4.0 * self.loop_diuretic.clamp(0.0, 1.0)
+            + 1.5 * self.thiazide_diuretic.clamp(0.0, 1.0);
 
         // Taxa instantânea de diurese (mL/min)
         // Basal eutrófico: 1.0 mL/min = 60.0 mL/h
-        let diuresis_target = (1.0 * (self.tfg / 125.0) * guyton_pressure_factor * diuretic_factor).max(0.0);
+        let diuresis_target =
+            (1.0 * (self.tfg / 125.0) * guyton_pressure_factor * diuretic_factor).max(0.0);
         let tau_diur = 0.40;
         let alpha_d = (-dt / tau_diur).exp();
-        self.diuresis_rate_ml_min = self.diuresis_rate_ml_min * alpha_d + diuresis_target * (1.0 - alpha_d);
+        self.diuresis_rate_ml_min =
+            self.diuresis_rate_ml_min * alpha_d + diuresis_target * (1.0 - alpha_d);
         self.diuresis_ml_h = self.diuresis_rate_ml_min * 60.0;
 
         // Excreção de sódio proporcional à diurese e à pressão
-        self.sodium_excretion = (150.0 * (self.diuresis_rate_ml_min / 1.0) * (p_renal / 90.0).sqrt()).max(0.0);
+        self.sodium_excretion =
+            (150.0 * (self.diuresis_rate_ml_min / 1.0) * (p_renal / 90.0).sqrt()).max(0.0);
 
         // 5. Balanço Hídrico & Dinâmica do VLEC
         // Ingesta em mL/s e perdas em mL/s (escalonadas pelo fator de aceleração temporal)

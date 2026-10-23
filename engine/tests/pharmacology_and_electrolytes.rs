@@ -5,28 +5,25 @@ fn test_hyperkalemia_depolarizes_resting_potential() {
     let mut baseline = HeartSystem::new();
     let mut hyper = HeartSystem::new();
     let dt = 0.01;
-    
+
     // Configura hipercalemia severa (K+ = 8.5 mM vs basal 5.4 mM)
-    hyper.update_params(
-        8.5, 1.8, 140.0,
-        1.0, 1.0, 1.0, 1.0,
-        0.0, 0.0, 0.0, 0.0
-    );
+    hyper.update_params(8.5, 1.8, 140.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0);
 
     // Simula 3 segundos
     for _ in 0..300_000 {
         baseline.step(dt);
         hyper.step(dt);
     }
-    
+
     let base_vrest = baseline.get_hud_metrics().v_rest;
     let hyper_vrest = hyper.get_hud_metrics().v_rest;
-    
+
     // Potencial sob hipercalemia deve ser significativamente menos negativo (despolarizado pela equação de Nernst)
     assert!(
         hyper_vrest > base_vrest + 8.0,
         "Hipercalemia não despolarizou adequadamente o repouso: basal={:.1} mV, hyper={:.1} mV",
-        base_vrest, hyper_vrest
+        base_vrest,
+        hyper_vrest
     );
 }
 
@@ -35,27 +32,24 @@ fn test_verapamil_prolongs_pr_interval() {
     let mut baseline = HeartSystem::new();
     let mut treated = HeartSystem::new();
     let dt = 0.01;
-    
+
     // Aplica Verapamil (bloqueio moderado de canais de cálcio do nó AV: block_ca = 0.6)
-    treated.update_params(
-        5.4, 1.8, 140.0,
-        1.0, 1.0, 0.60, 1.0,
-        0.0, 0.0, 0.0, 0.0
-    );
+    treated.update_params(5.4, 1.8, 140.0, 1.0, 1.0, 0.60, 1.0, 0.0, 0.0, 0.0, 0.0);
 
     // Simula 4 segundos para estabilizar métricas do HUD
     for _ in 0..400_000 {
         baseline.step(dt);
         treated.step(dt);
     }
-    
+
     let pr_base = baseline.get_hud_metrics().pr;
     let pr_treated = treated.get_hud_metrics().pr;
-    
+
     assert!(
         pr_treated > pr_base + 8.0,
         "Verapamil não prolongou o intervalo PR: basal={:.1} ms, tratado={:.1} ms",
-        pr_base, pr_treated
+        pr_base,
+        pr_treated
     );
 }
 
@@ -64,13 +58,9 @@ fn test_fibrosis_electrotonic_loading() {
     let mut baseline = HeartSystem::new();
     let mut fibrotic = HeartSystem::new();
     let dt = 0.01;
-    
+
     // 80% de fibrose miocárdica (acoplamento eletrotônico maciço com fibroblastos)
-    fibrotic.update_params(
-        5.4, 1.8, 140.0,
-        1.0, 1.0, 1.0, 1.0,
-        0.0, 0.0, 0.0, 0.80
-    );
+    fibrotic.update_params(5.4, 1.8, 140.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.80);
 
     let mut v_fib_max = -999.0;
     let mut v_fib_min = 999.0;
@@ -80,10 +70,14 @@ fn test_fibrosis_electrotonic_loading() {
         baseline.step(dt);
         fibrotic.step(dt);
         let vf = fibrotic.get_fibroblast_v();
-        if vf > v_fib_max { v_fib_max = vf; }
-        if vf < v_fib_min { v_fib_min = vf; }
+        if vf > v_fib_max {
+            v_fib_max = vf;
+        }
+        if vf < v_fib_min {
+            v_fib_min = vf;
+        }
     }
-    
+
     // 1. Fibroblasto basal desacoplado repousa no valor canônico de MacCannell (-49.6 mV nominal)
     // muito acima do rodapé antigo do gráfico (-71 mV)
     let v_fibro_base = baseline.get_fibroblast_v();
@@ -92,7 +86,7 @@ fn test_fibrosis_electrotonic_loading() {
         "Potencial de repouso basal do fibroblasto ({:.1} mV) fora da faixa canônica de MacCannell (-45 a -58 mV)",
         v_fibro_base
     );
-    
+
     // 2. Com fibrose, o fibroblasto apresenta ampla excursão oscilatória acoplada (> 50 mV)
     let excursion = v_fib_max - v_fib_min;
     assert!(
@@ -124,7 +118,8 @@ fn test_sotalol_ikr_block_prolongs_action_potential_duration() {
     assert!(
         qt_sotalol > qt_base + 15.0,
         "Sotalol (bloqueio I_Kr) não prolongou o intervalo QT: basal={:.1} ms, sotalol={:.1} ms",
-        qt_base, qt_sotalol
+        qt_base,
+        qt_sotalol
     );
 }
 
@@ -153,7 +148,8 @@ fn test_beta_blocker_attenuates_sympathetic_tachycardia() {
     assert!(
         bpm_symp > bpm_beta + 5.0,
         "Beta-bloqueador não atenuou a taquicardia simpática: symp_livre={:.1} BPM, com_beta_blocker={:.1} BPM",
-        bpm_symp, bpm_beta
+        bpm_symp,
+        bpm_beta
     );
 }
 
@@ -182,6 +178,7 @@ fn test_atropine_reverses_vagal_bradycardia() {
     assert!(
         bpm_atropine > bpm_vagal + 5.0,
         "Atropina não reverteu a bradicardia vagal: vagal_puro={:.1} BPM, com_atropina={:.1} BPM",
-        bpm_vagal, bpm_atropine
+        bpm_vagal,
+        bpm_atropine
     );
 }

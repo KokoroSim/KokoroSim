@@ -1,14 +1,14 @@
-pub mod severi;
-pub mod inada;
+pub mod baroreflex;
 pub mod courtemanche;
-pub mod tentusscher;
-pub mod purkinje;
 pub mod fibroblast;
 pub mod hemodynamics;
-pub mod respiratory;
-pub mod baroreflex;
+pub mod inada;
 pub mod microvascular;
+pub mod purkinje;
 pub mod renal;
+pub mod respiratory;
+pub mod severi;
+pub mod tentusscher;
 
 // Aqui ficará o gerenciador de estado global que orquestra as 4 células
 use wasm_bindgen::prelude::*;
@@ -34,9 +34,13 @@ pub struct Pharmaco {
 
 impl Pharmaco {
     pub fn effective_ko(&self) -> f64 {
-        if self.isch > 0.0 { self.ko + (self.isch * 6.0) } else { self.ko }
+        if self.isch > 0.0 {
+            self.ko + (self.isch * 6.0)
+        } else {
+            self.ko
+        }
     }
-    
+
     pub fn isch_block(&self) -> f64 {
         1.0 - (self.isch * 0.5)
     }
@@ -130,7 +134,7 @@ pub struct HeartSystem {
     acc_b2: bool,
     acc_sa_fire: bool,
     time: f64,
-    
+
     // Condução (Pingers & Estímulos Transitórios)
     timer_atrium: f64,
     timer_av: f64,
@@ -191,9 +195,15 @@ impl HeartSystem {
             av_node: inada::InadaCell::default(),
             atrium: courtemanche::AtriumCell::default(),
             purkinje: purkinje::PurkinjeCell::default(),
-            vent_endo: tentusscher::VentricleCell::new_with_type(tentusscher::VentricleCellType::Endocardial),
-            vent_m: tentusscher::VentricleCell::new_with_type(tentusscher::VentricleCellType::Midmyocardial),
-            vent_epi: tentusscher::VentricleCell::new_with_type(tentusscher::VentricleCellType::Epicardial),
+            vent_endo: tentusscher::VentricleCell::new_with_type(
+                tentusscher::VentricleCellType::Endocardial,
+            ),
+            vent_m: tentusscher::VentricleCell::new_with_type(
+                tentusscher::VentricleCellType::Midmyocardial,
+            ),
+            vent_epi: tentusscher::VentricleCell::new_with_type(
+                tentusscher::VentricleCellType::Epicardial,
+            ),
             fibroblast: fibroblast::FibroblastCell::default(),
             hemo: hemodynamics::HemodynamicsModel::new(),
             resp: respiratory::RespiratorySystem::new(),
@@ -244,10 +254,19 @@ impl HeartSystem {
         }
     }
 
-    pub fn update_params(&mut self, 
-        ko: f64, cao: f64, nao: f64, 
-        block_na: f64, block_k: f64, block_ca: f64, block_nak: f64,
-        symp: f64, parasymp: f64, isch: f64, fibrosis: f64
+    pub fn update_params(
+        &mut self,
+        ko: f64,
+        cao: f64,
+        nao: f64,
+        block_na: f64,
+        block_k: f64,
+        block_ca: f64,
+        block_nak: f64,
+        symp: f64,
+        parasymp: f64,
+        isch: f64,
+        fibrosis: f64,
     ) {
         self.pharm.ko = ko;
         self.pharm.cao = cao;
@@ -288,7 +307,9 @@ impl HeartSystem {
         // Acoplamento eletrotônico miócito-fibroblasto (MacCannell et al., 2007)
         // Condutância juncional proporcional à fibrose (0.0 a 4.0 nS)
         let g_gap = self.pharm.fibrosis * 4.0;
-        let i_gap_pa = self.fibroblast.step(dt, self.vent_epi.v, g_gap, &self.pharm);
+        let i_gap_pa = self
+            .fibroblast
+            .step(dt, self.vent_epi.v, g_gap, &self.pharm);
         let i_gap_norm = i_gap_pa / 185.0; // Capacitância do miócito CM = 185 pF -> pA/pF
         self.vent_epi.i_gap = i_gap_norm;
         self.vent_m.i_gap = i_gap_norm * 0.6;
@@ -365,7 +386,7 @@ impl HeartSystem {
         self.resp.step(dt);
 
         // Modulação autonômica integrada (Farmacologia basal/manual + compensação barorreflexa)
-        let mut eff_pharm = self.pharm;     // Para células ventriculares e nó AV
+        let mut eff_pharm = self.pharm; // Para células ventriculares e nó AV
         let mut eff_pharm_hemo = self.pharm; // Para hemodinâmica (vasoconstrição R_tpr completa)
 
         if self.baro.enabled && self.time > 2000.0 {
@@ -385,7 +406,8 @@ impl HeartSystem {
             // 3. Simpático vasomotor (hemodinâmica): delta_symp completo → R_tpr ↑ (vasoconstrição)
             //    Este é o mecanismo primário de restauração de PAM pelo barorreflexo.
             eff_pharm_hemo.symp = (eff_pharm_hemo.symp + self.baro.delta_symp).clamp(0.0, 1.0);
-            eff_pharm_hemo.parasymp = (eff_pharm_hemo.parasymp + self.baro.delta_parasymp).clamp(0.0, 1.0);
+            eff_pharm_hemo.parasymp =
+                (eff_pharm_hemo.parasymp + self.baro.delta_parasymp).clamp(0.0, 1.0);
         }
 
         // O nó SA recebe modulação autonômica do barorreflexo e da RSA
@@ -408,16 +430,16 @@ impl HeartSystem {
         let dt_sec = dt / 1000.0;
         self.sa_node.step(dt_sec, &eff_pharm_sa);
         self.av_node.step(dt_sec, &eff_pharm);
-        
+
         // O Átrio (Courtemanche), Purkinje (Stewart) e Ventrículo Transmural (Ten Tusscher) em MILISSEGUNDOS
         self.atrium.step(dt, &eff_pharm);
         self.purkinje.step(dt, &eff_pharm);
         self.vent_endo.step(dt, &eff_pharm);
         self.vent_m.step(dt, &eff_pharm);
         self.vent_epi.step(dt, &eff_pharm);
-        
+
         self.time += dt;
-        
+
         // --- SISTEMA DE CONDUÇÃO (Acoplamento Fisiológico com Dromotropismo Dinâmico) ---
 
         // Pinger 1: SA -> Átrio (Latência ~15ms modulada por canais de Sódio)
@@ -465,7 +487,9 @@ impl HeartSystem {
             } else {
                 1.0 - ((60.0 - self.bpm).min(30.0) / 60.0) * 0.10
             };
-            let ans_factor = (1.0 - (self.pharm.effective_symp() * 0.25) + (self.pharm.effective_parasymp() * 0.40) + (self.pharm.isch * 0.50))
+            let ans_factor = (1.0 - (self.pharm.effective_symp() * 0.25)
+                + (self.pharm.effective_parasymp() * 0.40)
+                + (self.pharm.isch * 0.50))
                 / self.pharm.block_ca.max(0.15);
             let dynamic_his_delay = (25.0 * rate_factor * ans_factor).clamp(15.0, 150.0);
 
@@ -615,7 +639,8 @@ impl HeartSystem {
 
         // --- FISIOLOGIA RENAL, NATRIURESE DE PRESSÃO E BALANÇO HÍDRICO (GUYTON) ---
         self.renal.step(dt / 1000.0, self.baro.pam);
-        self.hemo.set_pmes_volume_mod(self.renal.get_pmes_modulation());
+        self.hemo
+            .set_pmes_volume_mod(self.renal.get_pmes_modulation());
 
         // --- HEMODINÂMICA E ACOPLAMENTO ELETROMECÂNICO ---
         self.hemo.step(
@@ -627,13 +652,20 @@ impl HeartSystem {
             eff_pharm_hemo.effective_parasymp(),
         );
 
-        if self.hemo.event_r_peak { self.acc_r_peak = true; }
-        if self.hemo.event_b1 { self.acc_b1 = true; }
-        if self.hemo.event_b2 { self.acc_b2 = true; }
+        if self.hemo.event_r_peak {
+            self.acc_r_peak = true;
+        }
+        if self.hemo.event_b1 {
+            self.acc_b1 = true;
+        }
+        if self.hemo.event_b2 {
+            self.acc_b2 = true;
+        }
 
         // --- MICROCIRCULAÇÃO, EQUILÍBRIO DE STARLING E DINÂMICA DE EDEMA ---
         self.micro.step(dt, self.hemo.p_la, self.hemo.cvp);
-        self.resp.set_edema_stiffness(self.micro.get_crs_stiffness_factor());
+        self.resp
+            .set_edema_stiffness(self.micro.get_crs_stiffness_factor());
 
         // 5. Razão PR / RR
         if self.bpm > 0.0 {
@@ -662,27 +694,27 @@ impl HeartSystem {
                 self.acc_b2 = false;
                 self.acc_sa_fire = false;
 
-                batch.push(self.sa_node.v);        // 0: SA
-                batch.push(self.av_node.v);        // 1: AV
-                batch.push(self.atrium.v);         // 2: Atrium
-                batch.push(self.purkinje.v);       // 3: Purkinje
-                batch.push(self.vent_endo.v);      // 4: Endocárdio
-                batch.push(self.vent_epi.v);       // 5: Epicárdio
-                batch.push(self.fibroblast.v);     // 6: Fibroblasto (MacCannell 2007)
+                batch.push(self.sa_node.v); // 0: SA
+                batch.push(self.av_node.v); // 1: AV
+                batch.push(self.atrium.v); // 2: Atrium
+                batch.push(self.purkinje.v); // 3: Purkinje
+                batch.push(self.vent_endo.v); // 4: Endocárdio
+                batch.push(self.vent_epi.v); // 5: Epicárdio
+                batch.push(self.fibroblast.v); // 6: Fibroblasto (MacCannell 2007)
                 batch.push(self.compute_selected_ion()); // 7: Variável Iônica / Corrente Celular Selecionada
-                batch.push(self.hemo.p_lv);        // 8: Pressão Ventricular Esquerda (LVP, mmHg)
-                batch.push(self.hemo.p_ao);        // 9: Pressão Aórtica (AoP, mmHg)
-                batch.push(self.compute_ecg());    // 10: ECG Dipolar Transmural
-                batch.push(sound_code);            // 11: Eventos Acústicos (Bitmask)
-                batch.push(self.resp.vol);         // 12: Volume Pulmonar (L)
-                batch.push(self.resp.flow);        // 13: Fluxo Aéreo Instantâneo (L/s)
-                batch.push(self.resp.p_pl);        // 14: Pressão Intrapleural (cmH2O)
-                batch.push(self.hemo.v_lv);        // 15: Volume Ventricular Esquerdo (mL)
-                batch.push(self.hemo.p_la);        // 16: Pressão Atrial Esquerda (LAP, mmHg)
-                batch.push(self.renal.tfg);        // 17: Taxa de Filtração Glomerular (mL/min)
+                batch.push(self.hemo.p_lv); // 8: Pressão Ventricular Esquerda (LVP, mmHg)
+                batch.push(self.hemo.p_ao); // 9: Pressão Aórtica (AoP, mmHg)
+                batch.push(self.compute_ecg()); // 10: ECG Dipolar Transmural
+                batch.push(sound_code); // 11: Eventos Acústicos (Bitmask)
+                batch.push(self.resp.vol); // 12: Volume Pulmonar (L)
+                batch.push(self.resp.flow); // 13: Fluxo Aéreo Instantâneo (L/s)
+                batch.push(self.resp.p_pl); // 14: Pressão Intrapleural (cmH2O)
+                batch.push(self.hemo.v_lv); // 15: Volume Ventricular Esquerdo (mL)
+                batch.push(self.hemo.p_la); // 16: Pressão Atrial Esquerda (LAP, mmHg)
+                batch.push(self.renal.tfg); // 17: Taxa de Filtração Glomerular (mL/min)
                 batch.push(self.renal.diuresis_ml_h); // 18: Débito Urinário (mL/h)
-                batch.push(self.renal.rpf);        // 19: Fluxo Plasmático Renal (mL/min)
-                batch.push(self.renal.vlec);       // 20: Volume de Líquido Extracelular (L)
+                batch.push(self.renal.rpf); // 19: Fluxo Plasmático Renal (mL/min)
+                batch.push(self.renal.vlec); // 20: Volume de Líquido Extracelular (L)
                 batch.push(self.compute_ecg_lead(0)); // 21: Derivação DI (Plano Frontal X, mV)
                 batch.push(self.compute_ecg_lead(5)); // 22: Derivação aVF (Plano Frontal Y, mV)
             }
@@ -691,25 +723,63 @@ impl HeartSystem {
     }
 
     // Métodos de leitura individuais
-    pub fn get_sa_v(&self) -> f64 { self.sa_node.v }
-    pub fn get_av_v(&self) -> f64 { self.av_node.v }
-    pub fn get_atrium_v(&self) -> f64 { self.atrium.v }
-    pub fn get_purkinje_v(&self) -> f64 { self.purkinje.v }
-    pub fn get_ventricle_v(&self) -> f64 { self.vent_endo.v }
-    pub fn get_vent_endo_v(&self) -> f64 { self.vent_endo.v }
-    pub fn get_vent_m_v(&self) -> f64 { self.vent_m.v }
-    pub fn get_vent_epi_v(&self) -> f64 { self.vent_epi.v }
-    pub fn get_fibroblast_v(&self) -> f64 { self.fibroblast.v }
-    pub fn get_lvp(&self) -> f64 { self.hemo.p_lv }
-    pub fn get_aop(&self) -> f64 { self.hemo.p_ao }
-    pub fn get_lvv(&self) -> f64 { self.hemo.v_lv }
-    pub fn get_hemo_edv(&self) -> f64 { self.hemo.v_edv }
-    pub fn get_hemo_esv(&self) -> f64 { self.hemo.v_esv }
-    pub fn get_hemo_sv(&self) -> f64 { self.hemo.stroke_volume }
-    pub fn get_hemo_ef(&self) -> f64 { self.hemo.ejection_fraction }
-    pub fn get_hemo_co(&self) -> f64 { (self.bpm * self.hemo.stroke_volume) / 1000.0 }
-    pub fn get_hemo_lap(&self) -> f64 { self.hemo.p_la }
-    pub fn get_time(&self) -> f64 { self.time }
+    pub fn get_sa_v(&self) -> f64 {
+        self.sa_node.v
+    }
+    pub fn get_av_v(&self) -> f64 {
+        self.av_node.v
+    }
+    pub fn get_atrium_v(&self) -> f64 {
+        self.atrium.v
+    }
+    pub fn get_purkinje_v(&self) -> f64 {
+        self.purkinje.v
+    }
+    pub fn get_ventricle_v(&self) -> f64 {
+        self.vent_endo.v
+    }
+    pub fn get_vent_endo_v(&self) -> f64 {
+        self.vent_endo.v
+    }
+    pub fn get_vent_m_v(&self) -> f64 {
+        self.vent_m.v
+    }
+    pub fn get_vent_epi_v(&self) -> f64 {
+        self.vent_epi.v
+    }
+    pub fn get_fibroblast_v(&self) -> f64 {
+        self.fibroblast.v
+    }
+    pub fn get_lvp(&self) -> f64 {
+        self.hemo.p_lv
+    }
+    pub fn get_aop(&self) -> f64 {
+        self.hemo.p_ao
+    }
+    pub fn get_lvv(&self) -> f64 {
+        self.hemo.v_lv
+    }
+    pub fn get_hemo_edv(&self) -> f64 {
+        self.hemo.v_edv
+    }
+    pub fn get_hemo_esv(&self) -> f64 {
+        self.hemo.v_esv
+    }
+    pub fn get_hemo_sv(&self) -> f64 {
+        self.hemo.stroke_volume
+    }
+    pub fn get_hemo_ef(&self) -> f64 {
+        self.hemo.ejection_fraction
+    }
+    pub fn get_hemo_co(&self) -> f64 {
+        (self.bpm * self.hemo.stroke_volume) / 1000.0
+    }
+    pub fn get_hemo_lap(&self) -> f64 {
+        self.hemo.p_la
+    }
+    pub fn get_time(&self) -> f64 {
+        self.time
+    }
 
     pub fn trigger_spirometry(&mut self) {
         self.resp.trigger_spirometry();
@@ -721,14 +791,30 @@ impl HeartSystem {
         self.resp.c_rs = c_rs;
     }
 
-    pub fn get_resp_vol(&self) -> f64 { self.resp.vol }
-    pub fn get_resp_flow(&self) -> f64 { self.resp.flow }
-    pub fn get_resp_ppl(&self) -> f64 { self.resp.p_pl }
-    pub fn get_vef1(&self) -> f64 { self.resp.vef1 }
-    pub fn get_cvf(&self) -> f64 { self.resp.cvf }
-    pub fn get_tiffeneau(&self) -> f64 { self.resp.tiffeneau }
-    pub fn get_pef(&self) -> f64 { self.resp.pef }
-    pub fn is_in_spirometry(&self) -> bool { self.resp.maneuver_state != respiratory::ManeuverState::Idle }
+    pub fn get_resp_vol(&self) -> f64 {
+        self.resp.vol
+    }
+    pub fn get_resp_flow(&self) -> f64 {
+        self.resp.flow
+    }
+    pub fn get_resp_ppl(&self) -> f64 {
+        self.resp.p_pl
+    }
+    pub fn get_vef1(&self) -> f64 {
+        self.resp.vef1
+    }
+    pub fn get_cvf(&self) -> f64 {
+        self.resp.cvf
+    }
+    pub fn get_tiffeneau(&self) -> f64 {
+        self.resp.tiffeneau
+    }
+    pub fn get_pef(&self) -> f64 {
+        self.resp.pef
+    }
+    pub fn is_in_spirometry(&self) -> bool {
+        self.resp.maneuver_state != respiratory::ManeuverState::Idle
+    }
 
     pub fn set_rsa_enabled(&mut self, enabled: bool) {
         self.rsa_enabled = enabled;
@@ -812,12 +898,41 @@ impl HeartSystem {
                 // Corrente I_CaL estimada (pA/pF)
                 match self.ion_cell {
                     0 => -self.sa_node.a[72].abs() * 0.1,
-                    1 => -12.0 * self.atrium.d * self.atrium.f * ((self.atrium.v - 65.0) / 60.0).clamp(-1.0, 1.0),
-                    2 => -8.0 * self.av_node.d_gate * self.av_node.f_gate * ((self.av_node.v - 60.0) / 60.0).clamp(-1.0, 1.0),
-                    3 => -14.0 * self.purkinje.d * self.purkinje.f * ((self.purkinje.v - 65.0) / 60.0).clamp(-1.0, 1.0),
-                    4 => -15.0 * self.vent_endo.d * self.vent_endo.f * ((self.vent_endo.v - 65.0) / 60.0).clamp(-1.0, 1.0),
-                    5 => -15.0 * self.vent_m.d * self.vent_m.f * ((self.vent_m.v - 65.0) / 60.0).clamp(-1.0, 1.0),
-                    6 => -15.0 * self.vent_epi.d * self.vent_epi.f * ((self.vent_epi.v - 65.0) / 60.0).clamp(-1.0, 1.0),
+                    1 => {
+                        -12.0
+                            * self.atrium.d
+                            * self.atrium.f
+                            * ((self.atrium.v - 65.0) / 60.0).clamp(-1.0, 1.0)
+                    }
+                    2 => {
+                        -8.0 * self.av_node.d_gate
+                            * self.av_node.f_gate
+                            * ((self.av_node.v - 60.0) / 60.0).clamp(-1.0, 1.0)
+                    }
+                    3 => {
+                        -14.0
+                            * self.purkinje.d
+                            * self.purkinje.f
+                            * ((self.purkinje.v - 65.0) / 60.0).clamp(-1.0, 1.0)
+                    }
+                    4 => {
+                        -15.0
+                            * self.vent_endo.d
+                            * self.vent_endo.f
+                            * ((self.vent_endo.v - 65.0) / 60.0).clamp(-1.0, 1.0)
+                    }
+                    5 => {
+                        -15.0
+                            * self.vent_m.d
+                            * self.vent_m.f
+                            * ((self.vent_m.v - 65.0) / 60.0).clamp(-1.0, 1.0)
+                    }
+                    6 => {
+                        -15.0
+                            * self.vent_epi.d
+                            * self.vent_epi.f
+                            * ((self.vent_epi.v - 65.0) / 60.0).clamp(-1.0, 1.0)
+                    }
                     _ => 0.0,
                 }
             }
@@ -825,12 +940,47 @@ impl HeartSystem {
                 // Corrente I_Na estimada (pA/pF)
                 match self.ion_cell {
                     0 => -self.sa_node.a[68].abs() * 0.05,
-                    1 => -60.0 * self.atrium.m.powi(3) * self.atrium.h * self.atrium.j * ((self.atrium.v - 70.0) / 70.0).clamp(-1.0, 1.0),
-                    2 => -20.0 * self.av_node.m_gate.powi(3) * self.av_node.h1_gate * ((self.av_node.v - 65.0) / 65.0).clamp(-1.0, 1.0),
-                    3 => -75.0 * self.purkinje.m.powi(3) * self.purkinje.h * self.purkinje.j * ((self.purkinje.v - 70.0) / 70.0).clamp(-1.0, 1.0),
-                    4 => -70.0 * self.vent_endo.m.powi(3) * self.vent_endo.h * self.vent_endo.j * ((self.vent_endo.v - 70.0) / 70.0).clamp(-1.0, 1.0),
-                    5 => -70.0 * self.vent_m.m.powi(3) * self.vent_m.h * self.vent_m.j * ((self.vent_m.v - 70.0) / 70.0).clamp(-1.0, 1.0),
-                    6 => -70.0 * self.vent_epi.m.powi(3) * self.vent_epi.h * self.vent_epi.j * ((self.vent_epi.v - 70.0) / 70.0).clamp(-1.0, 1.0),
+                    1 => {
+                        -60.0
+                            * self.atrium.m.powi(3)
+                            * self.atrium.h
+                            * self.atrium.j
+                            * ((self.atrium.v - 70.0) / 70.0).clamp(-1.0, 1.0)
+                    }
+                    2 => {
+                        -20.0
+                            * self.av_node.m_gate.powi(3)
+                            * self.av_node.h1_gate
+                            * ((self.av_node.v - 65.0) / 65.0).clamp(-1.0, 1.0)
+                    }
+                    3 => {
+                        -75.0
+                            * self.purkinje.m.powi(3)
+                            * self.purkinje.h
+                            * self.purkinje.j
+                            * ((self.purkinje.v - 70.0) / 70.0).clamp(-1.0, 1.0)
+                    }
+                    4 => {
+                        -70.0
+                            * self.vent_endo.m.powi(3)
+                            * self.vent_endo.h
+                            * self.vent_endo.j
+                            * ((self.vent_endo.v - 70.0) / 70.0).clamp(-1.0, 1.0)
+                    }
+                    5 => {
+                        -70.0
+                            * self.vent_m.m.powi(3)
+                            * self.vent_m.h
+                            * self.vent_m.j
+                            * ((self.vent_m.v - 70.0) / 70.0).clamp(-1.0, 1.0)
+                    }
+                    6 => {
+                        -70.0
+                            * self.vent_epi.m.powi(3)
+                            * self.vent_epi.h
+                            * self.vent_epi.j
+                            * ((self.vent_epi.v - 70.0) / 70.0).clamp(-1.0, 1.0)
+                    }
                     _ => 0.0,
                 }
             }
@@ -839,11 +989,30 @@ impl HeartSystem {
                 match self.ion_cell {
                     0 => self.sa_node.a[76] * 0.2,
                     1 => 2.5 * self.atrium.xr * ((self.atrium.v + 85.0) / 85.0).clamp(0.0, 2.0),
-                    2 => 2.0 * self.av_node.paf_gate * ((self.av_node.v + 85.0) / 85.0).clamp(0.0, 2.0),
-                    3 => 3.0 * self.purkinje.xr1 * self.purkinje.xr2 * ((self.purkinje.v + 85.0) / 85.0).clamp(0.0, 2.0),
-                    4 => 3.2 * self.vent_endo.xr1 * self.vent_endo.xr2 * ((self.vent_endo.v + 85.0) / 85.0).clamp(0.0, 2.0),
-                    5 => 3.2 * self.vent_m.xr1 * self.vent_m.xr2 * ((self.vent_m.v + 85.0) / 85.0).clamp(0.0, 2.0),
-                    6 => 3.2 * self.vent_epi.xr1 * self.vent_epi.xr2 * ((self.vent_epi.v + 85.0) / 85.0).clamp(0.0, 2.0),
+                    2 => {
+                        2.0 * self.av_node.paf_gate
+                            * ((self.av_node.v + 85.0) / 85.0).clamp(0.0, 2.0)
+                    }
+                    3 => {
+                        3.0 * self.purkinje.xr1
+                            * self.purkinje.xr2
+                            * ((self.purkinje.v + 85.0) / 85.0).clamp(0.0, 2.0)
+                    }
+                    4 => {
+                        3.2 * self.vent_endo.xr1
+                            * self.vent_endo.xr2
+                            * ((self.vent_endo.v + 85.0) / 85.0).clamp(0.0, 2.0)
+                    }
+                    5 => {
+                        3.2 * self.vent_m.xr1
+                            * self.vent_m.xr2
+                            * ((self.vent_m.v + 85.0) / 85.0).clamp(0.0, 2.0)
+                    }
+                    6 => {
+                        3.2 * self.vent_epi.xr1
+                            * self.vent_epi.xr2
+                            * ((self.vent_epi.v + 85.0) / 85.0).clamp(0.0, 2.0)
+                    }
                     _ => 0.2,
                 }
             }
@@ -851,7 +1020,10 @@ impl HeartSystem {
                 // Corrente Funny I_f (pA/pF)
                 match self.ion_cell {
                     0 => -self.sa_node.a[65].abs() * 0.15,
-                    2 => -3.5 * self.av_node.y_gate * ((self.av_node.v + 20.0) / 70.0).clamp(0.0, 1.5),
+                    2 => {
+                        -3.5 * self.av_node.y_gate
+                            * ((self.av_node.v + 20.0) / 70.0).clamp(0.0, 1.5)
+                    }
                     3 => -4.0 * self.purkinje.y * ((self.purkinje.v + 20.0) / 70.0).clamp(0.0, 1.5),
                     _ => 0.0, // Células ventriculares e atriais não possuem I_f significativo
                 }
@@ -931,11 +1103,7 @@ impl HeartSystem {
         }
 
         // Segmento ST: Linha de base isoelétrica com elevação sob isquemia miocárdica (STEMI)
-        let st_shift = if in_st {
-            isch * 0.18
-        } else {
-            0.0
-        };
+        let st_shift = if in_st { isch * 0.18 } else { 0.0 };
 
         // 3. Onda T (Repolarização Ventricular Assimétrica)
         let mut t_wave = 0.0;
@@ -955,22 +1123,27 @@ impl HeartSystem {
         // Projeção nas 12 Derivações Clínicas
         let lead = lead_idx % 12;
         let (kp, kq, kr, ks, kst, kt) = match lead {
-            0 => (0.7, 0.8, 0.8, 0.6, 0.7, 0.8),         // DI
-            1 => (1.0, 1.0, 1.0, 1.0, 1.0, 1.0),         // DII (Padrão de Monitor)
-            2 => (0.4, 0.5, 0.6, 0.8, 0.5, 0.4),         // DIII
-            3 => (-0.8, -0.6, -0.9, -0.2, -0.8, -0.9),  // aVR (Invertida)
-            4 => (0.4, 0.6, 0.6, 0.4, 0.4, 0.5),         // aVL
-            5 => (0.8, 0.8, 0.9, 0.8, 0.8, 0.7),         // aVF
-            6 => (0.3, 0.0, 0.25, 1.3, 0.3, -0.3),       // V1 (rS profundo)
-            7 => (0.5, 0.0, 0.55, 1.1, 0.5, 0.5),        // V2 (rS transicional)
-            8 => (0.7, 0.3, 0.85, 0.7, 0.7, 0.8),        // V3 (isodifásico)
-            9 => (0.8, 0.5, 1.30, 0.4, 0.9, 1.0),        // V4 (R alto)
-            10 => (0.9, 0.6, 1.45, 0.25, 1.0, 1.0),      // V5 (R proeminente)
-            11 => (0.8, 0.5, 1.20, 0.15, 0.8, 0.85),     // V6 (lateral VE)
+            0 => (0.7, 0.8, 0.8, 0.6, 0.7, 0.8),       // DI
+            1 => (1.0, 1.0, 1.0, 1.0, 1.0, 1.0),       // DII (Padrão de Monitor)
+            2 => (0.4, 0.5, 0.6, 0.8, 0.5, 0.4),       // DIII
+            3 => (-0.8, -0.6, -0.9, -0.2, -0.8, -0.9), // aVR (Invertida)
+            4 => (0.4, 0.6, 0.6, 0.4, 0.4, 0.5),       // aVL
+            5 => (0.8, 0.8, 0.9, 0.8, 0.8, 0.7),       // aVF
+            6 => (0.3, 0.0, 0.25, 1.3, 0.3, -0.3),     // V1 (rS profundo)
+            7 => (0.5, 0.0, 0.55, 1.1, 0.5, 0.5),      // V2 (rS transicional)
+            8 => (0.7, 0.3, 0.85, 0.7, 0.7, 0.8),      // V3 (isodifásico)
+            9 => (0.8, 0.5, 1.30, 0.4, 0.9, 1.0),      // V4 (R alto)
+            10 => (0.9, 0.6, 1.45, 0.25, 1.0, 1.0),    // V5 (R proeminente)
+            11 => (0.8, 0.5, 1.20, 0.15, 0.8, 0.85),   // V6 (lateral VE)
             _ => (1.0, 1.0, 1.0, 1.0, 1.0, 1.0),
         };
 
-        (p_wave * kp) + (q_wave * kq) + (r_wave * kr) + (s_wave * ks) + (st_shift * kst) + (t_wave * kt)
+        (p_wave * kp)
+            + (q_wave * kq)
+            + (r_wave * kr)
+            + (s_wave * ks)
+            + (st_shift * kst)
+            + (t_wave * kt)
     }
 
     pub fn get_hud_metrics(&self) -> HudMetrics {
@@ -1151,18 +1324,46 @@ impl HeartSystem {
         self.renal.infuse_bolus(volume_ml);
     }
 
-    pub fn get_tfg(&self) -> f64 { self.renal.tfg }
-    pub fn get_diuresis(&self) -> f64 { self.renal.diuresis_ml_h }
-    pub fn get_rpf(&self) -> f64 { self.renal.rpf }
-    pub fn get_rbf(&self) -> f64 { self.renal.rbf }
-    pub fn get_ff(&self) -> f64 { self.renal.ff }
-    pub fn get_vlec(&self) -> f64 { self.renal.vlec }
-    pub fn get_renal_map(&self) -> f64 { self.renal.renal_map }
-    pub fn get_sodium_excretion(&self) -> f64 { self.renal.sodium_excretion }
-    pub fn get_stenosis(&self) -> f64 { self.renal.renal_artery_stenosis }
-    pub fn get_afferent_tone(&self) -> f64 { self.renal.afferent_tone }
-    pub fn get_raas_block(&self) -> bool { self.renal.raas_block }
-    pub fn get_loop_diuretic(&self) -> f64 { self.renal.loop_diuretic }
-    pub fn get_thiazide(&self) -> f64 { self.renal.thiazide_diuretic }
-    pub fn get_water_intake(&self) -> f64 { self.renal.water_intake_ml_day }
+    pub fn get_tfg(&self) -> f64 {
+        self.renal.tfg
+    }
+    pub fn get_diuresis(&self) -> f64 {
+        self.renal.diuresis_ml_h
+    }
+    pub fn get_rpf(&self) -> f64 {
+        self.renal.rpf
+    }
+    pub fn get_rbf(&self) -> f64 {
+        self.renal.rbf
+    }
+    pub fn get_ff(&self) -> f64 {
+        self.renal.ff
+    }
+    pub fn get_vlec(&self) -> f64 {
+        self.renal.vlec
+    }
+    pub fn get_renal_map(&self) -> f64 {
+        self.renal.renal_map
+    }
+    pub fn get_sodium_excretion(&self) -> f64 {
+        self.renal.sodium_excretion
+    }
+    pub fn get_stenosis(&self) -> f64 {
+        self.renal.renal_artery_stenosis
+    }
+    pub fn get_afferent_tone(&self) -> f64 {
+        self.renal.afferent_tone
+    }
+    pub fn get_raas_block(&self) -> bool {
+        self.renal.raas_block
+    }
+    pub fn get_loop_diuretic(&self) -> f64 {
+        self.renal.loop_diuretic
+    }
+    pub fn get_thiazide(&self) -> f64 {
+        self.renal.thiazide_diuretic
+    }
+    pub fn get_water_intake(&self) -> f64 {
+        self.renal.water_intake_ml_day
+    }
 }

@@ -24,20 +24,20 @@ pub struct RespiratoryMetrics {
 
 #[derive(Clone, Debug)]
 pub struct RespiratorySystem {
-    pub time: f64,          // Tempo acumulado (ms)
-    pub vol: f64,           // Volume pulmonar absoluto atual (L)
-    pub flow: f64,          // Fluxo aéreo instantâneo (L/s, positivo na expiração)
-    pub p_pl: f64,          // Pressão intrapleural (cmH2O)
-    pub f_rsa: f64,         // Fator de Arritmia Sinusal Respiratória (-0.10 a +0.15)
-    
+    pub time: f64,  // Tempo acumulado (ms)
+    pub vol: f64,   // Volume pulmonar absoluto atual (L)
+    pub flow: f64,  // Fluxo aéreo instantâneo (L/s, positivo na expiração)
+    pub p_pl: f64,  // Pressão intrapleural (cmH2O)
+    pub f_rsa: f64, // Fator de Arritmia Sinusal Respiratória (-0.10 a +0.15)
+
     // Parâmetros Fisiológicos Estáticos e Mecânicos
-    pub resp_rate: f64,     // Frequência respiratória (irpm, padrão 15)
-    pub raw: f64,           // Resistência de vias aéreas (cmH2O / (L/s), normal ~1.5)
-    pub c_rs: f64,          // Complacência toracopulmonar (L/cmH2O, normal ~0.10)
-    pub vr: f64,            // Volume Residual - o ar que fica (L, ~1.2 L)
-    pub vre: f64,           // Volume de Reserva Expiratório (L, ~1.1 L)
-    pub vt: f64,            // Volume Corrente em repouso (L, ~0.5 L)
-    pub vri: f64,           // Volume de Reserva Inspiratório (L, ~3.0 L)
+    pub resp_rate: f64,       // Frequência respiratória (irpm, padrão 15)
+    pub raw: f64,             // Resistência de vias aéreas (cmH2O / (L/s), normal ~1.5)
+    pub c_rs: f64,            // Complacência toracopulmonar (L/cmH2O, normal ~0.10)
+    pub vr: f64,              // Volume Residual - o ar que fica (L, ~1.2 L)
+    pub vre: f64,             // Volume de Reserva Expiratório (L, ~1.1 L)
+    pub vt: f64,              // Volume Corrente em repouso (L, ~0.5 L)
+    pub vri: f64,             // Volume de Reserva Inspiratório (L, ~3.0 L)
     pub edema_stiffness: f64, // Fator multiplicador de rigidez por edema intersticial/alveolar (1.0 = seco)
 
     // Estados da Manobra de Espirometria Forçada
@@ -159,7 +159,8 @@ impl RespiratorySystem {
                 } else {
                     // Fase Expiratória Passiva (Recuo Elástico)
                     let p_e = (phase - insp_fraction) / (1.0 - insp_fraction);
-                    let target_vol = (crf + eff_vt) - eff_vt * (p_e * std::f64::consts::PI / 2.0).sin();
+                    let target_vol =
+                        (crf + eff_vt) - eff_vt * (p_e * std::f64::consts::PI / 2.0).sin();
                     let d_vol = self.vol - target_vol;
                     self.flow = d_vol / dt_sec.max(1e-4); // Fluxo positivo na expiração
                     self.vol = target_vol;
@@ -177,7 +178,7 @@ impl RespiratorySystem {
                 let elapsed_ms = self.time - self.t_maneuver_start;
                 let insp_duration_ms = 1200.0;
                 let progress = (elapsed_ms / insp_duration_ms).clamp(0.0, 1.0);
-                
+
                 let target_vol = crf + (cpt - crf) * (progress * std::f64::consts::PI / 2.0).sin();
                 let d_vol = target_vol - self.vol;
                 self.flow = -d_vol / dt_sec.max(1e-4);
@@ -197,12 +198,12 @@ impl RespiratorySystem {
             ManeuverState::ExpiringForced => {
                 // 2. Expiração máxima explosiva forçada da CPT até o Volume Residual (VR)
                 let elapsed_exp_sec = (self.time - self.t_exp_start) / 1000.0;
-                
+
                 // Constante de tempo mecânica toracopulmonar tau = Raw * Crs
                 // Calibrada para ~0.58s em condições normais (Tiffeneau ~82%),
                 // aumentando linearmente sob broncoespasmo (asma/DPOC)
                 let tau = (0.58 * (self.raw / 1.5) * (self.get_effective_crs() / 0.10)).max(0.15);
-                
+
                 // Modelo de esvaziamento alveolar sob compressão dinâmica das vias aéreas:
                 // Volume acima do VR decai exponencialmente modulado por tau
                 let vol_expiravel_total = self.vol_at_exp_start - self.vr;

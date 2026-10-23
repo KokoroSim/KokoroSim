@@ -5,7 +5,7 @@ use engine::models::HeartSystem;
 use wasm_bindgen::prelude::*;
 
 mod plot;
-use plot::{Plotter, PvLoopPlotter, GuytonPlotter, VcgPlotter};
+use plot::{GuytonPlotter, Plotter, PvLoopPlotter, VcgPlotter};
 
 mod audio;
 
@@ -22,7 +22,7 @@ pub fn start() {
 fn App() -> Element {
     // Shared state
     let mut system = use_signal(|| HeartSystem::new());
-    
+
     // Sliders state
     let mut ko = use_signal(|| 5.4);
     let mut cao = use_signal(|| 2.0);
@@ -35,7 +35,7 @@ fn App() -> Element {
     let mut parasymp = use_signal(|| 0.0);
     let mut isch = use_signal(|| 0.0);
     let mut fibrosis = use_signal(|| 0.0);
-    
+
     // Valvopatias (0% a 100%)
     let mut aortic_stenosis = use_signal(|| 0.0);
     let mut aortic_regurg = use_signal(|| 0.0);
@@ -45,7 +45,7 @@ fn App() -> Element {
     // Dinâmica Microvascular & Starling (0% a 100%, 1.0 a 6.0 g/dL)
     let mut albumin_slider = use_signal(|| 4.0); // g/dL
     let mut permeability_slider = use_signal(|| 0.0); // 0% a 100%
-    
+
     let show_sa = use_signal(|| true);
     let show_av = use_signal(|| false);
     let show_atrium = use_signal(|| true);
@@ -69,7 +69,7 @@ fn App() -> Element {
     let mut ecg_lead_idx = use_signal(|| 1usize);
     let mut ecg_gain = use_signal(|| 1.0); // 1.0 (1N = 10 mm/mV) ou 2.0 (2N = 20 mm/mV)
     let mut ion_cell_idx = use_signal(|| 4usize); // Endocárdio por padrão
-    let mut ion_var_idx = use_signal(|| 0usize);  // [Ca2+]_i por padrão
+    let mut ion_var_idx = use_signal(|| 0usize); // [Ca2+]_i por padrão
     let mut two_d_mode = use_signal(|| "pv".to_string()); // "pv" ou "guyton"
 
     // Seletor de Especialidade / Abas de Laboratório
@@ -77,8 +77,8 @@ fn App() -> Element {
 
     // Parâmetros e Métricas Respiratórias
     let mut resp_rate = use_signal(|| 15.0); // irpm
-    let mut resp_raw = use_signal(|| 1.5);   // cmH2O/(L/s)
-    let mut resp_crs = use_signal(|| 0.10);  // L/cmH2O
+    let mut resp_raw = use_signal(|| 1.5); // cmH2O/(L/s)
+    let mut resp_crs = use_signal(|| 0.10); // L/cmH2O
     let mut rsa_toggle = use_signal(|| true); // Arritmia Sinusal Respiratória
     let mut baro_toggle = use_signal(|| true); // Barorreflexo em Malha Fechada
     let mut orthostasis_toggle = use_signal(|| false); // Desafio Postural de Ortostase (Guyton)
@@ -91,13 +91,13 @@ fn App() -> Element {
     let mut is_in_spiro = use_signal(|| false);
 
     // Parâmetros e Métricas Nefrológicas (Nefro Lab)
-    let mut renal_stenosis = use_signal(|| 0.0);       // % estenose de artéria renal (0 a 100%)
-    let mut renal_afferent_tone = use_signal(|| 1.0);  // tônus/resistência aferente (0.5 a 3.0x)
-    let mut renal_raas_block = use_signal(|| false);   // bloqueio SRAA (IECA / BRA)
-    let mut renal_loop_diuretic = use_signal(|| 0.0);  // diurético de alça / furosemida (0 a 100%)
-    let mut renal_thiazide = use_signal(|| 0.0);      // tiazídico (0 a 100%)
-    let mut renal_water_intake = use_signal(|| 2000.0);// mL/dia (500 a 4000)
-    let mut trigger_bolus = use_signal(|| false);      // infusão rápida de bolus 500 mL
+    let mut renal_stenosis = use_signal(|| 0.0); // % estenose de artéria renal (0 a 100%)
+    let mut renal_afferent_tone = use_signal(|| 1.0); // tônus/resistência aferente (0.5 a 3.0x)
+    let mut renal_raas_block = use_signal(|| false); // bloqueio SRAA (IECA / BRA)
+    let mut renal_loop_diuretic = use_signal(|| 0.0); // diurético de alça / furosemida (0 a 100%)
+    let mut renal_thiazide = use_signal(|| 0.0); // tiazídico (0 a 100%)
+    let mut renal_water_intake = use_signal(|| 2000.0); // mL/dia (500 a 4000)
+    let mut trigger_bolus = use_signal(|| false); // infusão rápida de bolus 500 mL
     let mut nefro_tfg = use_signal(|| 125.0);
     let mut nefro_du = use_signal(|| 60.0);
     let mut nefro_rpf = use_signal(|| 660.0);
@@ -127,484 +127,645 @@ fn App() -> Element {
     let mut edema_godet = use_signal(|| 0.0);
     let mut spo2 = use_signal(|| 99.0);
     let mut show_about = use_signal(|| false);
-    
+
     use_hook(|| {
         spawn(async move {
             let mut frame_count: u32 = 0;
 
-        // Create plotters com capacidade expandida (500 pontos) para acomodar ~2.5 segundos de histórico
-        let buffer_capacity = 500;
-        let mut pa_plotter_sa = Plotter::new("canvas-pa", buffer_capacity); // Vermelho para SA
-        let mut pa_plotter_av = Plotter::new("canvas-pa", buffer_capacity); // Amarelo para AV
-        let mut pa_plotter_atrium = Plotter::new("canvas-pa", buffer_capacity); // Azul para Átrio
-        let mut pa_plotter_purk = Plotter::new("canvas-pa", buffer_capacity); // Laranja para Purkinje
-        let mut pa_plotter_endo = Plotter::new("canvas-pa", buffer_capacity); // Verde Clínico para Endocárdio
-        let mut pa_plotter_epi = Plotter::new("canvas-pa", buffer_capacity); // Verde Menta para Epicárdio
-        let mut pa_plotter_fib = Plotter::new("canvas-pa", buffer_capacity); // Lilás para Fibroblasto
-        let mut ecg_plotter = Plotter::new("canvas-ecg", buffer_capacity); // Neon Cyan para ECG Dipolar
-        let mut ch3_plotter = Plotter::new("canvas-ch3", buffer_capacity); // Cálcio / Íons
-        let mut hemo_plotter_lvp = Plotter::new("canvas-ch4", buffer_capacity); // LVP Ventricular (Ciano)
-        let mut hemo_plotter_aop = Plotter::new("canvas-ch4", buffer_capacity); // AoP Aórtica (Coral)
-        let mut hemo_plotter_lap = Plotter::new("canvas-ch4", buffer_capacity); // LAP Atrial (Amarelo Âmbar)
-        let mut pv_plotter = PvLoopPlotter::new("canvas-pv", 700);              // Alça P x V 2D em plano de fase
-        let guyton_plotter = GuytonPlotter::new("canvas-guyton");              // Diagrama de Guyton 2D (DC x RV)
-        let mut vcg_plotter = VcgPlotter::new("canvas-vcg", 400);              // Vetorcardiograma Frontal 2D (DI x aVF)
+            // Create plotters com capacidade expandida (500 pontos) para acomodar ~2.5 segundos de histórico
+            let buffer_capacity = 500;
+            let mut pa_plotter_sa = Plotter::new("canvas-pa", buffer_capacity); // Vermelho para SA
+            let mut pa_plotter_av = Plotter::new("canvas-pa", buffer_capacity); // Amarelo para AV
+            let mut pa_plotter_atrium = Plotter::new("canvas-pa", buffer_capacity); // Azul para Átrio
+            let mut pa_plotter_purk = Plotter::new("canvas-pa", buffer_capacity); // Laranja para Purkinje
+            let mut pa_plotter_endo = Plotter::new("canvas-pa", buffer_capacity); // Verde Clínico para Endocárdio
+            let mut pa_plotter_epi = Plotter::new("canvas-pa", buffer_capacity); // Verde Menta para Epicárdio
+            let mut pa_plotter_fib = Plotter::new("canvas-pa", buffer_capacity); // Lilás para Fibroblasto
+            let mut ecg_plotter = Plotter::new("canvas-ecg", buffer_capacity); // Neon Cyan para ECG Dipolar
+            let mut ch3_plotter = Plotter::new("canvas-ch3", buffer_capacity); // Cálcio / Íons
+            let mut hemo_plotter_lvp = Plotter::new("canvas-ch4", buffer_capacity); // LVP Ventricular (Ciano)
+            let mut hemo_plotter_aop = Plotter::new("canvas-ch4", buffer_capacity); // AoP Aórtica (Coral)
+            let mut hemo_plotter_lap = Plotter::new("canvas-ch4", buffer_capacity); // LAP Atrial (Amarelo Âmbar)
+            let mut pv_plotter = PvLoopPlotter::new("canvas-pv", 700); // Alça P x V 2D em plano de fase
+            let guyton_plotter = GuytonPlotter::new("canvas-guyton"); // Diagrama de Guyton 2D (DC x RV)
+            let mut vcg_plotter = VcgPlotter::new("canvas-vcg", 400); // Vetorcardiograma Frontal 2D (DI x aVF)
 
-        // Plotters Respiratórios Dedicados (Pulmo Lab)
-        let mut resp_plotter_vol = Plotter::new("canvas-resp-vol", buffer_capacity);   // Espirograma V x t (Turquesa)
-        let mut resp_plotter_flow = Plotter::new("canvas-resp-flow", buffer_capacity); // Fluxo V̇ x t (Amarelo)
-        let mut resp_plotter_ppl = Plotter::new("canvas-resp-ppl", buffer_capacity);   // Pressão Intrapleural (Coral)
-        let mut resp_plotter_rsa = Plotter::new("canvas-resp-rsa", buffer_capacity);   // Acoplamento Cardiorrespiratório RSA (Carmine)
+            // Plotters Respiratórios Dedicados (Pulmo Lab)
+            let mut resp_plotter_vol = Plotter::new("canvas-resp-vol", buffer_capacity); // Espirograma V x t (Turquesa)
+            let mut resp_plotter_flow = Plotter::new("canvas-resp-flow", buffer_capacity); // Fluxo V̇ x t (Amarelo)
+            let mut resp_plotter_ppl = Plotter::new("canvas-resp-ppl", buffer_capacity); // Pressão Intrapleural (Coral)
+            let mut resp_plotter_rsa = Plotter::new("canvas-resp-rsa", buffer_capacity); // Acoplamento Cardiorrespiratório RSA (Carmine)
 
-        // Plotters Nefrológicos Dedicados (Nefro Lab)
-        let mut nefro_plotter_gfr = Plotter::new("canvas-nefro-gfr", buffer_capacity);   // TFG (Ouro/Âmbar #f39c12)
-        let mut nefro_plotter_uout = Plotter::new("canvas-nefro-uout", buffer_capacity); // Débito Urinário (Turquesa #00cec9)
-        let mut nefro_plotter_rbf = Plotter::new("canvas-nefro-rbf", buffer_capacity);   // FPR (Coral #e17055)
-        let mut nefro_plotter_vlec = Plotter::new("canvas-nefro-vlec", buffer_capacity); // VLEC (Lilás #a29bfe)
+            // Plotters Nefrológicos Dedicados (Nefro Lab)
+            let mut nefro_plotter_gfr = Plotter::new("canvas-nefro-gfr", buffer_capacity); // TFG (Ouro/Âmbar #f39c12)
+            let mut nefro_plotter_uout = Plotter::new("canvas-nefro-uout", buffer_capacity); // Débito Urinário (Turquesa #00cec9)
+            let mut nefro_plotter_rbf = Plotter::new("canvas-nefro-rbf", buffer_capacity); // FPR (Coral #e17055)
+            let mut nefro_plotter_vlec = Plotter::new("canvas-nefro-vlec", buffer_capacity); // VLEC (Lilás #a29bfe)
 
-        let mut audio = audio::AudioManager::new();
+            let mut audio = audio::AudioManager::new();
 
-        loop {
-            gloo_timers::future::TimeoutFuture::new(16).await;
+            loop {
+                gloo_timers::future::TimeoutFuture::new(16).await;
 
-            // 0. Sincronizar Modo de Visualização do Osciloscópio e Comandos
-            let current_mode = plot::ViewMode::from_str(&view_mode());
-            pa_plotter_sa.set_mode(current_mode);
-            pa_plotter_av.set_mode(current_mode);
-            pa_plotter_atrium.set_mode(current_mode);
-            pa_plotter_purk.set_mode(current_mode);
-            pa_plotter_endo.set_mode(current_mode);
-            pa_plotter_epi.set_mode(current_mode);
-            pa_plotter_fib.set_mode(current_mode);
-            ecg_plotter.set_mode(current_mode);
-            ch3_plotter.set_mode(current_mode);
-            hemo_plotter_lvp.set_mode(current_mode);
-            hemo_plotter_aop.set_mode(current_mode);
-            hemo_plotter_lap.set_mode(current_mode);
-            resp_plotter_vol.set_mode(current_mode);
-            resp_plotter_flow.set_mode(current_mode);
-            resp_plotter_ppl.set_mode(current_mode);
-            resp_plotter_rsa.set_mode(current_mode);
-            nefro_plotter_gfr.set_mode(current_mode);
-            nefro_plotter_uout.set_mode(current_mode);
-            nefro_plotter_rbf.set_mode(current_mode);
-            nefro_plotter_vlec.set_mode(current_mode);
+                // 0. Sincronizar Modo de Visualização do Osciloscópio e Comandos
+                let current_mode = plot::ViewMode::from_str(&view_mode());
+                pa_plotter_sa.set_mode(current_mode);
+                pa_plotter_av.set_mode(current_mode);
+                pa_plotter_atrium.set_mode(current_mode);
+                pa_plotter_purk.set_mode(current_mode);
+                pa_plotter_endo.set_mode(current_mode);
+                pa_plotter_epi.set_mode(current_mode);
+                pa_plotter_fib.set_mode(current_mode);
+                ecg_plotter.set_mode(current_mode);
+                ch3_plotter.set_mode(current_mode);
+                hemo_plotter_lvp.set_mode(current_mode);
+                hemo_plotter_aop.set_mode(current_mode);
+                hemo_plotter_lap.set_mode(current_mode);
+                resp_plotter_vol.set_mode(current_mode);
+                resp_plotter_flow.set_mode(current_mode);
+                resp_plotter_ppl.set_mode(current_mode);
+                resp_plotter_rsa.set_mode(current_mode);
+                nefro_plotter_gfr.set_mode(current_mode);
+                nefro_plotter_uout.set_mode(current_mode);
+                nefro_plotter_rbf.set_mode(current_mode);
+                nefro_plotter_vlec.set_mode(current_mode);
 
-            if trigger_clear_ghost() {
-                pa_plotter_sa.clear_ghost();
-                pa_plotter_av.clear_ghost();
-                pa_plotter_atrium.clear_ghost();
-                pa_plotter_purk.clear_ghost();
-                pa_plotter_endo.clear_ghost();
-                pa_plotter_epi.clear_ghost();
-                pa_plotter_fib.clear_ghost();
-                ecg_plotter.clear_ghost();
-                ch3_plotter.clear_ghost();
-                hemo_plotter_lvp.clear_ghost();
-                hemo_plotter_aop.clear_ghost();
-                hemo_plotter_lap.clear_ghost();
-                resp_plotter_vol.clear_ghost();
-                resp_plotter_flow.clear_ghost();
-                resp_plotter_ppl.clear_ghost();
-                resp_plotter_rsa.clear_ghost();
-                nefro_plotter_gfr.clear_ghost();
-                nefro_plotter_uout.clear_ghost();
-                nefro_plotter_rbf.clear_ghost();
-                nefro_plotter_vlec.clear_ghost();
-                pv_plotter.reset();
-                trigger_clear_ghost.set(false);
-                ghost_status_str.set("📸 Capturar".to_string());
-            }
-
-            if trigger_capture_ghost() {
-                pa_plotter_sa.capture_ghost();
-                pa_plotter_av.capture_ghost();
-                pa_plotter_atrium.capture_ghost();
-                pa_plotter_purk.capture_ghost();
-                pa_plotter_endo.capture_ghost();
-                pa_plotter_epi.capture_ghost();
-                pa_plotter_fib.capture_ghost();
-                ecg_plotter.capture_ghost();
-                ch3_plotter.capture_ghost();
-                hemo_plotter_lvp.capture_ghost();
-                hemo_plotter_aop.capture_ghost();
-                hemo_plotter_lap.capture_ghost();
-                resp_plotter_vol.capture_ghost();
-                resp_plotter_flow.capture_ghost();
-                resp_plotter_ppl.capture_ghost();
-                resp_plotter_rsa.capture_ghost();
-                nefro_plotter_gfr.capture_ghost();
-                nefro_plotter_uout.capture_ghost();
-                nefro_plotter_rbf.capture_ghost();
-                nefro_plotter_vlec.capture_ghost();
-                trigger_capture_ghost.set(false);
-                ghost_status_str.set("⏳ Aguardando Nó SA...".to_string());
-            }
-
-            let g_state = ecg_plotter.ghost_state();
-            match g_state {
-                plot::GhostCaptureState::Armed => {
-                    if ghost_status_str() != "⏳ Aguardando Nó SA..." {
-                        ghost_status_str.set("⏳ Aguardando Nó SA...".to_string());
-                    }
+                if trigger_clear_ghost() {
+                    pa_plotter_sa.clear_ghost();
+                    pa_plotter_av.clear_ghost();
+                    pa_plotter_atrium.clear_ghost();
+                    pa_plotter_purk.clear_ghost();
+                    pa_plotter_endo.clear_ghost();
+                    pa_plotter_epi.clear_ghost();
+                    pa_plotter_fib.clear_ghost();
+                    ecg_plotter.clear_ghost();
+                    ch3_plotter.clear_ghost();
+                    hemo_plotter_lvp.clear_ghost();
+                    hemo_plotter_aop.clear_ghost();
+                    hemo_plotter_lap.clear_ghost();
+                    resp_plotter_vol.clear_ghost();
+                    resp_plotter_flow.clear_ghost();
+                    resp_plotter_ppl.clear_ghost();
+                    resp_plotter_rsa.clear_ghost();
+                    nefro_plotter_gfr.clear_ghost();
+                    nefro_plotter_uout.clear_ghost();
+                    nefro_plotter_rbf.clear_ghost();
+                    nefro_plotter_vlec.clear_ghost();
+                    pv_plotter.reset();
+                    trigger_clear_ghost.set(false);
+                    ghost_status_str.set("📸 Capturar".to_string());
                 }
-                plot::GhostCaptureState::Recording => {
-                    if ghost_status_str() != "🔴 Gravando Ciclo..." {
-                        ghost_status_str.set("🔴 Gravando Ciclo...".to_string());
-                    }
+
+                if trigger_capture_ghost() {
+                    pa_plotter_sa.capture_ghost();
+                    pa_plotter_av.capture_ghost();
+                    pa_plotter_atrium.capture_ghost();
+                    pa_plotter_purk.capture_ghost();
+                    pa_plotter_endo.capture_ghost();
+                    pa_plotter_epi.capture_ghost();
+                    pa_plotter_fib.capture_ghost();
+                    ecg_plotter.capture_ghost();
+                    ch3_plotter.capture_ghost();
+                    hemo_plotter_lvp.capture_ghost();
+                    hemo_plotter_aop.capture_ghost();
+                    hemo_plotter_lap.capture_ghost();
+                    resp_plotter_vol.capture_ghost();
+                    resp_plotter_flow.capture_ghost();
+                    resp_plotter_ppl.capture_ghost();
+                    resp_plotter_rsa.capture_ghost();
+                    nefro_plotter_gfr.capture_ghost();
+                    nefro_plotter_uout.capture_ghost();
+                    nefro_plotter_rbf.capture_ghost();
+                    nefro_plotter_vlec.capture_ghost();
+                    trigger_capture_ghost.set(false);
+                    ghost_status_str.set("⏳ Aguardando Nó SA...".to_string());
                 }
-                _ => {
-                    if ghost_status_str() != "📸 Capturar" {
-                        ghost_status_str.set("📸 Capturar".to_string());
-                    }
-                }
-            }
 
-            if trigger_arm_single() {
-                pa_plotter_sa.arm_single();
-                pa_plotter_av.arm_single();
-                pa_plotter_atrium.arm_single();
-                pa_plotter_purk.arm_single();
-                pa_plotter_endo.arm_single();
-                pa_plotter_epi.arm_single();
-                pa_plotter_fib.arm_single();
-                ecg_plotter.arm_single();
-                ch3_plotter.arm_single();
-                hemo_plotter_lvp.arm_single();
-                hemo_plotter_aop.arm_single();
-                hemo_plotter_lap.arm_single();
-                resp_plotter_vol.arm_single();
-                resp_plotter_flow.arm_single();
-                resp_plotter_ppl.arm_single();
-                resp_plotter_rsa.arm_single();
-                nefro_plotter_gfr.arm_single();
-                nefro_plotter_uout.arm_single();
-                nefro_plotter_rbf.arm_single();
-                nefro_plotter_vlec.arm_single();
-                trigger_arm_single.set(false);
-            }
-            
-            if !is_paused() {
-                // 1. Update Parameters from UI
-                let b_na = 1.0 - (block_na() / 100.0);
-                let b_k = 1.0 - (block_k() / 100.0);
-                let b_ca = 1.0 - (block_ca() / 100.0);
-                let b_nak = 1.0 - (block_nak() / 100.0);
-                let s_symp = symp() / 100.0;
-                let s_parasymp = parasymp() / 100.0;
-                let s_isch = isch() / 100.0;
-                let s_fibrosis = fibrosis() / 100.0;
-
-                system.write().update_params(
-                    ko(), cao(), nao(), 
-                    b_na, b_k, b_ca, b_nak, 
-                    s_symp, s_parasymp, s_isch, s_fibrosis
-                );
-                system.write().set_valvopathy_params(
-                    aortic_stenosis() / 100.0,
-                    aortic_regurg() / 100.0,
-                    mitral_stenosis() / 100.0,
-                    mitral_regurg() / 100.0,
-                );
-                system.write().set_microvascular_params(
-                    albumin_slider(),
-                    permeability_slider() / 100.0,
-                );
-                system.write().set_ecg_lead(ecg_lead_idx());
-                system.write().set_ion_cell(ion_cell_idx());
-                system.write().set_ion_var(ion_var_idx());
-
-                // Parâmetros e Gatilhos Respiratórios
-                if trigger_spiro() {
-                    system.write().trigger_spirometry();
-                    trigger_spiro.set(false);
-                }
-                system.write().set_respiratory_params(resp_rate(), resp_raw(), resp_crs());
-                system.write().set_rsa_enabled(rsa_toggle());
-                system.write().set_baroreflex_enabled(baro_toggle());
-                system.write().set_orthostasis(orthostasis_toggle());
-                system.write().set_pmes(pmes_slider());
-
-                // Parâmetros e Gatilhos Nefrológicos (Nefro Lab)
-                if trigger_bolus() {
-                    system.write().infuse_fluid_bolus(500.0);
-                    trigger_bolus.set(false);
-                }
-                system.write().set_renal_params(
-                    renal_stenosis() / 100.0,
-                    renal_afferent_tone(),
-                    renal_raas_block(),
-                    renal_loop_diuretic() / 100.0,
-                    renal_thiazide() / 100.0,
-                    renal_water_intake(),
-                );
-                
-                // 2. Step Engine
-                // Amostragem compacta: 1 ponto a cada 5.0ms (downsample=500 com dt=0.01ms)
-                // Em 500 amostras temos 2500ms (2.5s) de traçado visível, comportando > 3 ciclos completos
-                // Com Rush-Larsen dt=0.01ms, 1600 passos simulam exatamente 16ms em 1x tempo real
-                // com consumo de CPU mínimo (<5-10%), viabilizando execução em celulares e computadores modestos.
-                let dt = 0.01; // dt de integração numérica (estável via Rush-Larsen)
-                let steps = 1600; // 16ms de simulação biológica por frame a 60 FPS (1x tempo real)
-                let downsample = 500; // 5ms por ponto amostrado (500 * 0.01ms = 5.0ms)
-                let batch = system.write().run_batch(dt, steps, downsample);
-                
-                // Batch achatado de 21 canais: [sa, av, atr, purk, endo, epi, fib, cai, lvp, aop, ecg, sound_events, vol, flow, p_pl, v_lv, p_la, tfg, du, rpf, vlec]
-                let chunk_size = HeartSystem::get_chunk_size();
-                for chunk in batch.chunks(chunk_size) {
-                    if chunk.len() == chunk_size {
-                        let sa = chunk[0];
-                        let av = chunk[1];
-                        let atrium = chunk[2];
-                        let purk = chunk[3];
-                        let endo = chunk[4];
-                        let epi = chunk[5];
-                        let fib = chunk[6];
-                        let cai = chunk[7];
-                        let lvp = chunk[8];
-                        let aop = chunk[9];
-                        let ecg = chunk[10];
-                        let sound_code = chunk[11] as u32;
-                        let is_sa_fire = (sound_code & 8) != 0;
-                        let vol = chunk[12];
-                        let flow = chunk[13];
-                        let ppl = chunk[14];
-                        let vol_lv = chunk[15];
-                        let lap = chunk[16];
-                        let tfg_val = chunk[17];
-                        let du_val = chunk[18];
-                        let rpf_val = chunk[19];
-                        let vlec_val = chunk[20];
-                        let di_val = chunk[21];
-                        let avf_val = chunk[22];
-                        
-                        pa_plotter_sa.push(sa, sound_code, is_sa_fire);
-                        pa_plotter_av.push(av, sound_code, is_sa_fire);
-                        pa_plotter_atrium.push(atrium, sound_code, is_sa_fire);
-                        pa_plotter_purk.push(purk, sound_code, is_sa_fire);
-                        pa_plotter_endo.push(endo, sound_code, is_sa_fire);
-                        pa_plotter_epi.push(epi, sound_code, is_sa_fire);
-                        pa_plotter_fib.push(fib, sound_code, is_sa_fire);
-
-                        ecg_plotter.push(ecg, sound_code, is_sa_fire);
-                        ch3_plotter.push(cai, sound_code, is_sa_fire);
-                        hemo_plotter_lvp.push(lvp, sound_code, is_sa_fire);
-                        hemo_plotter_aop.push(aop, sound_code, is_sa_fire);
-                        hemo_plotter_lap.push(lap, sound_code, is_sa_fire);
-                        pv_plotter.push(vol_lv, lvp);
-                        vcg_plotter.push(di_val, avf_val);
-
-                        // Traçados do Pulmo Lab
-                        resp_plotter_vol.push(vol, sound_code, is_sa_fire);
-                        resp_plotter_flow.push(flow, sound_code, is_sa_fire);
-                        resp_plotter_ppl.push(ppl, sound_code, is_sa_fire);
-                        resp_plotter_rsa.push(sa, sound_code, is_sa_fire);
-
-                        // Traçados do Nefro Lab
-                        nefro_plotter_gfr.push(tfg_val, sound_code, is_sa_fire);
-                        nefro_plotter_uout.push(du_val, sound_code, is_sa_fire);
-                        nefro_plotter_rbf.push(rpf_val, sound_code, is_sa_fire);
-                        nefro_plotter_vlec.push(vlec_val, sound_code, is_sa_fire);
-
-                        // Disparo dos eventos acústicos de acordo com as checkboxes ativas
-                        if (sound_code & 1) != 0 && sound_uti() {
-                            audio.play_uti_beep();
+                let g_state = ecg_plotter.ghost_state();
+                match g_state {
+                    plot::GhostCaptureState::Armed => {
+                        if ghost_status_str() != "⏳ Aguardando Nó SA..." {
+                            ghost_status_str.set("⏳ Aguardando Nó SA...".to_string());
                         }
-                        if (sound_code & 2) != 0 && sound_bulhas() {
-                            audio.play_b1();
+                    }
+                    plot::GhostCaptureState::Recording => {
+                        if ghost_status_str() != "🔴 Gravando Ciclo..." {
+                            ghost_status_str.set("🔴 Gravando Ciclo...".to_string());
                         }
-                        if (sound_code & 4) != 0 && sound_bulhas() {
-                            audio.play_b2();
+                    }
+                    _ => {
+                        if ghost_status_str() != "📸 Capturar" {
+                            ghost_status_str.set("📸 Capturar".to_string());
                         }
                     }
                 }
-            }
 
-            // 3. Draw to Canvas
-            let ghost = show_ghost();
-            let uti_m = sound_uti();
-            let bulhas_m = sound_bulhas();
-
-            if active_tab() == "cardio" {
-                // Flags de visibilidade das camadas celulares
-                let any_epi = show_epi();
-                let any_endo = show_endo();
-                let any_purk = show_purkinje();
-                let any_atrium = show_atrium();
-                let any_av = show_av();
-                let any_sa = show_sa();
-                let any_fib = show_fibroblast();
-
-                // O primeiro traçado a ser desenhado limpa o canvas e plota as linhas verticais de áudio
-                let mut cleared = false;
-
-                if any_sa {
-                    pa_plotter_sa.draw(-90.0, 50.0, "#e74c3c", !cleared, ghost, uti_m, bulhas_m, false, None); // Nó SA: Vermelho (#e74c3c)
-                    cleared = true;
-                }
-                if any_atrium {
-                    pa_plotter_atrium.draw(-90.0, 50.0, "#3498db", !cleared, ghost, uti_m, bulhas_m, false, None); // Átrio: Azul (#3498db)
-                    cleared = true;
-                }
-                if any_av {
-                    pa_plotter_av.draw(-90.0, 50.0, "#f1c40f", !cleared, ghost, uti_m, bulhas_m, false, None); // Nó AV: Amarelo (#f1c40f)
-                    cleared = true;
-                }
-                if any_purk {
-                    pa_plotter_purk.draw(-90.0, 50.0, "#e67e22", !cleared, ghost, uti_m, bulhas_m, false, None); // Purkinje: Laranja (#e67e22)
-                    cleared = true;
-                }
-                if any_endo {
-                    pa_plotter_endo.draw(-90.0, 50.0, "#2ecc71", !cleared, ghost, uti_m, bulhas_m, false, None); // Endocárdio: Verde Clínico (#2ecc71)
-                    cleared = true;
-                }
-                if any_epi {
-                    pa_plotter_epi.draw(-90.0, 50.0, "#1abc9c", !cleared, ghost, uti_m, bulhas_m, false, None); // Epicárdio: Verde Menta (#1abc9c)
-                    cleared = true;
-                }
-                if any_fib {
-                    pa_plotter_fib.draw(-90.0, 50.0, "#a29bfe", !cleared, ghost, uti_m, bulhas_m, false, None); // Fibroblasto: Lilás (#a29bfe)
-                    cleared = true;
+                if trigger_arm_single() {
+                    pa_plotter_sa.arm_single();
+                    pa_plotter_av.arm_single();
+                    pa_plotter_atrium.arm_single();
+                    pa_plotter_purk.arm_single();
+                    pa_plotter_endo.arm_single();
+                    pa_plotter_epi.arm_single();
+                    pa_plotter_fib.arm_single();
+                    ecg_plotter.arm_single();
+                    ch3_plotter.arm_single();
+                    hemo_plotter_lvp.arm_single();
+                    hemo_plotter_aop.arm_single();
+                    hemo_plotter_lap.arm_single();
+                    resp_plotter_vol.arm_single();
+                    resp_plotter_flow.arm_single();
+                    resp_plotter_ppl.arm_single();
+                    resp_plotter_rsa.arm_single();
+                    nefro_plotter_gfr.arm_single();
+                    nefro_plotter_uout.arm_single();
+                    nefro_plotter_rbf.arm_single();
+                    nefro_plotter_vlec.arm_single();
+                    trigger_arm_single.set(false);
                 }
 
-                // Se nenhuma camada estiver ativa, limpa a tela e plota os marcadores
-                if !cleared {
-                    pa_plotter_endo.draw(-90.0, 50.0, "#000000", true, false, uti_m, bulhas_m, false, None);
-                }
-                pa_plotter_endo.draw_scales(-90.0, 50.0, false, "+50 mV", "-20 mV", "-90 mV");
-                
-                // CH-02: ECG Calibrado em mV com Grade Isotrópica (40ms x 0.1mV)
-                ecg_plotter.set_ecg_gain(ecg_gain());
-                if ecg_gain() == 2.0 {
-                    ecg_plotter.draw(-0.25, 0.75, "#00f2fe", true, ghost, uti_m, bulhas_m, true, None);
-                    ecg_plotter.draw_scales(-0.25, 0.75, true, "+0.75 mV (2N)", "0.0 mV", "-0.25 mV");
-                } else {
-                    ecg_plotter.draw(-0.5, 1.5, "#00f2fe", true, ghost, uti_m, bulhas_m, true, None);
-                    ecg_plotter.draw_scales(-0.5, 1.5, true, "+1.5 mV (1N)", "0.0 mV", "-0.5 mV");
+                if !is_paused() {
+                    // 1. Update Parameters from UI
+                    let b_na = 1.0 - (block_na() / 100.0);
+                    let b_k = 1.0 - (block_k() / 100.0);
+                    let b_ca = 1.0 - (block_ca() / 100.0);
+                    let b_nak = 1.0 - (block_nak() / 100.0);
+                    let s_symp = symp() / 100.0;
+                    let s_parasymp = parasymp() / 100.0;
+                    let s_isch = isch() / 100.0;
+                    let s_fibrosis = fibrosis() / 100.0;
+
+                    system.write().update_params(
+                        ko(),
+                        cao(),
+                        nao(),
+                        b_na,
+                        b_k,
+                        b_ca,
+                        b_nak,
+                        s_symp,
+                        s_parasymp,
+                        s_isch,
+                        s_fibrosis,
+                    );
+                    system.write().set_valvopathy_params(
+                        aortic_stenosis() / 100.0,
+                        aortic_regurg() / 100.0,
+                        mitral_stenosis() / 100.0,
+                        mitral_regurg() / 100.0,
+                    );
+                    system
+                        .write()
+                        .set_microvascular_params(albumin_slider(), permeability_slider() / 100.0);
+                    system.write().set_ecg_lead(ecg_lead_idx());
+                    system.write().set_ion_cell(ion_cell_idx());
+                    system.write().set_ion_var(ion_var_idx());
+
+                    // Parâmetros e Gatilhos Respiratórios
+                    if trigger_spiro() {
+                        system.write().trigger_spirometry();
+                        trigger_spiro.set(false);
+                    }
+                    system
+                        .write()
+                        .set_respiratory_params(resp_rate(), resp_raw(), resp_crs());
+                    system.write().set_rsa_enabled(rsa_toggle());
+                    system.write().set_baroreflex_enabled(baro_toggle());
+                    system.write().set_orthostasis(orthostasis_toggle());
+                    system.write().set_pmes(pmes_slider());
+
+                    // Parâmetros e Gatilhos Nefrológicos (Nefro Lab)
+                    if trigger_bolus() {
+                        system.write().infuse_fluid_bolus(500.0);
+                        trigger_bolus.set(false);
+                    }
+                    system.write().set_renal_params(
+                        renal_stenosis() / 100.0,
+                        renal_afferent_tone(),
+                        renal_raas_block(),
+                        renal_loop_diuretic() / 100.0,
+                        renal_thiazide() / 100.0,
+                        renal_water_intake(),
+                    );
+
+                    // 2. Step Engine
+                    // Amostragem compacta: 1 ponto a cada 5.0ms (downsample=500 com dt=0.01ms)
+                    // Em 500 amostras temos 2500ms (2.5s) de traçado visível, comportando > 3 ciclos completos
+                    // Com Rush-Larsen dt=0.01ms, 1600 passos simulam exatamente 16ms em 1x tempo real
+                    // com consumo de CPU mínimo (<5-10%), viabilizando execução em celulares e computadores modestos.
+                    let dt = 0.01; // dt de integração numérica (estável via Rush-Larsen)
+                    let steps = 1600; // 16ms de simulação biológica por frame a 60 FPS (1x tempo real)
+                    let downsample = 500; // 5ms por ponto amostrado (500 * 0.01ms = 5.0ms)
+                    let batch = system.write().run_batch(dt, steps, downsample);
+
+                    // Batch achatado de 21 canais: [sa, av, atr, purk, endo, epi, fib, cai, lvp, aop, ecg, sound_events, vol, flow, p_pl, v_lv, p_la, tfg, du, rpf, vlec]
+                    let chunk_size = HeartSystem::get_chunk_size();
+                    for chunk in batch.chunks(chunk_size) {
+                        if chunk.len() == chunk_size {
+                            let sa = chunk[0];
+                            let av = chunk[1];
+                            let atrium = chunk[2];
+                            let purk = chunk[3];
+                            let endo = chunk[4];
+                            let epi = chunk[5];
+                            let fib = chunk[6];
+                            let cai = chunk[7];
+                            let lvp = chunk[8];
+                            let aop = chunk[9];
+                            let ecg = chunk[10];
+                            let sound_code = chunk[11] as u32;
+                            let is_sa_fire = (sound_code & 8) != 0;
+                            let vol = chunk[12];
+                            let flow = chunk[13];
+                            let ppl = chunk[14];
+                            let vol_lv = chunk[15];
+                            let lap = chunk[16];
+                            let tfg_val = chunk[17];
+                            let du_val = chunk[18];
+                            let rpf_val = chunk[19];
+                            let vlec_val = chunk[20];
+                            let di_val = chunk[21];
+                            let avf_val = chunk[22];
+
+                            pa_plotter_sa.push(sa, sound_code, is_sa_fire);
+                            pa_plotter_av.push(av, sound_code, is_sa_fire);
+                            pa_plotter_atrium.push(atrium, sound_code, is_sa_fire);
+                            pa_plotter_purk.push(purk, sound_code, is_sa_fire);
+                            pa_plotter_endo.push(endo, sound_code, is_sa_fire);
+                            pa_plotter_epi.push(epi, sound_code, is_sa_fire);
+                            pa_plotter_fib.push(fib, sound_code, is_sa_fire);
+
+                            ecg_plotter.push(ecg, sound_code, is_sa_fire);
+                            ch3_plotter.push(cai, sound_code, is_sa_fire);
+                            hemo_plotter_lvp.push(lvp, sound_code, is_sa_fire);
+                            hemo_plotter_aop.push(aop, sound_code, is_sa_fire);
+                            hemo_plotter_lap.push(lap, sound_code, is_sa_fire);
+                            pv_plotter.push(vol_lv, lvp);
+                            vcg_plotter.push(di_val, avf_val);
+
+                            // Traçados do Pulmo Lab
+                            resp_plotter_vol.push(vol, sound_code, is_sa_fire);
+                            resp_plotter_flow.push(flow, sound_code, is_sa_fire);
+                            resp_plotter_ppl.push(ppl, sound_code, is_sa_fire);
+                            resp_plotter_rsa.push(sa, sound_code, is_sa_fire);
+
+                            // Traçados do Nefro Lab
+                            nefro_plotter_gfr.push(tfg_val, sound_code, is_sa_fire);
+                            nefro_plotter_uout.push(du_val, sound_code, is_sa_fire);
+                            nefro_plotter_rbf.push(rpf_val, sound_code, is_sa_fire);
+                            nefro_plotter_vlec.push(vlec_val, sound_code, is_sa_fire);
+
+                            // Disparo dos eventos acústicos de acordo com as checkboxes ativas
+                            if (sound_code & 1) != 0 && sound_uti() {
+                                audio.play_uti_beep();
+                            }
+                            if (sound_code & 2) != 0 && sound_bulhas() {
+                                audio.play_b1();
+                            }
+                            if (sound_code & 4) != 0 && sound_bulhas() {
+                                audio.play_b2();
+                            }
+                        }
+                    }
                 }
 
-                // CH-03: Variável Iônica / Cinética Celular Dinâmica
-                let (min_ch3, max_ch3, color_ch3, top_l, mid_l, bot_l) = match ion_var_idx() {
-                    0 => (0.0, 2.0, "#a29bfe", "2.0 µM", "1.0 µM", "0.0 µM"),
-                    1 => (0.0, 25.0, "#f1c40f", "25 mM", "12.5 mM", "0 mM"),
-                    2 => (100.0, 160.0, "#e74c3c", "160 mM", "130 mM", "100 mM"),
-                    3 => (0.0, 5.0, "#00cec9", "5.0 mM", "2.5 mM", "0.0 mM"),
-                    4 => (-16.0, 2.0, "#fdcb6e", "+2 pA/pF", "-7 pA/pF", "-16 pA/pF"),
-                    5 => (-80.0, 10.0, "#e17055", "+10 pA/pF", "-35 pA/pF", "-80 pA/pF"),
-                    6 => (-1.0, 5.0, "#0984e3", "+5.0 pA/pF", "+2.0 pA/pF", "-1.0 pA/pF"),
-                    7 => (-6.0, 1.0, "#00b894", "+1.0 pA/pF", "-2.5 pA/pF", "-6.0 pA/pF"),
-                    _ => (0.0, 2.0, "#a29bfe", "2.0 µM", "1.0 µM", "0.0 µM"),
-                };
-                ch3_plotter.draw(min_ch3, max_ch3, color_ch3, true, ghost, uti_m, bulhas_m, false, None);
-                ch3_plotter.draw_scales(min_ch3, max_ch3, false, top_l, mid_l, bot_l);
-                
-                // CH-04: Hemodinâmica de Wiggers: LVP (Ciano), AoP (Coral) e LAP (Amarelo Âmbar)
-                hemo_plotter_lvp.draw(0.0, 180.0, "#00f2fe", true, ghost, uti_m, bulhas_m, false, None);
-                hemo_plotter_aop.draw(0.0, 180.0, "#ff1754", false, ghost, uti_m, bulhas_m, false, None);
-                hemo_plotter_lap.draw(0.0, 180.0, "#eab308", false, ghost, uti_m, bulhas_m, false, None);
-                hemo_plotter_aop.draw_scales(0.0, 180.0, false, "180 mmHg", "90 mmHg", "0 mmHg");
+                // 3. Draw to Canvas
+                let ghost = show_ghost();
+                let uti_m = sound_uti();
+                let bulhas_m = sound_bulhas();
 
-                // CH-2D: Alça Pressão-Volume 2D (Plano de Fase), Diagrama de Guyton ou Vetorcardiograma Frontal
-                if two_d_mode() == "pv" {
-                    pv_plotter.draw(edv(), esv(), ef(), sv());
-                } else if two_d_mode() == "guyton" {
-                    let sys_read = system.read();
-                    guyton_plotter.draw(
-                        sys_read.get_pmes(),
-                        sys_read.get_r_rv(),
-                        sys_read.get_inotropy(),
-                        cvp(),
-                        co(),
-                        sys_read.get_venous_return(),
+                if active_tab() == "cardio" {
+                    // Flags de visibilidade das camadas celulares
+                    let any_epi = show_epi();
+                    let any_endo = show_endo();
+                    let any_purk = show_purkinje();
+                    let any_atrium = show_atrium();
+                    let any_av = show_av();
+                    let any_sa = show_sa();
+                    let any_fib = show_fibroblast();
+
+                    // O primeiro traçado a ser desenhado limpa o canvas e plota as linhas verticais de áudio
+                    let mut cleared = false;
+
+                    if any_sa {
+                        pa_plotter_sa.draw(
+                            -90.0, 50.0, "#e74c3c", !cleared, ghost, uti_m, bulhas_m, false, None,
+                        ); // Nó SA: Vermelho (#e74c3c)
+                        cleared = true;
+                    }
+                    if any_atrium {
+                        pa_plotter_atrium.draw(
+                            -90.0, 50.0, "#3498db", !cleared, ghost, uti_m, bulhas_m, false, None,
+                        ); // Átrio: Azul (#3498db)
+                        cleared = true;
+                    }
+                    if any_av {
+                        pa_plotter_av.draw(
+                            -90.0, 50.0, "#f1c40f", !cleared, ghost, uti_m, bulhas_m, false, None,
+                        ); // Nó AV: Amarelo (#f1c40f)
+                        cleared = true;
+                    }
+                    if any_purk {
+                        pa_plotter_purk.draw(
+                            -90.0, 50.0, "#e67e22", !cleared, ghost, uti_m, bulhas_m, false, None,
+                        ); // Purkinje: Laranja (#e67e22)
+                        cleared = true;
+                    }
+                    if any_endo {
+                        pa_plotter_endo.draw(
+                            -90.0, 50.0, "#2ecc71", !cleared, ghost, uti_m, bulhas_m, false, None,
+                        ); // Endocárdio: Verde Clínico (#2ecc71)
+                        cleared = true;
+                    }
+                    if any_epi {
+                        pa_plotter_epi.draw(
+                            -90.0, 50.0, "#1abc9c", !cleared, ghost, uti_m, bulhas_m, false, None,
+                        ); // Epicárdio: Verde Menta (#1abc9c)
+                        cleared = true;
+                    }
+                    if any_fib {
+                        pa_plotter_fib.draw(
+                            -90.0, 50.0, "#a29bfe", !cleared, ghost, uti_m, bulhas_m, false, None,
+                        ); // Fibroblasto: Lilás (#a29bfe)
+                        cleared = true;
+                    }
+
+                    // Se nenhuma camada estiver ativa, limpa a tela e plota os marcadores
+                    if !cleared {
+                        pa_plotter_endo.draw(
+                            -90.0, 50.0, "#000000", true, false, uti_m, bulhas_m, false, None,
+                        );
+                    }
+                    pa_plotter_endo.draw_scales(-90.0, 50.0, false, "+50 mV", "-20 mV", "-90 mV");
+
+                    // CH-02: ECG Calibrado em mV com Grade Isotrópica (40ms x 0.1mV)
+                    ecg_plotter.set_ecg_gain(ecg_gain());
+                    if ecg_gain() == 2.0 {
+                        ecg_plotter.draw(
+                            -0.25, 0.75, "#00f2fe", true, ghost, uti_m, bulhas_m, true, None,
+                        );
+                        ecg_plotter.draw_scales(
+                            -0.25,
+                            0.75,
+                            true,
+                            "+0.75 mV (2N)",
+                            "0.0 mV",
+                            "-0.25 mV",
+                        );
+                    } else {
+                        ecg_plotter.draw(
+                            -0.5, 1.5, "#00f2fe", true, ghost, uti_m, bulhas_m, true, None,
+                        );
+                        ecg_plotter.draw_scales(
+                            -0.5,
+                            1.5,
+                            true,
+                            "+1.5 mV (1N)",
+                            "0.0 mV",
+                            "-0.5 mV",
+                        );
+                    }
+
+                    // CH-03: Variável Iônica / Cinética Celular Dinâmica
+                    let (min_ch3, max_ch3, color_ch3, top_l, mid_l, bot_l) = match ion_var_idx() {
+                        0 => (0.0, 2.0, "#a29bfe", "2.0 µM", "1.0 µM", "0.0 µM"),
+                        1 => (0.0, 25.0, "#f1c40f", "25 mM", "12.5 mM", "0 mM"),
+                        2 => (100.0, 160.0, "#e74c3c", "160 mM", "130 mM", "100 mM"),
+                        3 => (0.0, 5.0, "#00cec9", "5.0 mM", "2.5 mM", "0.0 mM"),
+                        4 => (-16.0, 2.0, "#fdcb6e", "+2 pA/pF", "-7 pA/pF", "-16 pA/pF"),
+                        5 => (
+                            -80.0,
+                            10.0,
+                            "#e17055",
+                            "+10 pA/pF",
+                            "-35 pA/pF",
+                            "-80 pA/pF",
+                        ),
+                        6 => (
+                            -1.0,
+                            5.0,
+                            "#0984e3",
+                            "+5.0 pA/pF",
+                            "+2.0 pA/pF",
+                            "-1.0 pA/pF",
+                        ),
+                        7 => (
+                            -6.0,
+                            1.0,
+                            "#00b894",
+                            "+1.0 pA/pF",
+                            "-2.5 pA/pF",
+                            "-6.0 pA/pF",
+                        ),
+                        _ => (0.0, 2.0, "#a29bfe", "2.0 µM", "1.0 µM", "0.0 µM"),
+                    };
+                    ch3_plotter.draw(
+                        min_ch3, max_ch3, color_ch3, true, ghost, uti_m, bulhas_m, false, None,
+                    );
+                    ch3_plotter.draw_scales(min_ch3, max_ch3, false, top_l, mid_l, bot_l);
+
+                    // CH-04: Hemodinâmica de Wiggers: LVP (Ciano), AoP (Coral) e LAP (Amarelo Âmbar)
+                    hemo_plotter_lvp.draw(
+                        0.0, 180.0, "#00f2fe", true, ghost, uti_m, bulhas_m, false, None,
+                    );
+                    hemo_plotter_aop.draw(
+                        0.0, 180.0, "#ff1754", false, ghost, uti_m, bulhas_m, false, None,
+                    );
+                    hemo_plotter_lap.draw(
+                        0.0, 180.0, "#eab308", false, ghost, uti_m, bulhas_m, false, None,
+                    );
+                    hemo_plotter_aop
+                        .draw_scales(0.0, 180.0, false, "180 mmHg", "90 mmHg", "0 mmHg");
+
+                    // CH-2D: Alça Pressão-Volume 2D (Plano de Fase), Diagrama de Guyton ou Vetorcardiograma Frontal
+                    if two_d_mode() == "pv" {
+                        pv_plotter.draw(edv(), esv(), ef(), sv());
+                    } else if two_d_mode() == "guyton" {
+                        let sys_read = system.read();
+                        guyton_plotter.draw(
+                            sys_read.get_pmes(),
+                            sys_read.get_r_rv(),
+                            sys_read.get_inotropy(),
+                            cvp(),
+                            co(),
+                            sys_read.get_venous_return(),
+                        );
+                    } else {
+                        vcg_plotter.draw();
+                    }
+                } else if active_tab() == "pulmo" {
+                    // PULMO LAB:
+                    // CH-01: Volume Pulmonar (V x t) de 0.0 a 7.0 L
+                    resp_plotter_vol.draw(
+                        0.0, 7.0, "#00f2fe", true, ghost, uti_m, bulhas_m, false, None,
+                    );
+                    resp_plotter_vol.draw_scales(
+                        0.0,
+                        7.0,
+                        false,
+                        "7.0 L (CPT)",
+                        "2.8 L (CRF)",
+                        "0.0 L",
+                    );
+
+                    // CH-02: Fluxo Aéreo (V̇ x t) de -8.0 a 12.0 L/s
+                    resp_plotter_flow.draw(
+                        -8.0, 12.0, "#f1c40f", true, ghost, uti_m, bulhas_m, false, None,
+                    );
+                    resp_plotter_flow.draw_scales(
+                        -8.0,
+                        12.0,
+                        false,
+                        "+10 L/s (PEF)",
+                        "0.0 L/s",
+                        "-6.0 L/s",
+                    );
+
+                    // CH-03: Pressão Intrapleural (P_pl x t) de -30.0 a 35.0 cmH2O
+                    resp_plotter_ppl.draw(
+                        -30.0, 35.0, "#ff7675", true, ghost, uti_m, bulhas_m, false, None,
+                    );
+                    resp_plotter_ppl.draw_scales(
+                        -30.0,
+                        35.0,
+                        false,
+                        "+30 cmH₂O",
+                        "0 cmH₂O",
+                        "-25 cmH₂O",
+                    );
+
+                    // CH-04: Acoplamento Cardiorrespiratório RSA (Disparo Sinusal guiado pela Respiração)
+                    resp_plotter_rsa.draw(
+                        -90.0, 50.0, "#a29bfe", true, ghost, uti_m, bulhas_m, false, None,
+                    );
+                    resp_plotter_rsa.draw_scales(
+                        -90.0,
+                        50.0,
+                        false,
+                        "+50 mV (Nó SA)",
+                        "-20 mV",
+                        "-90 mV",
                     );
                 } else {
-                    vcg_plotter.draw();
+                    // NEFRO LAB:
+                    // CH-01: Taxa de Filtração Glomerular (TFG) de 0.0 a 160.0 mL/min
+                    nefro_plotter_gfr.draw(
+                        0.0, 160.0, "#f39c12", true, ghost, uti_m, bulhas_m, false, None,
+                    );
+                    nefro_plotter_gfr.draw_scales(
+                        0.0,
+                        160.0,
+                        false,
+                        "160 mL/min",
+                        "125 mL/min (TFG)",
+                        "0 mL/min",
+                    );
+
+                    // CH-02: Débito Urinário Instantâneo (DU) de 0.0 a 400.0 mL/h
+                    nefro_plotter_uout.draw(
+                        0.0, 400.0, "#00cec9", true, ghost, uti_m, bulhas_m, false, None,
+                    );
+                    nefro_plotter_uout.draw_scales(
+                        0.0,
+                        400.0,
+                        false,
+                        "400 mL/h (Poliúria)",
+                        "60 mL/h (Basal)",
+                        "0 mL/h (Anúria)",
+                    );
+
+                    // CH-03: Fluxo Plasmático Renal (FPR) de 0.0 a 900.0 mL/min
+                    nefro_plotter_rbf.draw(
+                        0.0, 900.0, "#e17055", true, ghost, uti_m, bulhas_m, false, None,
+                    );
+                    nefro_plotter_rbf.draw_scales(
+                        0.0,
+                        900.0,
+                        false,
+                        "900 mL/min",
+                        "660 mL/min (FPR)",
+                        "0 mL/min",
+                    );
+
+                    // CH-04: Volume de Líquido Extracelular (VLEC) de 10.0 a 20.0 L
+                    nefro_plotter_vlec.draw(
+                        10.0, 20.0, "#a29bfe", true, ghost, uti_m, bulhas_m, false, None,
+                    );
+                    nefro_plotter_vlec.draw_scales(
+                        10.0,
+                        20.0,
+                        false,
+                        "20.0 L (Hipervolemia)",
+                        "15.0 L (Basal)",
+                        "10.0 L (Depleção)",
+                    );
                 }
-            } else if active_tab() == "pulmo" {
-                // PULMO LAB:
-                // CH-01: Volume Pulmonar (V x t) de 0.0 a 7.0 L
-                resp_plotter_vol.draw(0.0, 7.0, "#00f2fe", true, ghost, uti_m, bulhas_m, false, None);
-                resp_plotter_vol.draw_scales(0.0, 7.0, false, "7.0 L (CPT)", "2.8 L (CRF)", "0.0 L");
 
-                // CH-02: Fluxo Aéreo (V̇ x t) de -8.0 a 12.0 L/s
-                resp_plotter_flow.draw(-8.0, 12.0, "#f1c40f", true, ghost, uti_m, bulhas_m, false, None);
-                resp_plotter_flow.draw_scales(-8.0, 12.0, false, "+10 L/s (PEF)", "0.0 L/s", "-6.0 L/s");
+                // 4. Update HUD metrics at ~10 Hz (every 6 frames)
+                if !is_paused() {
+                    frame_count = frame_count.wrapping_add(1);
+                    if frame_count % 6 == 0 {
+                        let metrics = system.read().get_hud_metrics();
+                        bpm.set(metrics.bpm);
+                        pr.set(metrics.pr);
+                        qrs.set(metrics.qrs);
+                        qt.set(metrics.qt);
+                        v_rest.set(metrics.v_rest);
+                        pr_rr.set(metrics.pr_rr);
+                        edv.set(metrics.edv);
+                        esv.set(metrics.esv);
+                        sv.set(metrics.sv);
+                        ef.set(metrics.ef);
+                        co.set(metrics.co);
+                        map.set(metrics.map);
+                        cvp.set(metrics.cvp);
+                        pmes.set(metrics.pmes);
+                        pcp.set(metrics.pcp);
+                        pi_c.set(metrics.pi_c);
+                        edema_pulm.set(metrics.edema_pulm);
+                        edema_godet.set(metrics.edema_godet);
+                        spo2.set(metrics.spo2);
+                        nefro_tfg.set(metrics.tfg);
+                        nefro_du.set(metrics.diuresis);
+                        nefro_rpf.set(metrics.rpf);
+                        nefro_ff.set(metrics.ff * 100.0);
+                        nefro_vlec.set(metrics.vlec);
+                        nefro_renal_map.set(metrics.renal_map);
+                        nefro_sodium.set(metrics.sodium_excretion);
 
-                // CH-03: Pressão Intrapleural (P_pl x t) de -30.0 a 35.0 cmH2O
-                resp_plotter_ppl.draw(-30.0, 35.0, "#ff7675", true, ghost, uti_m, bulhas_m, false, None);
-                resp_plotter_ppl.draw_scales(-30.0, 35.0, false, "+30 cmH₂O", "0 cmH₂O", "-25 cmH₂O");
-
-                // CH-04: Acoplamento Cardiorrespiratório RSA (Disparo Sinusal guiado pela Respiração)
-                resp_plotter_rsa.draw(-90.0, 50.0, "#a29bfe", true, ghost, uti_m, bulhas_m, false, None);
-                resp_plotter_rsa.draw_scales(-90.0, 50.0, false, "+50 mV (Nó SA)", "-20 mV", "-90 mV");
-            } else {
-                // NEFRO LAB:
-                // CH-01: Taxa de Filtração Glomerular (TFG) de 0.0 a 160.0 mL/min
-                nefro_plotter_gfr.draw(0.0, 160.0, "#f39c12", true, ghost, uti_m, bulhas_m, false, None);
-                nefro_plotter_gfr.draw_scales(0.0, 160.0, false, "160 mL/min", "125 mL/min (TFG)", "0 mL/min");
-
-                // CH-02: Débito Urinário Instantâneo (DU) de 0.0 a 400.0 mL/h
-                nefro_plotter_uout.draw(0.0, 400.0, "#00cec9", true, ghost, uti_m, bulhas_m, false, None);
-                nefro_plotter_uout.draw_scales(0.0, 400.0, false, "400 mL/h (Poliúria)", "60 mL/h (Basal)", "0 mL/h (Anúria)");
-
-                // CH-03: Fluxo Plasmático Renal (FPR) de 0.0 a 900.0 mL/min
-                nefro_plotter_rbf.draw(0.0, 900.0, "#e17055", true, ghost, uti_m, bulhas_m, false, None);
-                nefro_plotter_rbf.draw_scales(0.0, 900.0, false, "900 mL/min", "660 mL/min (FPR)", "0 mL/min");
-
-                // CH-04: Volume de Líquido Extracelular (VLEC) de 10.0 a 20.0 L
-                nefro_plotter_vlec.draw(10.0, 20.0, "#a29bfe", true, ghost, uti_m, bulhas_m, false, None);
-                nefro_plotter_vlec.draw_scales(10.0, 20.0, false, "20.0 L (Hipervolemia)", "15.0 L (Basal)", "10.0 L (Depleção)");
-            }
-
-            // 4. Update HUD metrics at ~10 Hz (every 6 frames)
-            if !is_paused() {
-                frame_count = frame_count.wrapping_add(1);
-                if frame_count % 6 == 0 {
-                    let metrics = system.read().get_hud_metrics();
-                    bpm.set(metrics.bpm);
-                    pr.set(metrics.pr);
-                    qrs.set(metrics.qrs);
-                    qt.set(metrics.qt);
-                    v_rest.set(metrics.v_rest);
-                    pr_rr.set(metrics.pr_rr);
-                    edv.set(metrics.edv);
-                    esv.set(metrics.esv);
-                    sv.set(metrics.sv);
-                    ef.set(metrics.ef);
-                    co.set(metrics.co);
-                    map.set(metrics.map);
-                    cvp.set(metrics.cvp);
-                    pmes.set(metrics.pmes);
-                    pcp.set(metrics.pcp);
-                    pi_c.set(metrics.pi_c);
-                    edema_pulm.set(metrics.edema_pulm);
-                    edema_godet.set(metrics.edema_godet);
-                    spo2.set(metrics.spo2);
-                    nefro_tfg.set(metrics.tfg);
-                    nefro_du.set(metrics.diuresis);
-                    nefro_rpf.set(metrics.rpf);
-                    nefro_ff.set(metrics.ff * 100.0);
-                    nefro_vlec.set(metrics.vlec);
-                    nefro_renal_map.set(metrics.renal_map);
-                    nefro_sodium.set(metrics.sodium_excretion);
-
-                    spiro_vef1.set(system.read().get_vef1());
-                    spiro_cvf.set(system.read().get_cvf());
-                    spiro_tiff.set(system.read().get_tiffeneau());
-                    spiro_pef.set(system.read().get_pef());
-                    is_in_spiro.set(system.read().is_in_spirometry());
+                        spiro_vef1.set(system.read().get_vef1());
+                        spiro_cvf.set(system.read().get_cvf());
+                        spiro_tiff.set(system.read().get_tiffeneau());
+                        spiro_pef.set(system.read().get_pef());
+                        is_in_spiro.set(system.read().is_in_spirometry());
+                    }
                 }
             }
-        }
         });
     });
 
-    let bpm_str = if bpm() > 0.0 { format!("{:.0}", bpm()) } else { "0".to_string() };
-    let pr_str = if pr() > 0.0 { format!("{:.0}ms", pr()) } else { "---".to_string() };
+    let bpm_str = if bpm() > 0.0 {
+        format!("{:.0}", bpm())
+    } else {
+        "0".to_string()
+    };
+    let pr_str = if pr() > 0.0 {
+        format!("{:.0}ms", pr())
+    } else {
+        "---".to_string()
+    };
     let qrs_str = format!("{:.0}ms", qrs());
-    let qt_str = if qt() > 0.0 { format!("{:.0}ms", qt()) } else { "---".to_string() };
+    let qt_str = if qt() > 0.0 {
+        format!("{:.0}ms", qt())
+    } else {
+        "---".to_string()
+    };
     let vrest_str = format!("{:.0}mV", v_rest());
-    let pr_rr_str = if pr_rr() > 0.0 { format!("{:.2}", pr_rr()) } else { "---".to_string() };
+    let pr_rr_str = if pr_rr() > 0.0 {
+        format!("{:.2}", pr_rr())
+    } else {
+        "---".to_string()
+    };
     let ef_str = format!("{:.1}", ef());
     let sv_str = format!("{:.0}", sv());
     let co_str = format!("{:.2}", co());
@@ -1311,19 +1472,19 @@ fn App() -> Element {
                             div { class: "canvas-wrapper",
                                 div { class: "canvas-label",
                                     span { "CH-04 [ 左室圧迫曲線 // WIGGERS: " }
-                                    span { 
+                                    span {
                                         style: "display: inline-flex; align-items: center; gap: 4px;",
                                         span { style: "display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #00f2fe; box-shadow: 0 0 6px #00f2fe;" }
                                         span { style: "color: #00f2fe;", "LVP" }
                                     }
                                     span { "&" }
-                                    span { 
+                                    span {
                                         style: "display: inline-flex; align-items: center; gap: 4px;",
                                         span { style: "display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #ff1754; box-shadow: 0 0 6px #ff1754;" }
                                         span { style: "color: #ff1754;", "AoP" }
                                     }
                                     span { "&" }
-                                    span { 
+                                    span {
                                         style: "display: inline-flex; align-items: center; gap: 4px;",
                                         span { style: "display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #eab308; box-shadow: 0 0 6px #eab308;" }
                                         span { style: "color: #eab308;", "LAP" }
@@ -1408,10 +1569,22 @@ fn App() -> Element {
 }
 
 #[component]
-fn Accordion(index: usize, label: String, mut active_accordion: Signal<Option<usize>>, children: Element) -> Element {
+fn Accordion(
+    index: usize,
+    label: String,
+    mut active_accordion: Signal<Option<usize>>,
+    children: Element,
+) -> Element {
     let is_open = active_accordion() == Some(index);
-    let summary_color = if is_open { "var(--neon-cyan)" } else { "var(--neon-yellow)" };
-    let summary_style = format!("cursor: pointer; user-select: none; font-weight: bold; color: {}; font-size: 1.65vh; padding: 0.8vh 0.8vw;", summary_color);
+    let summary_color = if is_open {
+        "var(--neon-cyan)"
+    } else {
+        "var(--neon-yellow)"
+    };
+    let summary_style = format!(
+        "cursor: pointer; user-select: none; font-weight: bold; color: {}; font-size: 1.65vh; padding: 0.8vh 0.8vw;",
+        summary_color
+    );
     rsx! {
         details {
             class: "control-group",
@@ -1460,9 +1633,16 @@ fn Slider(
 
     let max_diff = (max - default_val).abs().max((min - default_val).abs());
     let diff = (val_num - default_val).abs();
-    let severity = if max_diff > 0.0 { (diff / max_diff).clamp(0.0, 1.0) } else { 0.0 };
+    let severity = if max_diff > 0.0 {
+        (diff / max_diff).clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
     let hue = 120.0 - (severity * 120.0); // 120 (Green) to 0 (Red)
-    let style_str = format!("--val: {:.1}%; --track-color: hsl({:.0}, 100%, 50%);", percentage, hue);
+    let style_str = format!(
+        "--val: {:.1}%; --track-color: hsl({:.0}, 100%, 50%);",
+        percentage, hue
+    );
 
     let formatted_val = if step < 1.0 {
         format!("{:.1}{}", val_num, unit)

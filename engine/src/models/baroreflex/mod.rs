@@ -14,12 +14,12 @@ pub struct BaroreflexModel {
     pub s_baro: f64,         // Disparo barorreceptor aferente normalizado [-1.0, 1.0]
     pub delta_symp: f64,     // Modulação eferente simpática [-0.5, 0.8]
     pub delta_parasymp: f64, // Modulação eferente vagal [-0.2, 0.35]
-    
+
     // Constantes dinâmicas biofísicas
-    pub tau_map: f64,        // Constante de tempo do filtro de PAM (ms, ~2000.0)
-    pub tau_symp: f64,       // Constante do ramo simpático (ms, ~3500.0)
-    pub tau_vagus: f64,      // Constante do ramo vagal (ms, ~800.0)
-    pub k_sens: f64,         // Sensibilidade da curva sigmoide (mmHg, ~15.0)
+    pub tau_map: f64,   // Constante de tempo do filtro de PAM (ms, ~2000.0)
+    pub tau_symp: f64,  // Constante do ramo simpático (ms, ~3500.0)
+    pub tau_vagus: f64, // Constante do ramo vagal (ms, ~800.0)
+    pub k_sens: f64,    // Sensibilidade da curva sigmoide (mmHg, ~15.0)
 }
 
 impl Default for BaroreflexModel {
@@ -31,16 +31,16 @@ impl Default for BaroreflexModel {
 impl BaroreflexModel {
     pub fn new() -> Self {
         Self {
-            enabled: false,     // Desabilitado por padrão no construtor (ativado na UI ou sob demanda)
-            p_setpoint: 96.0,   // PAM eutrófica de estado estacionário (~96 mmHg para 122/71 mmHg)
-            pam: 80.0,          // Inicializado com p_ao inicial do HemodynamicsModel (evita spike de startup)
+            enabled: false, // Desabilitado por padrão no construtor (ativado na UI ou sob demanda)
+            p_setpoint: 96.0, // PAM eutrófica de estado estacionário (~96 mmHg para 122/71 mmHg)
+            pam: 80.0, // Inicializado com p_ao inicial do HemodynamicsModel (evita spike de startup)
             s_baro: 0.0,
             delta_symp: 0.0,
             delta_parasymp: 0.0,
-            tau_map: 3000.0,    // 3.0 segundos — mais lento p/ suavizar transientes de ciclo a ciclo
-            tau_symp: 5000.0,   // 5.0 segundos de resposta simpática adrenérgica (mais conservador)
-            tau_vagus: 1000.0,  // 1.0 segundo de resposta vagal colinérgica
-            k_sens: 12.0,       // Sensibilidade calibrada (tanh satura em ±3 k_sens = ±36 mmHg)
+            tau_map: 3000.0, // 3.0 segundos — mais lento p/ suavizar transientes de ciclo a ciclo
+            tau_symp: 5000.0, // 5.0 segundos de resposta simpática adrenérgica (mais conservador)
+            tau_vagus: 1000.0, // 1.0 segundo de resposta vagal colinérgica
+            k_sens: 12.0,    // Sensibilidade calibrada (tanh satura em ±3 k_sens = ±36 mmHg)
         }
     }
 

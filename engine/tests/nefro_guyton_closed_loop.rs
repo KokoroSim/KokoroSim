@@ -16,18 +16,39 @@ fn test_nefro_normotensive_autoregulation() {
     let metrics = system.get_hud_metrics();
     println!(
         "Eutrofia Renal: PAM={:.1} mmHg, TFG={:.1} mL/min, DU={:.1} mL/h, FPR={:.1} mL/min, FF={:.1}%, VLEC={:.2} L",
-        metrics.map, metrics.tfg, metrics.diuresis, metrics.rpf, metrics.ff * 100.0, metrics.vlec
+        metrics.map,
+        metrics.tfg,
+        metrics.diuresis,
+        metrics.rpf,
+        metrics.ff * 100.0,
+        metrics.vlec
     );
 
     // Na eutrofia normotensa (PAM ~90 mmHg):
     // TFG fisiológica em torno de 120-130 mL/min
-    assert!(metrics.tfg >= 115.0 && metrics.tfg <= 135.0, "TFG fora da faixa fisiológica: {}", metrics.tfg);
+    assert!(
+        metrics.tfg >= 115.0 && metrics.tfg <= 135.0,
+        "TFG fora da faixa fisiológica: {}",
+        metrics.tfg
+    );
     // Débito urinário eupneico basal: ~60 mL/h (1.0 mL/min)
-    assert!(metrics.diuresis >= 45.0 && metrics.diuresis <= 80.0, "Débito urinário fora da faixa basal: {}", metrics.diuresis);
+    assert!(
+        metrics.diuresis >= 45.0 && metrics.diuresis <= 80.0,
+        "Débito urinário fora da faixa basal: {}",
+        metrics.diuresis
+    );
     // Fração de Filtração ~20%
-    assert!(metrics.ff >= 0.16 && metrics.ff <= 0.24, "Fração de Filtração fora de 20%: {}", metrics.ff);
+    assert!(
+        metrics.ff >= 0.16 && metrics.ff <= 0.24,
+        "Fração de Filtração fora de 20%: {}",
+        metrics.ff
+    );
     // VLEC estável em torno de 15 L
-    assert!(metrics.vlec >= 14.8 && metrics.vlec <= 15.2, "VLEC instável em repouso: {}", metrics.vlec);
+    assert!(
+        metrics.vlec >= 14.8 && metrics.vlec <= 15.2,
+        "VLEC instável em repouso: {}",
+        metrics.vlec
+    );
 }
 
 #[test]
@@ -53,10 +74,20 @@ fn test_guyton_pressure_natriuresis_under_hypertension() {
     );
 
     // Diurese e natriurese de pressão devem disparar significativamente (> 2.5x basal)
-    assert!(renal.diuresis_ml_h > baseline_du * 2.2, "Natriurese de pressão insuficiente: {}", renal.diuresis_ml_h);
-    assert!(renal.sodium_excretion > baseline_na * 2.0, "Excreção de sódio insuficiente sob hipertensão");
+    assert!(
+        renal.diuresis_ml_h > baseline_du * 2.2,
+        "Natriurese de pressão insuficiente: {}",
+        renal.diuresis_ml_h
+    );
+    assert!(
+        renal.sodium_excretion > baseline_na * 2.0,
+        "Excreção de sódio insuficiente sob hipertensão"
+    );
     // O VLEC deve contrair para restabelecer o equilíbrio a longo prazo
-    assert!(renal.vlec < 15.0, "VLEC deveria contrair sob diurese pressórica de Guyton");
+    assert!(
+        renal.vlec < 15.0,
+        "VLEC deveria contrair sob diurese pressórica de Guyton"
+    );
 }
 
 #[test]
@@ -75,9 +106,17 @@ fn test_prerenal_oliguria_under_hypotensive_shock() {
     );
 
     // Na PAM < 50 mmHg, a pressão capilar glomerular colapsa
-    assert!(renal.tfg < 35.0, "TFG deveria colapsar no choque hipotensivo: {}", renal.tfg);
+    assert!(
+        renal.tfg < 35.0,
+        "TFG deveria colapsar no choque hipotensivo: {}",
+        renal.tfg
+    );
     // Oligúria/anúria pré-renal (< 15 mL/h)
-    assert!(renal.diuresis_ml_h < 15.0, "Rim deveria entrar em oligúria/anúria pré-renal: {}", renal.diuresis_ml_h);
+    assert!(
+        renal.diuresis_ml_h < 15.0,
+        "Rim deveria entrar em oligúria/anúria pré-renal: {}",
+        renal.diuresis_ml_h
+    );
 }
 
 #[test]
@@ -101,11 +140,22 @@ fn test_loop_diuretic_and_fluid_bolus_volume_shifts() {
     );
 
     // Diurético maciço deve elevar o débito urinário > 200 mL/h
-    assert!(diuretic_du > 200.0, "Débito urinário sob furosemida insuficiente: {}", diuretic_du);
+    assert!(
+        diuretic_du > 200.0,
+        "Débito urinário sob furosemida insuficiente: {}",
+        diuretic_du
+    );
     // VLEC deve depletar abaixo de 15 L
-    assert!(depleted_vlec < 14.95, "VLEC deveria depletar sob furosemida: {}", depleted_vlec);
+    assert!(
+        depleted_vlec < 14.95,
+        "VLEC deveria depletar sob furosemida: {}",
+        depleted_vlec
+    );
     // Modulação na PMES deve ser negativa (reduz pré-carga venosa e alivia edema)
-    assert!(pmes_mod_diuretic < -0.05, "PMES modulação deveria ser negativa sob diurético");
+    assert!(
+        pmes_mod_diuretic < -0.05,
+        "PMES modulação deveria ser negativa sob diurético"
+    );
 
     // 2. Desafio Volêmico: Infusão de Bolus IV de 1000 mL
     renal.infuse_bolus(1000.0);
@@ -117,6 +167,12 @@ fn test_loop_diuretic_and_fluid_bolus_volume_shifts() {
         post_bolus_vlec, pmes_mod_bolus
     );
 
-    assert!(post_bolus_vlec > depleted_vlec + 0.90, "VLEC não recuperou após bolus de 1000 mL");
-    assert!(pmes_mod_bolus > pmes_mod_diuretic, "PMES modulação deveria subir após bolus");
+    assert!(
+        post_bolus_vlec > depleted_vlec + 0.90,
+        "VLEC não recuperou após bolus de 1000 mL"
+    );
+    assert!(
+        pmes_mod_bolus > pmes_mod_diuretic,
+        "PMES modulação deveria subir após bolus"
+    );
 }

@@ -11,9 +11,7 @@ fn main() {
 
     // 2. Read KOKOROSIM_BUILD_TIME from environment, or generate formatted local time
     let build_time = std::env::var("KOKOROSIM_BUILD_TIME").unwrap_or_else(|_| {
-        let output = Command::new("date")
-            .arg("+%Y-%m-%d %H:%M:%S")
-            .output();
+        let output = Command::new("date").arg("+%Y-%m-%d %H:%M:%S").output();
         match output {
             Ok(out) => String::from_utf8_lossy(&out.stdout).trim().to_string(),
             Err(_) => "unknown".to_string(),

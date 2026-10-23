@@ -95,7 +95,12 @@ fn test_baroreflex_compensatory_tachycardia_under_acute_hypotension() {
     );
 
     // PAM sofre queda em relação à linha de base
-    assert!(map < baseline_map, "PAM não reduziu sob vasodilatação (base: {:.1}, atual: {:.1})", baseline_map, map);
+    assert!(
+        map < baseline_map,
+        "PAM não reduziu sob vasodilatação (base: {:.1}, atual: {:.1})",
+        baseline_map,
+        map
+    );
 
     // Barorreceptor detecta hipotensão (s_baro negativo)
     assert!(
@@ -115,7 +120,8 @@ fn test_baroreflex_compensatory_tachycardia_under_acute_hypotension() {
     assert!(
         post_bpm > baseline_bpm,
         "Frequência cardíaca não aumentou sob hipotensão reflexa: {:.1} -> {:.1}",
-        baseline_bpm, post_bpm
+        baseline_bpm,
+        post_bpm
     );
 }
 
@@ -140,9 +146,7 @@ fn test_baroreflex_compensatory_bradycardia_under_acute_hypertension() {
 
     // 2. Simula hipertensão / vasoconstrição maciça exógena através de infusão adrenérgica controlada
     heart.update_params(
-        5.4, 2.0, 140.0,
-        1.0, 1.0, 1.0, 1.0,
-        0.50, 0.0, 0.0, 0.0 // symp exógeno = 0.50
+        5.4, 2.0, 140.0, 1.0, 1.0, 1.0, 1.0, 0.50, 0.0, 0.0, 0.0, // symp exógeno = 0.50
     );
 
     // Roda mais 8 segundos
@@ -160,7 +164,10 @@ fn test_baroreflex_compensatory_bradycardia_under_acute_hypertension() {
     );
 
     // PAM subiu acima da linha de base
-    assert!(map > baseline_map, "PAM não subiu sob estímulo hipertensivo");
+    assert!(
+        map > baseline_map,
+        "PAM não subiu sob estímulo hipertensivo"
+    );
 
     // Disparo aferente positivo
     assert!(

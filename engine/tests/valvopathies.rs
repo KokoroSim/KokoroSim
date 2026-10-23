@@ -26,10 +26,16 @@ fn test_aortic_stenosis_creates_systolic_gradient() {
         for i in 0..(batch.len() / chunk_size) {
             let lvp = batch[i * chunk_size + 8];
             let aop = batch[i * chunk_size + 9];
-            if lvp > max_lvp { max_lvp = lvp; }
-            if aop > max_aop { max_aop = aop; }
+            if lvp > max_lvp {
+                max_lvp = lvp;
+            }
+            if aop > max_aop {
+                max_aop = aop;
+            }
             let grad = lvp - aop;
-            if grad > max_gradient { max_gradient = grad; }
+            if grad > max_gradient {
+                max_gradient = grad;
+            }
         }
     }
 
@@ -72,11 +78,17 @@ fn test_aortic_regurgitation_causes_diastolic_runoff_and_volume_overload() {
         let chunk_size = engine::models::BATCH_CHUNK_SIZE;
         for i in 0..(batch.len() / chunk_size) {
             let aop = batch[i * chunk_size + 9];
-            if aop < min_aop { min_aop = aop; }
-            if aop > max_aop { max_aop = aop; }
+            if aop < min_aop {
+                min_aop = aop;
+            }
+            if aop > max_aop {
+                max_aop = aop;
+            }
         }
         let edv = system.get_hemo_edv();
-        if edv > max_edv { max_edv = edv; }
+        if edv > max_edv {
+            max_edv = edv;
+        }
     }
 
     let pulse_pressure = max_aop - min_aop;
@@ -155,7 +167,9 @@ fn test_mitral_regurgitation_generates_giant_v_wave() {
     for _ in 0..156 {
         system.run_batch(dt, steps_per_frame, downsample);
         let lap = system.get_hemo_lap();
-        if lap > max_lap { max_lap = lap; }
+        if lap > max_lap {
+            max_lap = lap;
+        }
     }
 
     // Onda 'v' sistólica gigante decorrente do jato de refluxo (> 22 mmHg)

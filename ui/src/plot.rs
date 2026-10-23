@@ -108,7 +108,8 @@ impl Plotter {
             if mode == ViewMode::Rolling && self.ghost_state == GhostCaptureState::Ready {
                 self.ghost_playback_idx = 0;
                 self.ghost_rolling_buffer.clear();
-                self.ghost_rolling_buffer.resize(self.capacity, self.ghost_rest_val);
+                self.ghost_rolling_buffer
+                    .resize(self.capacity, self.ghost_rest_val);
             }
         }
     }
@@ -158,7 +159,8 @@ impl Plotter {
                     self.ghost_recording.clear();
                     if self.mode == ViewMode::Rolling {
                         self.ghost_rolling_buffer.clear();
-                        self.ghost_rolling_buffer.resize(self.capacity, self.ghost_rest_val);
+                        self.ghost_rolling_buffer
+                            .resize(self.capacity, self.ghost_rest_val);
                     }
                 } else {
                     self.ghost_recording.push(value);
@@ -170,7 +172,8 @@ impl Plotter {
                         self.ghost_recording.clear();
                         if self.mode == ViewMode::Rolling {
                             self.ghost_rolling_buffer.clear();
-                            self.ghost_rolling_buffer.resize(self.capacity, self.ghost_rest_val);
+                            self.ghost_rolling_buffer
+                                .resize(self.capacity, self.ghost_rest_val);
                         }
                     }
                 }
@@ -216,7 +219,8 @@ impl Plotter {
                     }
                 });
                 if sound_flags != 0 {
-                    self.sound_markers.push((self.buffer.len().saturating_sub(1), sound_flags));
+                    self.sound_markers
+                        .push((self.buffer.len().saturating_sub(1), sound_flags));
                 }
             }
 
@@ -230,7 +234,8 @@ impl Plotter {
                 let cur = self.head_idx;
                 let erase_samples = 25;
                 let erase_end = (cur + erase_samples).min(self.capacity);
-                self.sound_markers.retain(|(idx, _)| *idx < cur || *idx >= erase_end);
+                self.sound_markers
+                    .retain(|(idx, _)| *idx < cur || *idx >= erase_end);
 
                 if sound_flags != 0 {
                     self.sound_markers.push((cur, sound_flags));
@@ -282,7 +287,8 @@ impl Plotter {
                 let cur = self.head_idx;
                 let erase_samples = 25;
                 let erase_end = (cur + erase_samples).min(self.capacity);
-                self.sound_markers.retain(|(idx, _)| *idx < cur || *idx >= erase_end);
+                self.sound_markers
+                    .retain(|(idx, _)| *idx < cur || *idx >= erase_end);
                 for i in (cur + 1)..erase_end {
                     self.buffer[i] = f64::NAN;
                 }
@@ -374,7 +380,7 @@ impl Plotter {
                     let y_zero = if is_ecg_grid {
                         let peak_pos_mv = 1.15_f64 * gain; // mV acima da isoline com ganho
                         let peak_neg_mv = 0.30_f64 * gain; // mV abaixo da isoline com ganho
-                        let margin_px = s * 0.5;    // margem extra em pixels (0.5 quadradinhos)
+                        let margin_px = s * 0.5; // margem extra em pixels (0.5 quadradinhos)
                         let px_above = peak_pos_mv * 10.0 * s + margin_px;
                         let px_below = peak_neg_mv * 10.0 * s + margin_px;
                         let total_px = px_above + px_below;
@@ -422,7 +428,9 @@ impl Plotter {
                                         (overflow as f64 * dx).rem_euclid(s)
                                     }
                                 }
-                                ViewMode::Sweep | ViewMode::TriggeredAuto | ViewMode::TriggeredSingle => {
+                                ViewMode::Sweep
+                                | ViewMode::TriggeredAuto
+                                | ViewMode::TriggeredSingle => {
                                     // Nos modos com caneta, ancora a grade na posição atual da caneta
                                     (self.head_idx as f64 * dx).rem_euclid(s)
                                 }
@@ -444,7 +452,9 @@ impl Plotter {
                                 _ => self.head_idx as u64,
                             };
                             // k_base: quantos quadradinhos inteiros foram "consumidos" até o início da janela
-                            let k_base_offset = ((phase_count as f64 * dx / s).floor() as i64).rem_euclid(5) as usize;
+                            let k_base_offset = ((phase_count as f64 * dx / s).floor() as i64)
+                                .rem_euclid(5)
+                                as usize;
                             let mut k_rel = 0usize;
 
                             // 1. Linhas verticais isotrópicas de tempo (a cada s = 40ms)
@@ -565,7 +575,10 @@ impl Plotter {
                     }
 
                     // 1. Desenha Onda Fantasma: Linha contínua sólida esmaecida (sem pontilhado, anti-fadiga visual)
-                    if show_ghost && self.ghost_state == GhostCaptureState::Ready && !self.ghost_beat.is_empty() {
+                    if show_ghost
+                        && self.ghost_state == GhostCaptureState::Ready
+                        && !self.ghost_beat.is_empty()
+                    {
                         ctx.save();
                         ctx.begin_path();
                         ctx.set_stroke_style_str(&format_ghost_color(color));
@@ -590,7 +603,10 @@ impl Plotter {
                                     }
                                 }
                             }
-                            ViewMode::Sweep | ViewMode::TriggeredAuto | ViewMode::Paged | ViewMode::TriggeredSingle => {
+                            ViewMode::Sweep
+                            | ViewMode::TriggeredAuto
+                            | ViewMode::Paged
+                            | ViewMode::TriggeredSingle => {
                                 let beat_len = self.ghost_beat.len();
                                 for i in 0..self.capacity {
                                     let val = if i < beat_len {
@@ -776,11 +792,7 @@ impl Plotter {
                         let _ = ctx.fill_text(top_str, width - 8.0, 6.0);
 
                         // Centro (Y_mid / Linha de Referência)
-                        let mid_y = if is_ecg_grid {
-                            y_zero
-                        } else {
-                            height * 0.5
-                        };
+                        let mid_y = if is_ecg_grid { y_zero } else { height * 0.5 };
                         ctx.set_fill_style_str("rgba(0, 242, 254, 0.50)");
                         ctx.set_text_baseline("middle");
                         let _ = ctx.fill_text(mid_str, width - 8.0, mid_y);
@@ -831,11 +843,7 @@ impl Plotter {
                     let _ = ctx.fill_text(top_str, width - 8.0, 6.0);
 
                     // Centro (Y_mid / Linha de Referência)
-                    let mid_y = if is_ecg_grid {
-                        y_zero
-                    } else {
-                        height * 0.5
-                    };
+                    let mid_y = if is_ecg_grid { y_zero } else { height * 0.5 };
                     ctx.set_fill_style_str("rgba(0, 242, 254, 0.50)");
                     ctx.set_text_baseline("middle");
                     let _ = ctx.fill_text(mid_str, width - 8.0, mid_y);
@@ -943,7 +951,8 @@ impl PvLoopPlotter {
         let plot_h = (height - margin_top - margin_bottom).max(10.0);
 
         let map_x = |v: f64| margin_left + ((v - min_v) / (max_v - min_v)).clamp(0.0, 1.0) * plot_w;
-        let map_y = |p: f64| margin_top + (1.0 - ((p - min_p) / (max_p - min_p)).clamp(0.0, 1.0)) * plot_h;
+        let map_y =
+            |p: f64| margin_top + (1.0 - ((p - min_p) / (max_p - min_p)).clamp(0.0, 1.0)) * plot_h;
 
         // 1. Fundo industrial escuro
         ctx.set_fill_style_str("#020305");
@@ -1010,7 +1019,10 @@ impl PvLoopPlotter {
         ctx.save();
         ctx.set_stroke_style_str("rgba(56, 189, 248, 0.35)");
         ctx.set_line_width(1.0);
-        let _ = ctx.set_line_dash(&js_sys::Array::of2(&wasm_bindgen::JsValue::from_f64(3.0), &wasm_bindgen::JsValue::from_f64(3.0)));
+        let _ = ctx.set_line_dash(&js_sys::Array::of2(
+            &wasm_bindgen::JsValue::from_f64(3.0),
+            &wasm_bindgen::JsValue::from_f64(3.0),
+        ));
         ctx.begin_path();
         ctx.move_to(map_x(v0), map_y(0.0));
         ctx.line_to(map_x(v_es_top), map_y(p_top));
@@ -1026,7 +1038,10 @@ impl PvLoopPlotter {
         ctx.save();
         ctx.set_stroke_style_str("rgba(168, 85, 247, 0.35)");
         ctx.set_line_width(1.0);
-        let _ = ctx.set_line_dash(&js_sys::Array::of2(&wasm_bindgen::JsValue::from_f64(3.0), &wasm_bindgen::JsValue::from_f64(3.0)));
+        let _ = ctx.set_line_dash(&js_sys::Array::of2(
+            &wasm_bindgen::JsValue::from_f64(3.0),
+            &wasm_bindgen::JsValue::from_f64(3.0),
+        ));
         ctx.begin_path();
         for i in 0..=25 {
             let v = 20.0 + (i as f64 / 25.0) * 160.0;
@@ -1089,13 +1104,25 @@ impl PvLoopPlotter {
         ctx.set_font("10px 'JetBrains Mono', monospace");
         ctx.set_text_align("right");
         ctx.set_text_baseline("top");
-        
+
         ctx.set_fill_style_str("rgba(0, 242, 254, 0.90)");
-        let _ = ctx.fill_text(&format!("FE: {:.1}%", ef), width - margin_right - 4.0, margin_top + 4.0);
+        let _ = ctx.fill_text(
+            &format!("FE: {:.1}%", ef),
+            width - margin_right - 4.0,
+            margin_top + 4.0,
+        );
 
         ctx.set_fill_style_str("rgba(255, 255, 255, 0.70)");
-        let _ = ctx.fill_text(&format!("VS: {:.0}mL", sv), width - margin_right - 4.0, margin_top + 16.0);
-        let _ = ctx.fill_text(&format!("VDF:{:.0} VSF:{:.0}", v_edv, v_esv), width - margin_right - 4.0, margin_top + 28.0);
+        let _ = ctx.fill_text(
+            &format!("VS: {:.0}mL", sv),
+            width - margin_right - 4.0,
+            margin_top + 16.0,
+        );
+        let _ = ctx.fill_text(
+            &format!("VDF:{:.0} VSF:{:.0}", v_edv, v_esv),
+            width - margin_right - 4.0,
+            margin_top + 28.0,
+        );
         ctx.restore();
     }
 }
@@ -1170,8 +1197,13 @@ impl GuytonPlotter {
         let plot_w = (width - margin_left - margin_right).max(10.0);
         let plot_h = (height - margin_top - margin_bottom).max(10.0);
 
-        let map_x = |pvc: f64| margin_left + ((pvc - min_pvc) / (max_pvc - min_pvc)).clamp(0.0, 1.0) * plot_w;
-        let map_y = |flow: f64| margin_top + (1.0 - ((flow - min_flow) / (max_flow - min_flow)).clamp(0.0, 1.0)) * plot_h;
+        let map_x = |pvc: f64| {
+            margin_left + ((pvc - min_pvc) / (max_pvc - min_pvc)).clamp(0.0, 1.0) * plot_w
+        };
+        let map_y = |flow: f64| {
+            margin_top
+                + (1.0 - ((flow - min_flow) / (max_flow - min_flow)).clamp(0.0, 1.0)) * plot_h
+        };
 
         // 1. Fundo industrial escuro
         ctx.set_fill_style_str("#020305");
@@ -1204,7 +1236,10 @@ impl GuytonPlotter {
 
         // Linha pontilhada em PVC = 0 mmHg (limiar de colapso de cavas / Guyton waterfall)
         ctx.save();
-        let _ = ctx.set_line_dash(&js_sys::Array::of2(&wasm_bindgen::JsValue::from_f64(3.0), &wasm_bindgen::JsValue::from_f64(3.0)));
+        let _ = ctx.set_line_dash(&js_sys::Array::of2(
+            &wasm_bindgen::JsValue::from_f64(3.0),
+            &wasm_bindgen::JsValue::from_f64(3.0),
+        ));
         ctx.set_stroke_style_str("rgba(255, 255, 255, 0.15)");
         ctx.begin_path();
         let x_zero = map_x(0.0);
@@ -1239,7 +1274,11 @@ impl GuytonPlotter {
 
         ctx.set_text_align("right");
         ctx.set_text_baseline("bottom");
-        let _ = ctx.fill_text("PVC (mmHg)", margin_left + plot_w, margin_top + plot_h - 2.0);
+        let _ = ctx.fill_text(
+            "PVC (mmHg)",
+            margin_left + plot_w,
+            margin_top + plot_h - 2.0,
+        );
 
         // Fórmulas analíticas biofísicas
         let calc_rv = |p: f64, pmes_val: f64, r_val: f64| -> f64 {
@@ -1268,10 +1307,14 @@ impl GuytonPlotter {
         };
 
         // 5. Curvas Basais Fantasmas (referência pontilhada tênue: PMES=7.5, R=0.85, Ino=1.0)
-        let is_altered = (pmes - 7.5).abs() > 0.3 || (r_rv - 0.85).abs() > 0.05 || (inotropy - 1.0).abs() > 0.05;
+        let is_altered =
+            (pmes - 7.5).abs() > 0.3 || (r_rv - 0.85).abs() > 0.05 || (inotropy - 1.0).abs() > 0.05;
         if is_altered {
             ctx.save();
-            let _ = ctx.set_line_dash(&js_sys::Array::of2(&wasm_bindgen::JsValue::from_f64(3.0), &wasm_bindgen::JsValue::from_f64(3.0)));
+            let _ = ctx.set_line_dash(&js_sys::Array::of2(
+                &wasm_bindgen::JsValue::from_f64(3.0),
+                &wasm_bindgen::JsValue::from_f64(3.0),
+            ));
             ctx.set_line_width(1.0);
 
             // Retorno Venoso Basal Fantasma
@@ -1405,7 +1448,11 @@ impl GuytonPlotter {
         leg_y += 12.0;
 
         ctx.set_fill_style_str("#2ecc71");
-        let _ = ctx.fill_text(&format!("★ Eq: {:.1} mmHg | {:.1} L/min", cvp, op_flow), leg_x, leg_y);
+        let _ = ctx.fill_text(
+            &format!("★ Eq: {:.1} mmHg | {:.1} L/min", cvp, op_flow),
+            leg_x,
+            leg_y,
+        );
         ctx.restore();
     }
 }
@@ -1495,13 +1542,25 @@ impl VcgPlotter {
         ctx.set_stroke_style_str("rgba(255, 255, 255, 0.08)");
         ctx.set_line_width(1.0);
         ctx.begin_path();
-        let _ = ctx.arc(center_x, center_y, 0.5 * scale, 0.0, std::f64::consts::PI * 2.0);
+        let _ = ctx.arc(
+            center_x,
+            center_y,
+            0.5 * scale,
+            0.0,
+            std::f64::consts::PI * 2.0,
+        );
         ctx.stroke();
 
         ctx.set_stroke_style_str("rgba(255, 255, 255, 0.15)");
         ctx.set_line_width(1.0);
         ctx.begin_path();
-        let _ = ctx.arc(center_x, center_y, 1.0 * scale, 0.0, std::f64::consts::PI * 2.0);
+        let _ = ctx.arc(
+            center_x,
+            center_y,
+            1.0 * scale,
+            0.0,
+            std::f64::consts::PI * 2.0,
+        );
         ctx.stroke();
 
         // 4. Eixos Ortogonais DI (horizontal) e aVF (vertical)
@@ -1576,7 +1635,10 @@ impl VcgPlotter {
                 let x1 = di_to_x(di1);
                 let y1 = avf_to_y(avf1);
 
-                ctx.set_stroke_style_str(&format!("rgba(0, 242, 254, {:.2})", 0.08 + progress * 0.82));
+                ctx.set_stroke_style_str(&format!(
+                    "rgba(0, 242, 254, {:.2})",
+                    0.08 + progress * 0.82
+                ));
                 ctx.set_line_width(1.0 + progress * 1.0);
                 ctx.begin_path();
                 ctx.move_to(x0, y0);
@@ -1624,14 +1686,9 @@ impl VcgPlotter {
             ctx.set_text_align("center");
             ctx.set_text_baseline("top");
             ctx.set_fill_style_str(diag_color);
-            let _ = ctx.fill_text(
-                &format!("Â: {} [ {} ]", angle_deg, diag_str),
-                center_x,
-                6.0,
-            );
+            let _ = ctx.fill_text(&format!("Â: {} [ {} ]", angle_deg, diag_str), center_x, 6.0);
         }
 
         ctx.restore();
     }
 }
-

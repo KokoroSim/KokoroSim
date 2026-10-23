@@ -61,23 +61,31 @@ impl FibroblastCell {
         // 1. Corrente de Potássio Ativada por Voltagem (I_Kv)
         let r_inf = 1.0 / (1.0 + f64::exp(-(v + 20.0) / 11.0));
         let tau_r = 20.3 + 138.0 * f64::exp(-((v + 20.0) / 25.9).powi(2));
-        
+
         let s_inf = 1.0 / (1.0 + f64::exp((v + 23.0) / 16.0));
         let tau_s = 1574.0 + 5268.0 * f64::exp(-((v + 23.0) / 22.7).powi(2));
 
         let i_kv = G_KV * C_F * self.r * self.s * (v - e_k) * p.block_k;
 
         // 2. Corrente Retificadora de Entrada de Potássio (I_K1)
-        let i_k1 = (G_K1 * (v - e_k) * (p.effective_ko() / 5.4).sqrt() /
-            (1.0 + f64::exp((v - e_k - 10.0) / 15.0))) * p.block_k;
+        let i_k1 = (G_K1 * (v - e_k) * (p.effective_ko() / 5.4).sqrt()
+            / (1.0 + f64::exp((v - e_k - 10.0) / 15.0)))
+            * p.block_k;
 
         // 3. Corrente de Fuga Não-Seletiva (I_b)
         let i_b = G_B * C_F * (v - E_B);
 
         // 4. Bomba de Sódio/Potássio (I_NaK)
-        let f_nak = 1.0 / (1.0 + 0.1245 * f64::exp(-0.1 * v * F / (R * T)) + 0.0353 * f64::exp(-v * F / (R * T)));
-        let i_nak = I_NAK_MAX * C_F * (p.effective_ko() / (p.effective_ko() + K_MK)) *
-            (NA_I_FIB.powf(1.5) / (NA_I_FIB.powf(1.5) + K_MNA.powf(1.5))) * f_nak * p.block_nak;
+        let f_nak = 1.0
+            / (1.0
+                + 0.1245 * f64::exp(-0.1 * v * F / (R * T))
+                + 0.0353 * f64::exp(-v * F / (R * T)));
+        let i_nak = I_NAK_MAX
+            * C_F
+            * (p.effective_ko() / (p.effective_ko() + K_MK))
+            * (NA_I_FIB.powf(1.5) / (NA_I_FIB.powf(1.5) + K_MNA.powf(1.5)))
+            * f_nak
+            * p.block_nak;
 
         // Corrente total de canais iônicos do fibroblasto (pA)
         let i_ion_fib = i_kv + i_k1 + i_b + i_nak;

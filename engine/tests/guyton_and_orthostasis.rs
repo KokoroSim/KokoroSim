@@ -93,14 +93,21 @@ fn test_orthostasis_postural_challenge_and_baroreflex_compensation() {
 
     println!(
         "Ortostase: Deitado (PMES={:.1}, BPM={:.1}, DC={:.2}) -> Em Pé (PMES={:.1}, BPM={:.1}, DC={:.2}) | Δsymp={:.3}",
-        supine_pmes, supine_bpm, supine_co, standing_pmes, standing_m.bpm, standing_m.co, delta_symp
+        supine_pmes,
+        supine_bpm,
+        supine_co,
+        standing_pmes,
+        standing_m.bpm,
+        standing_m.co,
+        delta_symp
     );
 
     // PMES efetiva deve cair inicialmente pelo pooling venoso caudal
     assert!(
         standing_pmes < supine_pmes,
         "PMES efetiva não reduziu na ortostase: {:.1} -> {:.1}",
-        supine_pmes, standing_pmes
+        supine_pmes,
+        standing_pmes
     );
 
     // Eferência simpática deve ser ativada pelos barorreceptores
@@ -114,7 +121,8 @@ fn test_orthostasis_postural_challenge_and_baroreflex_compensation() {
     assert!(
         standing_m.bpm > supine_bpm + 2.0,
         "Taquicardia reflexa postural ausente: deitado={:.1} -> em pé={:.1}",
-        supine_bpm, standing_m.bpm
+        supine_bpm,
+        standing_m.bpm
     );
 
     // PAM deve se manter controlada sem colapso hipotensivo severo (> 70 mmHg)
@@ -164,14 +172,16 @@ fn test_hypovolemic_shock_hemorrhage() {
     assert!(
         shock_edv < base_edv - 6.0,
         "VDF não reduziu adequadamente sob hemorragia: {:.1} -> {:.1}",
-        base_edv, shock_edv
+        base_edv,
+        shock_edv
     );
 
     // Débito cardíaco entra em baixo débito (< 4.2 L/min)
     assert!(
         shock_co < base_co,
         "Débito Cardíaco não caiu no choque hipovolêmico: {:.2} -> {:.2}",
-        base_co, shock_co
+        base_co,
+        shock_co
     );
 
     // PVC colapsa (< 2.2 mmHg)
@@ -220,13 +230,15 @@ fn test_hypervolemia_volume_expansion() {
     assert!(
         exp_edv > base_edv + 3.0,
         "VDF não aumentou sob expansão volêmica: {:.1} -> {:.1}",
-        base_edv, exp_edv
+        base_edv,
+        exp_edv
     );
 
     // PVC sobe por sobrecarga venosa
     assert!(
         exp_cvp > base_cvp,
         "PVC não elevou sob expansão volêmica: {:.1} -> {:.1}",
-        base_cvp, exp_cvp
+        base_cvp,
+        exp_cvp
     );
 }

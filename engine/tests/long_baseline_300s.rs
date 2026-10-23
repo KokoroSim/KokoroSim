@@ -57,10 +57,16 @@ fn test_long_baseline_300s_stress_and_bounds() {
     let mut beats_last_interval = 0;
     let report_interval_steps = 3_000_000; // A cada 30 segundos
 
-    println!("\n=========================================================================================");
-    println!("🧪 INICIANDO SIMULAÇÃO BASELINE DE LONGA DURAÇÃO: 300 SEGUNDOS (5 MINUTOS CONTÍNUOS)");
+    println!(
+        "\n========================================================================================="
+    );
+    println!(
+        "🧪 INICIANDO SIMULAÇÃO BASELINE DE LONGA DURAÇÃO: 300 SEGUNDOS (5 MINUTOS CONTÍNUOS)"
+    );
     println!("   Passo de integração: dt = 0.01 ms | Passos totais: 30.000.000 | RSA: Ativada");
-    println!("=========================================================================================\n");
+    println!(
+        "=========================================================================================\n"
+    );
 
     for step in 0..total_steps {
         let t = step as f64 * dt;
@@ -72,19 +78,43 @@ fn test_long_baseline_300s_stress_and_bounds() {
         let lap = system.get_hemo_lap();
 
         // Rastreamento instantâneo contínuo de pressões (desconsiderando os primeiros 2s de inicialização)
-        if lvp < min_lvp { min_lvp = lvp; }
-        if lvp > max_lvp { max_lvp = lvp; }
-        if t > 2000.0 {
-            if aop < min_aop { min_aop = aop; }
+        if lvp < min_lvp {
+            min_lvp = lvp;
         }
-        if aop > max_aop { max_aop = aop; }
-        if lap < min_lap { min_lap = lap; }
-        if lap > max_lap { max_lap = lap; }
+        if lvp > max_lvp {
+            max_lvp = lvp;
+        }
+        if t > 2000.0 {
+            if aop < min_aop {
+                min_aop = aop;
+            }
+        }
+        if aop > max_aop {
+            max_aop = aop;
+        }
+        if lap < min_lap {
+            min_lap = lap;
+        }
+        if lap > max_lap {
+            max_lap = lap;
+        }
 
         // Validação contínua contra NaN e Infinitos
-        assert!(!lvp.is_nan() && !lvp.is_infinite(), "LVP é NaN/Inf no passo {}", step);
-        assert!(!aop.is_nan() && !aop.is_infinite(), "AoP é NaN/Inf no passo {}", step);
-        assert!(!lap.is_nan() && !lap.is_infinite(), "LAP é NaN/Inf no passo {}", step);
+        assert!(
+            !lvp.is_nan() && !lvp.is_infinite(),
+            "LVP é NaN/Inf no passo {}",
+            step
+        );
+        assert!(
+            !aop.is_nan() && !aop.is_infinite(),
+            "AoP é NaN/Inf no passo {}",
+            step
+        );
+        assert!(
+            !lap.is_nan() && !lap.is_infinite(),
+            "LAP é NaN/Inf no passo {}",
+            step
+        );
 
         // Detecção de ativação ventricular (cruzamento ascendente de -20 mV)
         if last_v_vent <= -20.0 && v_vent > -20.0 {
@@ -95,33 +125,81 @@ fn test_long_baseline_300s_stress_and_bounds() {
                 let rr = t - last_beat_time;
                 let inst_bpm = 60000.0 / rr;
 
-                if inst_bpm < min_inst_bpm { min_inst_bpm = inst_bpm; }
-                if inst_bpm > max_inst_bpm { max_inst_bpm = inst_bpm; }
-                if rr < min_rr { min_rr = rr; }
-                if rr > max_rr { max_rr = rr; }
+                if inst_bpm < min_inst_bpm {
+                    min_inst_bpm = inst_bpm;
+                }
+                if inst_bpm > max_inst_bpm {
+                    max_inst_bpm = inst_bpm;
+                }
+                if rr < min_rr {
+                    min_rr = rr;
+                }
+                if rr > max_rr {
+                    max_rr = rr;
+                }
 
                 let hud = system.get_hud_metrics();
-                if hud.bpm < min_hud_bpm { min_hud_bpm = hud.bpm; }
-                if hud.bpm > max_hud_bpm { max_hud_bpm = hud.bpm; }
-                if hud.pr < min_pr { min_pr = hud.pr; }
-                if hud.pr > max_pr { max_pr = hud.pr; }
-                if hud.qrs < min_qrs { min_qrs = hud.qrs; }
-                if hud.qrs > max_qrs { max_qrs = hud.qrs; }
-                if hud.qt < min_qt { min_qt = hud.qt; }
-                if hud.qt > max_qt { max_qt = hud.qt; }
-                if hud.v_rest < min_vrest { min_vrest = hud.v_rest; }
-                if hud.v_rest > max_vrest { max_vrest = hud.v_rest; }
+                if hud.bpm < min_hud_bpm {
+                    min_hud_bpm = hud.bpm;
+                }
+                if hud.bpm > max_hud_bpm {
+                    max_hud_bpm = hud.bpm;
+                }
+                if hud.pr < min_pr {
+                    min_pr = hud.pr;
+                }
+                if hud.pr > max_pr {
+                    max_pr = hud.pr;
+                }
+                if hud.qrs < min_qrs {
+                    min_qrs = hud.qrs;
+                }
+                if hud.qrs > max_qrs {
+                    max_qrs = hud.qrs;
+                }
+                if hud.qt < min_qt {
+                    min_qt = hud.qt;
+                }
+                if hud.qt > max_qt {
+                    max_qt = hud.qt;
+                }
+                if hud.v_rest < min_vrest {
+                    min_vrest = hud.v_rest;
+                }
+                if hud.v_rest > max_vrest {
+                    max_vrest = hud.v_rest;
+                }
 
-                if hud.edv < min_edv { min_edv = hud.edv; }
-                if hud.edv > max_edv { max_edv = hud.edv; }
-                if hud.esv < min_esv { min_esv = hud.esv; }
-                if hud.esv > max_esv { max_esv = hud.esv; }
-                if hud.sv < min_sv { min_sv = hud.sv; }
-                if hud.sv > max_sv { max_sv = hud.sv; }
-                if hud.ef < min_ef { min_ef = hud.ef; }
-                if hud.ef > max_ef { max_ef = hud.ef; }
-                if hud.co < min_co { min_co = hud.co; }
-                if hud.co > max_co { max_co = hud.co; }
+                if hud.edv < min_edv {
+                    min_edv = hud.edv;
+                }
+                if hud.edv > max_edv {
+                    max_edv = hud.edv;
+                }
+                if hud.esv < min_esv {
+                    min_esv = hud.esv;
+                }
+                if hud.esv > max_esv {
+                    max_esv = hud.esv;
+                }
+                if hud.sv < min_sv {
+                    min_sv = hud.sv;
+                }
+                if hud.sv > max_sv {
+                    max_sv = hud.sv;
+                }
+                if hud.ef < min_ef {
+                    min_ef = hud.ef;
+                }
+                if hud.ef > max_ef {
+                    max_ef = hud.ef;
+                }
+                if hud.co < min_co {
+                    min_co = hud.co;
+                }
+                if hud.co > max_co {
+                    max_co = hud.co;
+                }
             }
             last_beat_time = t;
         }
@@ -133,8 +211,15 @@ fn test_long_baseline_300s_stress_and_bounds() {
             let hud = system.get_hud_metrics();
             println!(
                 "⏱️ t = {:5.0}s | Batimentos: {:4} (+{:2} nos últimos 30s) | FC: {:4.1} bpm | AoP: {:5.1}/{:4.1} mmHg | VDF: {:5.1} mL | FE: {:4.1}% | DC: {:4.2} L/min",
-                elapsed_sec, beat_count, beats_last_interval, hud.bpm,
-                system.get_aop(), min_aop, hud.edv, hud.ef, hud.co
+                elapsed_sec,
+                beat_count,
+                beats_last_interval,
+                hud.bpm,
+                system.get_aop(),
+                min_aop,
+                hud.edv,
+                hud.ef,
+                hud.co
             );
             beats_last_interval = 0;
         }
@@ -142,29 +227,94 @@ fn test_long_baseline_300s_stress_and_bounds() {
 
     let hud_final = system.get_hud_metrics();
 
-    println!("\n=========================================================================================");
+    println!(
+        "\n========================================================================================="
+    );
     println!("📊 RELATÓRIO DE BASELINE FISIOLÓGICA CONSOLIDADA (300 SEGUNDOS / 5 MINUTOS)");
-    println!("=========================================================================================");
-    println!("Parâmetro                       | Mínimo Observado | Máximo Observado | Valor Final    | Faixa Padrão");
-    println!("--------------------------------+------------------+------------------+----------------+------------------");
-    println!("Frequência Cardíaca Instantânea | {:6.1} bpm       | {:6.1} bpm       | ---            | 65.0 - 90.0 bpm", min_inst_bpm, max_inst_bpm);
-    println!("Frequência Cardíaca Suavizada   | {:6.1} bpm       | {:6.1} bpm       | {:6.1} bpm     | 70.0 - 85.0 bpm", min_hud_bpm, max_hud_bpm, hud_final.bpm);
-    println!("Intervalo RR                    | {:6.1} ms        | {:6.1} ms        | {:6.1} ms      | 660 - 920 ms", min_rr, max_rr, 60000.0 / hud_final.bpm);
-    println!("Intervalo PR                    | {:6.1} ms        | {:6.1} ms        | {:6.1} ms      | 120 - 200 ms", min_pr, max_pr, hud_final.pr);
-    println!("Duração do Complexo QRS         | {:6.1} ms        | {:6.1} ms        | {:6.1} ms      | 80 - 100 ms", min_qrs, max_qrs, hud_final.qrs);
-    println!("Intervalo QT                    | {:6.1} ms        | {:6.1} ms        | {:6.1} ms      | 360 - 450 ms", min_qt, max_qt, hud_final.qt);
-    println!("Potencial de Repouso Diastólico | {:6.1} mV        | {:6.1} mV        | {:6.1} mV      | -88.0 a -82.0 mV", min_vrest, max_vrest, hud_final.v_rest);
-    println!("Pressão Ventricular Sistólica   | ---              | {:6.1} mmHg      | ---            | 110 - 135 mmHg", max_lvp);
-    println!("Pressão Aórtica Sistólica (Pico)| ---              | {:6.1} mmHg      | ---            | 110 - 135 mmHg", max_aop);
-    println!("Pressão Aórtica Diastólica (Mín)| {:6.1} mmHg      | ---              | ---            | >= 65.0 mmHg", min_aop);
-    println!("Pressão Atrial Esquerda (Mín/Mx)| {:6.1} mmHg      | {:6.1} mmHg      | {:6.1} mmHg    | 4.0 a 16.0 mmHg", min_lap, max_lap, system.get_hemo_lap());
-    println!("Volume Diastólico Final (VDF)   | {:6.1} mL        | {:6.1} mL        | {:6.1} mL      | 110 - 135 mL", min_edv, max_edv, hud_final.edv);
-    println!("Volume Sistólico Final (VSF)    | {:6.1} mL        | {:6.1} mL        | {:6.1} mL      | 45 - 65 mL", min_esv, max_esv, hud_final.esv);
-    println!("Volume Sistólico Efetivo (VS)   | {:6.1} mL        | {:6.1} mL        | {:6.1} mL      | 55 - 80 mL", min_sv, max_sv, hud_final.sv);
-    println!("Fração de Ejeção (FE)           | {:6.1} %         | {:6.1} %         | {:6.1} %       | 50.0 - 65.0 %", min_ef, max_ef, hud_final.ef);
-    println!("Débito Cardíaco (DC)            | {:6.2} L/min     | {:6.2} L/min     | {:6.2} L/min   | 4.0 - 6.5 L/min", min_co, max_co, hud_final.co);
-    println!("Total de Batimentos em 5 min    | {:6} batimentos|                  |                | 360 - 420 batimentos", beat_count);
-    println!("=========================================================================================\n");
+    println!(
+        "========================================================================================="
+    );
+    println!(
+        "Parâmetro                       | Mínimo Observado | Máximo Observado | Valor Final    | Faixa Padrão"
+    );
+    println!(
+        "--------------------------------+------------------+------------------+----------------+------------------"
+    );
+    println!(
+        "Frequência Cardíaca Instantânea | {:6.1} bpm       | {:6.1} bpm       | ---            | 65.0 - 90.0 bpm",
+        min_inst_bpm, max_inst_bpm
+    );
+    println!(
+        "Frequência Cardíaca Suavizada   | {:6.1} bpm       | {:6.1} bpm       | {:6.1} bpm     | 70.0 - 85.0 bpm",
+        min_hud_bpm, max_hud_bpm, hud_final.bpm
+    );
+    println!(
+        "Intervalo RR                    | {:6.1} ms        | {:6.1} ms        | {:6.1} ms      | 660 - 920 ms",
+        min_rr,
+        max_rr,
+        60000.0 / hud_final.bpm
+    );
+    println!(
+        "Intervalo PR                    | {:6.1} ms        | {:6.1} ms        | {:6.1} ms      | 120 - 200 ms",
+        min_pr, max_pr, hud_final.pr
+    );
+    println!(
+        "Duração do Complexo QRS         | {:6.1} ms        | {:6.1} ms        | {:6.1} ms      | 80 - 100 ms",
+        min_qrs, max_qrs, hud_final.qrs
+    );
+    println!(
+        "Intervalo QT                    | {:6.1} ms        | {:6.1} ms        | {:6.1} ms      | 360 - 450 ms",
+        min_qt, max_qt, hud_final.qt
+    );
+    println!(
+        "Potencial de Repouso Diastólico | {:6.1} mV        | {:6.1} mV        | {:6.1} mV      | -88.0 a -82.0 mV",
+        min_vrest, max_vrest, hud_final.v_rest
+    );
+    println!(
+        "Pressão Ventricular Sistólica   | ---              | {:6.1} mmHg      | ---            | 110 - 135 mmHg",
+        max_lvp
+    );
+    println!(
+        "Pressão Aórtica Sistólica (Pico)| ---              | {:6.1} mmHg      | ---            | 110 - 135 mmHg",
+        max_aop
+    );
+    println!(
+        "Pressão Aórtica Diastólica (Mín)| {:6.1} mmHg      | ---              | ---            | >= 65.0 mmHg",
+        min_aop
+    );
+    println!(
+        "Pressão Atrial Esquerda (Mín/Mx)| {:6.1} mmHg      | {:6.1} mmHg      | {:6.1} mmHg    | 4.0 a 16.0 mmHg",
+        min_lap,
+        max_lap,
+        system.get_hemo_lap()
+    );
+    println!(
+        "Volume Diastólico Final (VDF)   | {:6.1} mL        | {:6.1} mL        | {:6.1} mL      | 110 - 135 mL",
+        min_edv, max_edv, hud_final.edv
+    );
+    println!(
+        "Volume Sistólico Final (VSF)    | {:6.1} mL        | {:6.1} mL        | {:6.1} mL      | 45 - 65 mL",
+        min_esv, max_esv, hud_final.esv
+    );
+    println!(
+        "Volume Sistólico Efetivo (VS)   | {:6.1} mL        | {:6.1} mL        | {:6.1} mL      | 55 - 80 mL",
+        min_sv, max_sv, hud_final.sv
+    );
+    println!(
+        "Fração de Ejeção (FE)           | {:6.1} %         | {:6.1} %         | {:6.1} %       | 50.0 - 65.0 %",
+        min_ef, max_ef, hud_final.ef
+    );
+    println!(
+        "Débito Cardíaco (DC)            | {:6.2} L/min     | {:6.2} L/min     | {:6.2} L/min   | 4.0 - 6.5 L/min",
+        min_co, max_co, hud_final.co
+    );
+    println!(
+        "Total de Batimentos em 5 min    | {:6} batimentos|                  |                | 360 - 420 batimentos",
+        beat_count
+    );
+    println!(
+        "=========================================================================================\n"
+    );
 
     // ASSERÇÕES ESTRITAS DE BASELINE (Garantia de que a simulação nunca definha e permanece eutrófica)
     // 1. Cadência do Marcapasso
@@ -208,7 +358,8 @@ fn test_long_baseline_300s_stress_and_bounds() {
     assert!(
         min_lap >= 4.0 && max_lap <= 20.0,
         "Pressão atrial esquerda fora da faixa fisiológica: min={:.1}, max={:.1} mmHg",
-        min_lap, max_lap
+        min_lap,
+        max_lap
     );
 
     // 3. Volumes e Função de Bomba

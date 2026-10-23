@@ -197,12 +197,17 @@ impl PurkinjeCell {
         // Fast sodium current: m gate
         let m_inf = 1.0 / (1.0 + f64::exp((-56.86 - v) / 9.03)).powi(2);
         let alpha_m = 1.0 / (1.0 + f64::exp((-60.0 - v) / 5.0));
-        let beta_m = 0.1 / (1.0 + f64::exp((v + 35.0) / 5.0)) + 0.1 / (1.0 + f64::exp((v - 50.0) / 200.0));
+        let beta_m =
+            0.1 / (1.0 + f64::exp((v + 35.0) / 5.0)) + 0.1 / (1.0 + f64::exp((v - 50.0) / 200.0));
         let tau_m = alpha_m * beta_m;
 
         // Fast sodium current: h gate
         let h_inf = 1.0 / (1.0 + f64::exp((v + 71.55) / 7.43)).powi(2);
-        let alpha_h = if v < -40.0 { 0.057 * f64::exp(-(v + 80.0) / 6.8) } else { 0.0 };
+        let alpha_h = if v < -40.0 {
+            0.057 * f64::exp(-(v + 80.0) / 6.8)
+        } else {
+            0.0
+        };
         let beta_h = if v < -40.0 {
             2.7 * f64::exp(0.079 * v) + 310000.0 * f64::exp(0.3485 * v)
         } else {
@@ -235,11 +240,14 @@ impl PurkinjeCell {
         // --- Transmembrane Currents ---
         // Na+/K+ pump
         let i_nak = (((P_NAK * p.ko / (p.ko + K_MK)) * self.na_i / (self.na_i + K_MNA))
-            / (1.0 + 0.1245 * f64::exp(-0.1 * v * F / (R * T)) + 0.0353 * f64::exp(-v * F / (R * T))))
+            / (1.0
+                + 0.1245 * f64::exp(-0.1 * v * F / (R * T))
+                + 0.0353 * f64::exp(-v * F / (R * T))))
             * p.block_nak;
 
         // Fast Na+
-        let i_na = G_NA * self.m.powi(3) * self.h * self.j * (v - e_na) * p.block_na * p.isch_block();
+        let i_na =
+            G_NA * self.m.powi(3) * self.h * self.j * (v - e_na) * p.block_na * p.isch_block();
 
         // Background Na+
         let i_b_na = G_BNA * (v - e_na);
@@ -271,16 +279,21 @@ impl PurkinjeCell {
         let i_sus = G_SUS * a_sus * (v - e_k) * p.block_k;
 
         // Rapid delayed rectifier K+
-        let i_kr = G_KR * (p.ko / 5.4).sqrt() * self.xr1 * self.xr2 * (v - e_k) * p.effective_ikr_block();
+        let i_kr =
+            G_KR * (p.ko / 5.4).sqrt() * self.xr1 * self.xr2 * (v - e_k) * p.effective_ikr_block();
 
         // Slow delayed rectifier K+
         let i_ks = G_KS * self.xs.powi(2) * (v - e_ks) * p.block_k;
 
         // L-type calcium current
-        let i_cal = (((G_CAL * self.d * self.f * self.f2 * self.f_cass * 4.0 * (v - 15.0) * F.powi(2) / (R * T))
-            * (0.25 * self.ca_ss * f64::exp(2.0 * (v - 15.0) * F / (R * T)) - p.cao))
-            / (f64::exp(2.0 * (v - 15.0) * F / (R * T)) - 1.0))
-            * p.block_ca * p.isch_block() * p.ans_ca_modifier();
+        let i_cal =
+            (((G_CAL * self.d * self.f * self.f2 * self.f_cass * 4.0 * (v - 15.0) * F.powi(2)
+                / (R * T))
+                * (0.25 * self.ca_ss * f64::exp(2.0 * (v - 15.0) * F / (R * T)) - p.cao))
+                / (f64::exp(2.0 * (v - 15.0) * F / (R * T)) - 1.0))
+                * p.block_ca
+                * p.isch_block()
+                * p.ans_ca_modifier();
 
         // Background Ca2+
         let i_b_ca = G_BCA * (v - e_ca);
@@ -295,11 +308,27 @@ impl PurkinjeCell {
         let i_stim = self.i_stim;
 
         // Membrane potential derivative dv/dt
-        let dv = -(i_k1 + i_to + i_sus + i_kr + i_ks + i_cal + i_nak + i_na + i_b_na + i_naca + i_b_ca + i_p_k + i_p_ca + i_f + i_stim);
+        let dv = -(i_k1
+            + i_to
+            + i_sus
+            + i_kr
+            + i_ks
+            + i_cal
+            + i_nak
+            + i_na
+            + i_b_na
+            + i_naca
+            + i_b_ca
+            + i_p_k
+            + i_p_ca
+            + i_f
+            + i_stim);
 
         // Ion concentrations derivatives
         let dna_i = (-(i_na + i_b_na + i_f_na + 3.0 * i_nak + 3.0 * i_naca) / (V_C * F)) * CM;
-        let dk_i = (-(i_k1 + i_to + i_f_k + i_sus + i_kr + i_ks + i_p_k + i_stim - 2.0 * i_nak) / (V_C * F)) * CM;
+        let dk_i = (-(i_k1 + i_to + i_f_k + i_sus + i_kr + i_ks + i_p_k + i_stim - 2.0 * i_nak)
+            / (V_C * F))
+            * CM;
 
         // Sarcoplasmic reticulum and subspace calcium fluxes
         let i_up = VMAX_UP / (1.0 + K_UP.powi(2) / self.ca_i.powi(2));
@@ -315,22 +344,25 @@ impl PurkinjeCell {
 
         // Calcium buffering
         let ca_i_bufc = 1.0 / (1.0 + (BUF_C * K_BUF_C) / (self.ca_i + K_BUF_C).powi(2));
-        let dca_i = ca_i_bufc * (((i_leak - i_up) * V_SR) / V_C + i_xfer - ((i_b_ca + i_p_ca - 2.0 * i_naca) * CM) / (2.0 * V_C * F));
+        let dca_i = ca_i_bufc
+            * (((i_leak - i_up) * V_SR) / V_C + i_xfer
+                - ((i_b_ca + i_p_ca - 2.0 * i_naca) * CM) / (2.0 * V_C * F));
 
         let ca_sr_bufsr = 1.0 / (1.0 + (BUF_SR * K_BUF_SR) / (self.ca_sr + K_BUF_SR).powi(2));
         let dca_sr = ca_sr_bufsr * (i_up - (i_rel + i_leak));
 
         let ca_ss_bufss = 1.0 / (1.0 + (BUF_SS * K_BUF_SS) / (self.ca_ss + K_BUF_SS).powi(2));
-        let dca_ss = ca_ss_bufss * (-(i_cal * CM) / (2.0 * V_SS * F) + (i_rel * V_SR) / V_SS - (i_xfer * V_C) / V_SS);
+        let dca_ss = ca_ss_bufss
+            * (-(i_cal * CM) / (2.0 * V_SS * F) + (i_rel * V_SR) / V_SS - (i_xfer * V_C) / V_SS);
 
-#[inline(always)]
-fn rush_larsen(val: f64, inf: f64, tau: f64, dt: f64) -> f64 {
-    if tau > 1e-7 {
-        inf + (val - inf) * (-dt / tau).exp()
-    } else {
-        inf
-    }
-}
+        #[inline(always)]
+        fn rush_larsen(val: f64, inf: f64, tau: f64, dt: f64) -> f64 {
+            if tau > 1e-7 {
+                inf + (val - inf) * (-dt / tau).exp()
+            } else {
+                inf
+            }
+        }
 
         // Update states (Rush-Larsen for gates, Forward Euler for concentrations & voltage)
         self.v += dv * dt;
@@ -347,7 +379,7 @@ fn rush_larsen(val: f64, inf: f64, tau: f64, dt: f64) -> f64 {
         self.h = rush_larsen(self.h, h_inf, tau_h, dt).clamp(0.0, 1.0);
         self.j = rush_larsen(self.j, j_inf, tau_j, dt).clamp(0.0, 1.0);
         self.d = rush_larsen(self.d, d_inf, tau_d, dt).clamp(0.0, 1.0);
-        
+
         self.na_i = (self.na_i + dna_i * dt).max(1.0);
         self.k_i = (self.k_i + dk_i * dt).max(1.0);
         self.ca_i = (self.ca_i + dca_i * dt).max(1e-7);

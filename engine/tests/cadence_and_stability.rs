@@ -13,11 +13,11 @@ fn test_sinus_cadence_and_bpm_stability() {
         let t = step as f64 * dt;
         system.step(dt);
         let v_vent = system.get_vent_endo_v();
-        
+
         // Detecção de ativação ventricular (cruzamento ascendente de -20 mV)
         if last_v_vent <= -20.0 && v_vent > -20.0 {
             beat_num += 1;
-            
+
             // O primeiro batimento DEVE vir da propagação sinusal normal (> 450 ms),
             // comprovando a ausência de extrassístoles precoces de Purkinje (artefato de 111 ms).
             if beat_num == 1 {
@@ -27,24 +27,27 @@ fn test_sinus_cadence_and_bpm_stability() {
                     t
                 );
             }
-            
+
             if last_beat_time > 0.0 {
                 let rr = t - last_beat_time;
                 let inst_bpm = 60000.0 / rr;
-                
+
                 // Frequência instantânea deve estar estritamente na faixa fisiológica (70 a 85 BPM)
                 assert!(
                     inst_bpm >= 70.0 && inst_bpm <= 85.0,
                     "Batimento #{} com BPM instantâneo anômalo: {:.1} (RR = {:.1} ms)",
-                    beat_num, inst_bpm, rr
+                    beat_num,
+                    inst_bpm,
+                    rr
                 );
-                
+
                 // Métrica suavizada do HUD não pode saltar para ~98 BPM
                 let hud = system.get_hud_metrics();
                 assert!(
                     hud.bpm >= 72.0 && hud.bpm <= 80.0,
                     "Batimento #{} com HUD BPM fora da faixa: {:.1}",
-                    beat_num, hud.bpm
+                    beat_num,
+                    hud.bpm
                 );
             }
             last_beat_time = t;
@@ -65,9 +68,10 @@ fn test_numerical_stability_no_nan_or_inf() {
     let mut system = HeartSystem::new();
     let dt = 0.01;
 
-    for step in 0..500_000 { // 5 segundos
+    for step in 0..500_000 {
+        // 5 segundos
         system.step(dt);
-        
+
         // Verifica que nenhuma variável vital é NaN ou Infinita
         let sa = system.get_sa_v();
         let av = system.get_av_v();
@@ -79,15 +83,51 @@ fn test_numerical_stability_no_nan_or_inf() {
         let aop = system.get_aop();
         let ecg = system.compute_ecg();
 
-        assert!(!sa.is_nan() && !sa.is_infinite(), "SA V é NaN/Inf no passo {}", step);
-        assert!(!av.is_nan() && !av.is_infinite(), "AV V é NaN/Inf no passo {}", step);
-        assert!(!atr.is_nan() && !atr.is_infinite(), "Atrium V é NaN/Inf no passo {}", step);
-        assert!(!purk.is_nan() && !purk.is_infinite(), "Purkinje V é NaN/Inf no passo {}", step);
-        assert!(!endo.is_nan() && !endo.is_infinite(), "Endo V é NaN/Inf no passo {}", step);
-        assert!(!epi.is_nan() && !epi.is_infinite(), "Epi V é NaN/Inf no passo {}", step);
-        assert!(!lvp.is_nan() && !lvp.is_infinite(), "LVP é NaN/Inf no passo {}", step);
-        assert!(!aop.is_nan() && !aop.is_infinite(), "AoP é NaN/Inf no passo {}", step);
-        assert!(!ecg.is_nan() && !ecg.is_infinite(), "ECG é NaN/Inf no passo {}", step);
+        assert!(
+            !sa.is_nan() && !sa.is_infinite(),
+            "SA V é NaN/Inf no passo {}",
+            step
+        );
+        assert!(
+            !av.is_nan() && !av.is_infinite(),
+            "AV V é NaN/Inf no passo {}",
+            step
+        );
+        assert!(
+            !atr.is_nan() && !atr.is_infinite(),
+            "Atrium V é NaN/Inf no passo {}",
+            step
+        );
+        assert!(
+            !purk.is_nan() && !purk.is_infinite(),
+            "Purkinje V é NaN/Inf no passo {}",
+            step
+        );
+        assert!(
+            !endo.is_nan() && !endo.is_infinite(),
+            "Endo V é NaN/Inf no passo {}",
+            step
+        );
+        assert!(
+            !epi.is_nan() && !epi.is_infinite(),
+            "Epi V é NaN/Inf no passo {}",
+            step
+        );
+        assert!(
+            !lvp.is_nan() && !lvp.is_infinite(),
+            "LVP é NaN/Inf no passo {}",
+            step
+        );
+        assert!(
+            !aop.is_nan() && !aop.is_infinite(),
+            "AoP é NaN/Inf no passo {}",
+            step
+        );
+        assert!(
+            !ecg.is_nan() && !ecg.is_infinite(),
+            "ECG é NaN/Inf no passo {}",
+            step
+        );
     }
 }
 
@@ -113,14 +153,21 @@ fn test_rsa_long_term_stability_and_normotension() {
             if last_beat_time > 0.0 {
                 let rr = t - last_beat_time;
                 let inst_bpm = 60000.0 / rr;
-                if inst_bpm < min_bpm { min_bpm = inst_bpm; }
-                if inst_bpm > max_bpm { max_bpm = inst_bpm; }
+                if inst_bpm < min_bpm {
+                    min_bpm = inst_bpm;
+                }
+                if inst_bpm > max_bpm {
+                    max_bpm = inst_bpm;
+                }
 
                 // Mesmo com flutuações respiratórias, a FC instantânea nunca deve colapsar (< 65 BPM) nem disparar (> 92 BPM)
                 assert!(
                     inst_bpm >= 65.0 && inst_bpm <= 92.0,
                     "Batimento #{} com BPM instantâneo anômalo sob RSA: {:.1} (RR = {:.1} ms em t={:.1}s)",
-                    beat_count, inst_bpm, rr, t / 1000.0
+                    beat_count,
+                    inst_bpm,
+                    rr,
+                    t / 1000.0
                 );
             }
             last_beat_time = t;
@@ -147,8 +194,19 @@ fn test_rsa_long_term_stability_and_normotension() {
     let ef = system.get_hemo_ef();
     let sv = system.get_hemo_sv();
     let edv = system.get_hemo_edv();
-    assert!(ef >= 50.0 && ef <= 65.0, "Fração de ejeção fora da faixa sob RSA: {:.1}%", ef);
-    assert!(sv >= 60.0 && sv <= 85.0, "Volume sistólico fora da faixa sob RSA: {:.1} mL", sv);
-    assert!(edv >= 115.0 && edv <= 140.0, "VDF fora da faixa sob RSA: {:.1} mL", edv);
+    assert!(
+        ef >= 50.0 && ef <= 65.0,
+        "Fração de ejeção fora da faixa sob RSA: {:.1}%",
+        ef
+    );
+    assert!(
+        sv >= 60.0 && sv <= 85.0,
+        "Volume sistólico fora da faixa sob RSA: {:.1} mL",
+        sv
+    );
+    assert!(
+        edv >= 115.0 && edv <= 140.0,
+        "VDF fora da faixa sob RSA: {:.1} mL",
+        edv
+    );
 }
-

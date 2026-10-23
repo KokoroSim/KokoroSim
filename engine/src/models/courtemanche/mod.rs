@@ -162,26 +162,29 @@ impl AtriumCell {
 
     pub fn step(&mut self, dt: f64, p: &crate::models::Pharmaco) {
         let c = Constants::new(p);
-        
+
         let f_ca_inf = (1.0 + self.ca_i / 0.00035).powi(-1);
-        
+
         let d_inf = (1.0 + ((self.v + 10.0) / -8.0).exp()).powi(-1);
         let tau_d = if (self.v + 10.0).abs() < 1e-10 {
             4.579 / (1.0 + ((self.v + 10.0) / -6.24).exp())
         } else {
-            (1.0 - ((self.v + 10.0) / -6.24).exp()) / (0.035 * (self.v + 10.0) * (1.0 + ((self.v + 10.0) / -6.24).exp()))
+            (1.0 - ((self.v + 10.0) / -6.24).exp())
+                / (0.035 * (self.v + 10.0) * (1.0 + ((self.v + 10.0) / -6.24).exp()))
         };
-        
+
         let f_inf = (-(self.v + 28.0) / 6.9).exp() / (1.0 + (-(self.v + 28.0) / 6.9).exp());
-        let tau_f = 9.0 * (0.0197 * (-(0.0337_f64).powi(2) * (self.v + 10.0).powi(2)).exp() + 0.02).powi(-1);
-        
+        let tau_f = 9.0
+            * (0.0197 * (-(0.0337_f64).powi(2) * (self.v + 10.0).powi(2)).exp() + 0.02).powi(-1);
+
         let tau_w = if (self.v - 7.9).abs() < 1e-10 {
             6.0 * 0.2 / 1.3
         } else {
-            6.0 * (1.0 - (-(self.v - 7.9) / 5.0).exp()) / ((1.0 + 0.3 * (-(self.v - 7.9) / 5.0).exp()) * 1.0 * (self.v - 7.9))
+            6.0 * (1.0 - (-(self.v - 7.9) / 5.0).exp())
+                / ((1.0 + 0.3 * (-(self.v - 7.9) / 5.0).exp()) * 1.0 * (self.v - 7.9))
         };
         let w_inf = 1.0 - (1.0 + (-(self.v - 40.0) / 17.0).exp()).powi(-1);
-        
+
         let alpha_m = if self.v == -47.13 {
             3.2
         } else {
@@ -190,7 +193,7 @@ impl AtriumCell {
         let beta_m = 0.08 * (-self.v / 11.0).exp();
         let m_inf = alpha_m / (alpha_m + beta_m);
         let tau_m = 1.0 / (alpha_m + beta_m);
-        
+
         let alpha_h = if self.v < -40.0 {
             0.135 * ((self.v + 80.0) / -6.8).exp()
         } else {
@@ -203,9 +206,11 @@ impl AtriumCell {
         };
         let h_inf = alpha_h / (alpha_h + beta_h);
         let tau_h = 1.0 / (alpha_h + beta_h);
-        
+
         let alpha_j = if self.v < -40.0 {
-            (-127140.0 * (0.2444 * self.v).exp() - 3.474e-5 * (-0.04391 * self.v).exp()) * (self.v + 37.78) / (1.0 + (0.311 * (self.v + 79.23)).exp())
+            (-127140.0 * (0.2444 * self.v).exp() - 3.474e-5 * (-0.04391 * self.v).exp())
+                * (self.v + 37.78)
+                / (1.0 + (0.311 * (self.v + 79.23)).exp())
         } else {
             0.0
         };
@@ -216,27 +221,29 @@ impl AtriumCell {
         };
         let j_inf = alpha_j / (alpha_j + beta_j);
         let tau_j = 1.0 / (alpha_j + beta_j);
-        
-        let alpha_oa = 0.65 * (((self.v - -10.0) / -8.5).exp() + ((self.v - -10.0 - 40.0) / -59.0).exp()).powi(-1);
+
+        let alpha_oa = 0.65
+            * (((self.v - -10.0) / -8.5).exp() + ((self.v - -10.0 - 40.0) / -59.0).exp()).powi(-1);
         let beta_oa = 0.65 * (2.5 + ((self.v - -10.0 + 72.0) / 17.0).exp()).powi(-1);
         let tau_oa = (alpha_oa + beta_oa).powi(-1) / c.k_q10;
         let oa_inf = (1.0 + ((self.v - -10.0 + 10.47) / -17.54).exp()).powi(-1);
-        
+
         let alpha_oi = (18.53 + 1.0 * ((self.v - -10.0 + 103.7) / 10.95).exp()).powi(-1);
         let beta_oi = (35.56 + 1.0 * ((self.v - -10.0 - 8.74) / -7.44).exp()).powi(-1);
         let tau_oi = (alpha_oi + beta_oi).powi(-1) / c.k_q10;
         let oi_inf = (1.0 + ((self.v - -10.0 + 33.1) / 5.3).exp()).powi(-1);
-        
-        let alpha_ua = 0.65 * (((self.v - -10.0) / -8.5).exp() + ((self.v - -10.0 - 40.0) / -59.0).exp()).powi(-1);
+
+        let alpha_ua = 0.65
+            * (((self.v - -10.0) / -8.5).exp() + ((self.v - -10.0 - 40.0) / -59.0).exp()).powi(-1);
         let beta_ua = 0.65 * (2.5 + ((self.v - -10.0 + 72.0) / 17.0).exp()).powi(-1);
         let tau_ua = (alpha_ua + beta_ua).powi(-1) / c.k_q10;
         let ua_inf = (1.0 + ((self.v - -10.0 + 20.3) / -9.6).exp()).powi(-1);
-        
+
         let alpha_ui = (21.0 + 1.0 * ((self.v - -10.0 - 195.0) / -28.0).exp()).powi(-1);
         let beta_ui = 1.0 / ((self.v - -10.0 - 168.0) / -16.0).exp();
         let tau_ui = (alpha_ui + beta_ui).powi(-1) / c.k_q10;
         let ui_inf = (1.0 + ((self.v - -10.0 - 109.45) / 27.48).exp()).powi(-1);
-        
+
         let alpha_xr = if (self.v + 14.1).abs() < 1e-10 {
             0.0015
         } else {
@@ -249,7 +256,7 @@ impl AtriumCell {
         };
         let tau_xr = (alpha_xr + beta_xr).powi(-1);
         let xr_inf = (1.0 + ((self.v + 14.1) / -6.5).exp()).powi(-1);
-        
+
         let alpha_xs = if (self.v - 19.9).abs() < 1e-10 {
             0.00068
         } else {
@@ -262,63 +269,111 @@ impl AtriumCell {
         };
         let tau_xs = 0.5 * (alpha_xs + beta_xs).powi(-1);
         let xs_inf = (1.0 + ((self.v - 19.9) / -12.7).exp()).powf(-0.5);
-        
+
         let e_k = (c.r * c.t / c.f_faraday) * (p.effective_ko() / self.k_i).ln();
         let i_k1 = (c.cm * c.g_k1 * (self.v - e_k)) / (1.0 + (0.07 * (self.v + 80.0)).exp());
         let i_to = c.cm * c.g_to * self.oa.powi(3) * self.oi * (self.v - e_k) * p.block_k;
         let g_kur = 0.005 + 0.05 / (1.0 + ((self.v - 15.0) / -13.0).exp());
         let i_kur = c.cm * g_kur * self.ua.powi(3) * self.ui * (self.v - e_k) * p.block_k;
-        let i_kr = (c.cm * c.g_kr * self.xr * (self.v - e_k)) / (1.0 + ((self.v + 15.0) / 22.4).exp()) * p.effective_ikr_block();
+        let i_kr = (c.cm * c.g_kr * self.xr * (self.v - e_k))
+            / (1.0 + ((self.v + 15.0) / 22.4).exp())
+            * p.effective_ikr_block();
         let i_ks = c.cm * c.g_ks * self.xs.powi(2) * (self.v - e_k) * p.block_k;
-        
-        let f_nak = (1.0 + 0.1245 * (-0.1 * c.f_faraday * self.v / (c.r * c.t)).exp() + 0.0365 * c.sigma * (-c.f_faraday * self.v / (c.r * c.t)).exp()).powi(-1);
-        let i_nak = (c.cm * c.i_nak_max * f_nak / (1.0 + (c.km_na_i / self.na_i).powf(1.5))) * c.k_o / (c.k_o + c.km_k_o) * p.block_nak;
+
+        let f_nak = (1.0
+            + 0.1245 * (-0.1 * c.f_faraday * self.v / (c.r * c.t)).exp()
+            + 0.0365 * c.sigma * (-c.f_faraday * self.v / (c.r * c.t)).exp())
+        .powi(-1);
+        let i_nak = (c.cm * c.i_nak_max * f_nak / (1.0 + (c.km_na_i / self.na_i).powf(1.5)))
+            * c.k_o
+            / (c.k_o + c.km_k_o)
+            * p.block_nak;
         let i_b_k = c.cm * c.g_b_k * (self.v - e_k);
-        let dk_i = (2.0 * i_nak - (i_k1 + i_to + i_kur + i_kr + i_ks + i_b_k)) / (c.v_i * c.f_faraday);
-        
+        let dk_i =
+            (2.0 * i_nak - (i_k1 + i_to + i_kur + i_kr + i_ks + i_b_k)) / (c.v_i * c.f_faraday);
+
         let e_na = (c.r * c.t / c.f_faraday) * (c.na_o / self.na_i).ln();
-        let i_na = c.cm * c.g_na * self.m.powi(3) * self.h * self.j * (self.v - e_na) * p.block_na * p.isch_block();
-        
+        let i_na = c.cm
+            * c.g_na
+            * self.m.powi(3)
+            * self.h
+            * self.j
+            * (self.v - e_na)
+            * p.block_na
+            * p.isch_block();
+
         let exp_v = (c.gamma * c.f_faraday * self.v / (c.r * c.t)).exp();
         let exp_v_min1 = ((c.gamma - 1.0) * c.f_faraday * self.v / (c.r * c.t)).exp();
-        
-        let i_naca = (c.cm * c.i_naca_max * (exp_v * self.na_i.powi(3) * c.ca_o - exp_v_min1 * c.na_o.powi(3) * self.ca_i)) / ((c.k_mna.powi(3) + c.na_o.powi(3)) * (c.k_mca + c.ca_o) * (1.0 + c.k_sat * exp_v_min1));
-        
+
+        let i_naca = (c.cm
+            * c.i_naca_max
+            * (exp_v * self.na_i.powi(3) * c.ca_o - exp_v_min1 * c.na_o.powi(3) * self.ca_i))
+            / ((c.k_mna.powi(3) + c.na_o.powi(3))
+                * (c.k_mca + c.ca_o)
+                * (1.0 + c.k_sat * exp_v_min1));
+
         let i_b_na = c.cm * c.g_b_na * (self.v - e_na);
         let dna_i = (-3.0 * i_nak - (3.0 * i_naca + i_b_na + i_na)) / (c.v_i * c.f_faraday);
-        
+
         // Stimulus (controlled externally by conduction system)
         let i_st = self.i_st;
-        
-        let i_ca_l = c.cm * c.g_ca_l * self.d * self.f * self.f_ca * (self.v - 65.0) * p.block_ca * p.isch_block() * p.ans_ca_modifier();
+
+        let i_ca_l = c.cm
+            * c.g_ca_l
+            * self.d
+            * self.f
+            * self.f_ca
+            * (self.v - 65.0)
+            * p.block_ca
+            * p.isch_block()
+            * p.ans_ca_modifier();
         let i_cap = (c.cm * c.i_cap_max * self.ca_i) / (0.0005 + self.ca_i);
         let e_ca = (c.r * c.t / (2.0 * c.f_faraday)) * (c.ca_o / self.ca_i).ln();
         let i_b_ca = c.cm * c.g_b_ca * (self.v - e_ca);
-        
-        let dv = -(i_na + i_k1 + i_to + i_kur + i_kr + i_ks + i_b_na + i_b_ca + i_nak + i_cap + i_naca + i_ca_l + i_st) / c.cm;
-        
+
+        let dv = -(i_na
+            + i_k1
+            + i_to
+            + i_kur
+            + i_kr
+            + i_ks
+            + i_b_na
+            + i_b_ca
+            + i_nak
+            + i_cap
+            + i_naca
+            + i_ca_l
+            + i_st)
+            / c.cm;
+
         let i_rel = c.k_rel * self.u.powi(2) * self.v_gate * self.w * (self.ca_rel - self.ca_i);
         let i_tr = (self.ca_up - self.ca_rel) / c.tau_tr;
-        
-        let dca_rel = (i_tr - i_rel) * (1.0 + (c.csqn_max * c.km_csqn) / (self.ca_rel + c.km_csqn).powi(2)).powi(-1);
-        
-        let fn_val = 1000.0 * (1e-15 * c.v_rel * i_rel - (1e-15 / (2.0 * c.f_faraday)) * (0.5 * i_ca_l - 0.2 * i_naca));
-        
+
+        let dca_rel = (i_tr - i_rel)
+            * (1.0 + (c.csqn_max * c.km_csqn) / (self.ca_rel + c.km_csqn).powi(2)).powi(-1);
+
+        let fn_val = 1000.0
+            * (1e-15 * c.v_rel * i_rel
+                - (1e-15 / (2.0 * c.f_faraday)) * (0.5 * i_ca_l - 0.2 * i_naca));
+
         let u_inf = (1.0 + (-(fn_val - 3.4175e-13) / 1.367e-15).exp()).powi(-1);
-        
+
         let tau_v_gate = 1.91 + 2.09 * (1.0 + (-(fn_val - 3.4175e-13) / 1.367e-15).exp()).powi(-1);
         let v_inf = 1.0 - (1.0 + (-(fn_val - 6.835e-14) / 1.367e-15).exp()).powi(-1);
-        
+
         let i_up = c.i_up_max / (1.0 + c.k_up / self.ca_i);
         let i_up_leak = (c.i_up_max * self.ca_up) / c.ca_up_max;
-        
+
         let dca_up = i_up - (i_up_leak + (i_tr * c.v_rel) / c.v_up);
-        
-        let b1 = (2.0 * i_naca - (i_cap + i_ca_l + i_b_ca)) / (2.0 * c.v_i * c.f_faraday) + (c.v_up * (i_up_leak - i_up) + i_rel * c.v_rel) / c.v_i;
-        let b2 = 1.0 + (c.trpn_max * c.km_trpn) / (self.ca_i + c.km_trpn).powi(2) + (c.cmdn_max * c.km_cmdn) / (self.ca_i + c.km_cmdn).powi(2);
-        
+
+        let b1 = (2.0 * i_naca - (i_cap + i_ca_l + i_b_ca)) / (2.0 * c.v_i * c.f_faraday)
+            + (c.v_up * (i_up_leak - i_up) + i_rel * c.v_rel) / c.v_i;
+        let b2 = 1.0
+            + (c.trpn_max * c.km_trpn) / (self.ca_i + c.km_trpn).powi(2)
+            + (c.cmdn_max * c.km_cmdn) / (self.ca_i + c.km_cmdn).powi(2);
+
         let dca_i = b1 / b2;
-        
+
         #[inline(always)]
         fn rush_larsen(val: f64, inf: f64, tau: f64, dt: f64) -> f64 {
             if tau > 1e-7 {
