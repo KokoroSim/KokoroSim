@@ -11,6 +11,8 @@ jobs:
   test:
     name: Executar Suíte de Testes Biofísicos
     runs-on: ubuntu-latest
+    container:
+      image: gambi.2lp.in/lumen/gost-ci-cross:latest
     steps:
       - name: Checkout do Repositório
         uses: actions/checkout@v4
