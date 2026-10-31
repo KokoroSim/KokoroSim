@@ -20,12 +20,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     <!-- Open Graph / Facebook / WhatsApp / Telegram / LinkedIn -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://kokorosim.github.io/">
+    <meta property="og:url" content="https://kokorosim.2lp.in/">
     <meta property="og:site_name" content="KokoroSim">
     <meta property="og:title" content="__PAGE_TITLE__">
     <meta property="og:description" content="Simulador cardíaco open source de eletrofisiologia, dromotropismo e hemodinâmica com Rust e Wasm.">
-    <meta property="og:image" content="https://kokorosim.github.io/assets/og_preview.png">
-    <meta property="og:image:secure_url" content="https://kokorosim.github.io/assets/og_preview.png">
+    <meta property="og:image" content="https://kokorosim.2lp.in/assets/og_preview.png">
+    <meta property="og:image:secure_url" content="https://kokorosim.2lp.in/assets/og_preview.png">
     <meta property="og:image:type" content="image/png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
@@ -33,10 +33,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     <!-- Twitter (X) Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="https://kokorosim.github.io/">
+    <meta name="twitter:url" content="https://kokorosim.2lp.in/">
     <meta name="twitter:title" content="__PAGE_TITLE__">
     <meta name="twitter:description" content="Simulador cardíaco open source de eletrofisiologia, dromotropismo e hemodinâmica com Rust e Wasm.">
-    <meta name="twitter:image" content="https://kokorosim.github.io/assets/og_preview.png">
+    <meta name="twitter:image" content="https://kokorosim.2lp.in/assets/og_preview.png">
     <meta name="twitter:image:alt" content="KokoroSim — Simulador Cardíaco Open Source: Eletrofisiológico, Dromotrópico e Hemodinâmico">
     <link rel="icon" type="image/png" href="assets/icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
