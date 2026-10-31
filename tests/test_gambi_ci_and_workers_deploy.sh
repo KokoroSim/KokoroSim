@@ -73,5 +73,28 @@ if ! grep -q 'kokorosim\.2lp\.in' "$BUILD_DOCS"; then
 fi
 echo "OK: build_docs.py configurado com o domínio canônico kokorosim.2lp.in."
 
+# 6. Testes de Mutação (Fase 7)
+echo -n "-> [MUTAÇÃO] Testando sensibilidade a mutação no wrangler.jsonc... "
+MUTANT_WRANGLER=$(mktemp)
+sed 's/kokorosim\.2lp\.in/externo.exemplo.com/g' "$WRANGLER_JSONC" > "$MUTANT_WRANGLER"
+if grep -q '"kokorosim\.2lp\.in"' "$MUTANT_WRANGLER"; then
+    rm -f "$MUTANT_WRANGLER"
+    echo "FALHA: Mutação no wrangler.jsonc não alterou o domínio."
+    exit 1
+fi
+rm -f "$MUTANT_WRANGLER"
+echo "OK: Mutante de rota detectado."
+
+echo -n "-> [MUTAÇÃO] Testando sensibilidade a retorno de imagem externa no CI... "
+MUTANT_CI=$(mktemp)
+sed 's|gambi\.2lp\.in/lumen/gost-ci-cross:latest|codeberg.org/lumenpink/gost-ci-wasm:latest|g' "$FORGEJO_CI" > "$MUTANT_CI"
+if grep -q 'gambi\.2lp\.in/lumen/gost-ci-cross:latest' "$MUTANT_CI"; then
+    rm -f "$MUTANT_CI"
+    echo "FALHA: Mutação de imagem não substituiu a imagem gambi."
+    exit 1
+fi
+rm -f "$MUTANT_CI"
+echo "OK: Mutante de imagem externa detectado."
+
 echo "================================================================="
-echo "SUCESSO: Todas as asserções passaram (GREEN)!"
+echo "SUCESSO: Todas as asserções e testes de mutação passaram (GREEN)!"

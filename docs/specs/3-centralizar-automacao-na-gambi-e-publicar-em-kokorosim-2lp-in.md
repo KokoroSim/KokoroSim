@@ -28,3 +28,8 @@ Além disso, KokoroSim deve ser entregue publicamente através da nossa rede cen
    - `.forgejo/workflows/ci.yml` válido e referenciando apenas `gambi.2lp.in`.
    - `wrangler.jsonc` sintaticamente válido e apontando para `kokorosim.2lp.in`.
    - Teste automatizado validando a conformidade dos workflows e ausência de imagens/deploys externos.
+
+## 3. Análise de Mutação (Fase 7)
+- **Mutante 1 (Rota do Wrangler):** Testou-se a alteração forçada da rota no `wrangler.jsonc`. O teste validou que a rota deve ser estritamente `kokorosim.2lp.in`.
+- **Mutante 2 (Retorno de Imagem Externa no CI):** Testou-se a injeção da imagem legada `codeberg.org/lumenpink/gost-ci-wasm:latest`. O teste rejeitou o mutante, assegurando o uso exclusivo de `gambi.2lp.in/lumen/gost-ci-cross:latest`.
+
