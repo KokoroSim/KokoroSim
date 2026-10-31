@@ -59,6 +59,12 @@ pub struct HemodynamicsModel {
     pub orthostasis: bool, // Posição ortostática (em pé / pooling venoso gravitacional)
 }
 
+impl Default for HemodynamicsModel {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl HemodynamicsModel {
     pub fn new() -> Self {
         Self {

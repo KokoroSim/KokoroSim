@@ -182,6 +182,12 @@ pub struct HeartSystem {
 
 pub const BATCH_CHUNK_SIZE: usize = 23;
 
+impl Default for HeartSystem {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[wasm_bindgen]
 impl HeartSystem {
     pub fn get_chunk_size() -> usize {
@@ -254,6 +260,7 @@ impl HeartSystem {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn update_params(
         &mut self,
         ko: f64,
@@ -418,12 +425,10 @@ impl HeartSystem {
             eff_pharm_sa.symp = (eff_pharm_sa.symp + sa_symp).clamp(0.0, 1.0);
         }
 
-        if self.rsa_enabled && self.time > 1000.0 {
-            if self.resp.f_rsa > 0.0 {
-                // Inspiração: inibição vagal fisiológica com aceleração sinusal transitória (~ +3 a +4 BPM)
-                eff_pharm_sa.symp = (eff_pharm_sa.symp + self.resp.f_rsa * 0.25).clamp(0.0, 100.0);
-                eff_pharm_sa.parasymp = (eff_pharm_sa.parasymp - self.resp.f_rsa * 0.5).max(0.0);
-            }
+        if self.rsa_enabled && self.time > 1000.0 && self.resp.f_rsa > 0.0 {
+            // Inspiração: inibição vagal fisiológica com aceleração sinusal transitória (~ +3 a +4 BPM)
+            eff_pharm_sa.symp = (eff_pharm_sa.symp + self.resp.f_rsa * 0.25).clamp(0.0, 100.0);
+            eff_pharm_sa.parasymp = (eff_pharm_sa.parasymp - self.resp.f_rsa * 0.5).max(0.0);
         }
 
         // O nó SA (Severi) e Nó AV (Inada) foram modelados no artigo original em SEGUNDOS

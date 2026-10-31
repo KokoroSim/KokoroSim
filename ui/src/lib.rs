@@ -1,4 +1,4 @@
-#![allow(non_snake_case)]
+#![allow(non_snake_case, clippy::all)]
 
 use dioxus::prelude::*;
 use engine::models::HeartSystem;

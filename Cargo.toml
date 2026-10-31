@@ -5,6 +5,9 @@ members = [
 ]
 resolver = "2"
 
+[workspace.lints.clippy]
+manual_range_contains = "allow"
+
 [profile.release]
 # Optimize for speed and size
 opt-level = 3

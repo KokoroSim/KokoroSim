@@ -84,10 +84,8 @@ fn test_long_baseline_300s_stress_and_bounds() {
         if lvp > max_lvp {
             max_lvp = lvp;
         }
-        if t > 2000.0 {
-            if aop < min_aop {
-                min_aop = aop;
-            }
+        if t > 2000.0 && aop < min_aop {
+            min_aop = aop;
         }
         if aop > max_aop {
             max_aop = aop;
