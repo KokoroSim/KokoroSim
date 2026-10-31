@@ -129,7 +129,7 @@ def create_og_image(output_path="ui/assets/og_preview.png"):
     tdraw.line([(f_bar_x, foot_y - 18), (f_bar_x + f_bar_w, foot_y - 18)], fill=(42, 49, 68, 190), width=1)
 
     tdraw.ellipse([f_bar_x, foot_y + 4, f_bar_x + 14, foot_y + 18], fill=(46, 204, 113, 255))
-    tdraw.text((f_bar_x + 24, foot_y), "kokorosim.github.io", font=f_url, fill=(0, 242, 254, 255))
+    tdraw.text((f_bar_x + 24, foot_y), "kokorosim.2lp.in", font=f_url, fill=(0, 242, 254, 255))
 
     auth_text = "UFSC // Código Aberto // GPL-3.0"
     abox = tdraw.textbbox((0, 0), auth_text, font=f_author)
